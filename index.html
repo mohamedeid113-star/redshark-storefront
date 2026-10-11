@@ -33,11 +33,13 @@
       </a>
 
       <div class="header-actions">
-        <!-- Download App (APK) Button -->
-        <button class="icon-btn" onclick="Storefront.openAppDownloadModal()" id="btn-download-app-header" style="background:rgba(5,150,105,0.15);color:var(--brand-primary);border:1px solid rgba(5,150,105,0.3);font-weight:800;gap:6px" title="Download Android APK / Install App">
-          <span>📱</span>
-          <span id="btn-download-app-text">Download App (APK)</span>
+        
+        <!-- Single Clean Download App Button -->
+        <button class="icon-btn header-app-btn" onclick="Storefront.openAppDownloadModal()" id="btn-download-app-header" title="Download Android APK / Install App">
+          <span>📲</span>
+          <span class="app-btn-label">App</span>
         </button>
+
 
         <!-- PWA Install -->
         <button id="btn-pwa-install" class="icon-btn" style="display:none" onclick="Storefront.promptInstallPWA()">

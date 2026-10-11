@@ -387,31 +387,27 @@ const Storefront = (() => {
       const name = _currentLang === 'ar' ? (cat.name_ar || cat.name) : (cat.name_en || cat.name);
       const count = _products.filter(p => p.category_id === cat.id).length;
       
-      // Auto image selector based on name if no image_url
-      let img = cat.image_url;
+      // Auto image selector
+      let img = _categoryImages[cat.id] || cat.image_url;
       if (!img) {
         const lower = (cat.name || '').toLowerCase();
-        if (lower.includes('fruit') || lower.includes('veg')) img = DEFAULT_CAT_IMAGES.fruits;
-        else if (lower.includes('dairy') || lower.includes('cheese')) img = DEFAULT_CAT_IMAGES.dairy;
-        else if (lower.includes('bakery') || lower.includes('pastry')) img = DEFAULT_CAT_IMAGES.bakery;
-        else if (lower.includes('beverage') || lower.includes('coffee')) img = DEFAULT_CAT_IMAGES.beverages;
-        else if (lower.includes('meat') || lower.includes('poultry')) img = DEFAULT_CAT_IMAGES.meats;
-        else if (lower.includes('snack') || lower.includes('sweet')) img = DEFAULT_CAT_IMAGES.snacks;
+        if (lower.includes('fruit') || lower.includes('veg') || lower.includes('خضار') || lower.includes('فواكه')) img = DEFAULT_CAT_IMAGES.fruits;
+        else if (lower.includes('dairy') || lower.includes('cheese') || lower.includes('ألبان') || lower.includes('جبن')) img = DEFAULT_CAT_IMAGES.dairy;
+        else if (lower.includes('bakery') || lower.includes('pastry') || lower.includes('مخبز') || lower.includes('خبز')) img = DEFAULT_CAT_IMAGES.bakery;
+        else if (lower.includes('beverage') || lower.includes('drink') || lower.includes('مشروب')) img = DEFAULT_CAT_IMAGES.beverages;
+        else if (lower.includes('meat') || lower.includes('لحم') || lower.includes('دجاج')) img = DEFAULT_CAT_IMAGES.meats;
+        else if (lower.includes('snack') || lower.includes('sweet') || lower.includes('حلويات')) img = DEFAULT_CAT_IMAGES.snacks;
         else img = DEFAULT_CAT_IMAGES.general;
       }
 
       return `
         <div class="category-big-card" onclick="Storefront.selectCategory('${cat.id}')">
           <div class="cat-big-img-wrap">
-            <img src="${img}" alt="${name}" loading="lazy">
-            <div class="cat-big-overlay"></div>
+            <img src="${img}" class="cat-big-img" alt="${name}" loading="lazy" onerror="this.src='${DEFAULT_CAT_IMAGES.general}'">
           </div>
           <div class="cat-big-info">
-            <h3 class="cat-big-title">${name}</h3>
-            <div class="cat-big-footer">
-              <span class="cat-big-pill">${count} ${t('itemsCount')}</span>
-              <span style="color:var(--brand-primary);font-weight:800">${t('browseCategory')}</span>
-            </div>
+            <div class="cat-big-title">${name}</div>
+            <div class="cat-big-count">${count} ${_currentLang === 'ar' ? 'صنف' : 'items'}</div>
           </div>
         </div>
       `;
@@ -427,6 +423,12 @@ const Storefront = (() => {
     const prodsView = document.getElementById('products-view');
 
     if (bigView) bigView.style.display = 'block';
+
+    const catSlider = document.getElementById('categories-slider');
+    if (catSlider) {
+      catSlider.style.display = _viewMode === 'categories' ? 'none' : 'flex';
+    }
+
     if (prodsView) prodsView.style.display = 'none';
 
     renderCategoriesSlider();
@@ -441,6 +443,12 @@ const Storefront = (() => {
     const prodsView = document.getElementById('products-view');
 
     if (bigView) bigView.style.display = 'none';
+
+    const catSlider = document.getElementById('categories-slider');
+    if (catSlider) {
+      catSlider.style.display = _viewMode === 'categories' ? 'none' : 'flex';
+    }
+
     if (prodsView) prodsView.style.display = 'block';
 
     const cat = _categories.find(c => c.id === catId);
