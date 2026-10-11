@@ -2,6 +2,9 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Red Shark Storefront</title>
   
@@ -10,7 +13,7 @@
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   
-  <link rel="stylesheet" href="css/storefront.css?v=3.2">
+  <link rel="stylesheet" href="css/storefront.css?v=7.0">
 </head>
 <body>
 
@@ -303,15 +306,12 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/supabase-client.js?v=3.2"></script>
-  <script src="js/storefront.js?v=3.2"></script>
+  <script src="js/supabase-client.js?v=7.0"></script>
+  <script src="js/storefront.js?v=7.0"></script>
 
   <!-- Automatic Loader Safety Timeout -->
   <script>
-    setTimeout(function() {
-      var l = document.getElementById('app-loader');
-      if (l) l.style.display = 'none';
-    }, 2800);
+    setTimeout(function() { var l = document.getElementById('app-loader'); if (l) l.style.display = 'none'; }, 8000);
   </script>
 
   <!-- DOWNLOAD APP & APK MODAL -->

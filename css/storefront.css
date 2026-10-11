@@ -2011,3 +2011,289 @@ body[dir="rtl"] {
     font-size: 0.9rem !important;
   }
 }
+
+
+/* =====================================================================
+   HIGH-END LUXURY MOBILE STOREFRONT - 2-COLUMN GRID & TOUCH FIT
+   ===================================================================== */
+@media screen and (max-width: 768px) {
+  html, body {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .storefront-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 8px 10px 95px 10px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    gap: 12px !important;
+  }
+
+  .catalog-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+  }
+
+  /* Guaranteed 2-Column Big Categories Grid */
+  #categories-big-grid.categories-big-grid,
+  .categories-big-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .category-big-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+  }
+
+  .cat-big-img-wrap {
+    height: 110px !important;
+    max-height: 110px !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    background: #f1f5f9 !important;
+  }
+
+  .cat-big-img {
+    height: 110px !important;
+    width: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .cat-big-info {
+    padding: 8px 10px !important;
+  }
+
+  .cat-big-title {
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    color: var(--text-main) !important;
+  }
+
+  .cat-big-count {
+    font-size: 0.72rem !important;
+    color: var(--text-muted) !important;
+    margin-top: 2px !important;
+  }
+
+  /* GUARANTEED 2-COLUMN PRODUCTS GRID ON ALL SCREENS */
+  .products-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .category-group-header {
+    margin: 12px 0 8px !important;
+    padding: 0 2px !important;
+  }
+
+  .category-group-title {
+    font-size: 1.05rem !important;
+    font-weight: 900 !important;
+  }
+
+  /* LUXURY MOBILE PRODUCT CARD */
+  .product-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 14px !important;
+    padding: 10px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
+  }
+
+  .product-img-wrap {
+    height: 115px !important;
+    max-height: 115px !important;
+    min-height: 115px !important;
+    width: 100% !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 8px !important;
+  }
+
+  .product-img-wrap img {
+    height: 115px !important;
+    width: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .prod-no-img {
+    height: 115px !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 2.2rem !important;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(59, 130, 246, 0.06) 100%) !important;
+  }
+
+  .badge-stock {
+    position: absolute !important;
+    top: 6px !important;
+    right: 6px !important;
+    font-size: 0.65rem !important;
+    font-weight: 800 !important;
+    padding: 2px 7px !important;
+    border-radius: 6px !important;
+    backdrop-filter: blur(6px) !important;
+    z-index: 2 !important;
+    line-height: 1.2 !important;
+  }
+
+  .product-info {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin-bottom: 6px !important;
+  }
+
+  .product-title {
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+    line-height: 1.3 !important;
+    color: var(--text-main) !important;
+    height: 2.6em !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    margin: 0 !important;
+  }
+
+  .product-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+    margin-top: auto !important;
+    padding-top: 6px !important;
+    border-top: 1px dashed rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .product-price {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+  }
+
+  .price-usd {
+    font-size: 1.02rem !important;
+    font-weight: 900 !important;
+    color: var(--brand-primary) !important;
+    line-height: 1.1 !important;
+  }
+
+  .price-lbp {
+    font-size: 0.65rem !important;
+    color: var(--text-muted) !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+  }
+
+  .btn-add-cart {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, #059669 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 999px !important;
+    padding: 5px 10px !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    cursor: pointer !important;
+    box-shadow: 0 3px 8px rgba(16, 185, 129, 0.25) !important;
+    white-space: nowrap !important;
+  }
+
+  .card-qty-stepper {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid var(--brand-primary) !important;
+    border-radius: 999px !important;
+    padding: 2px 4px !important;
+    gap: 4px !important;
+  }
+
+  .card-qty-stepper button {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    background: var(--brand-primary) !important;
+    color: #fff !important;
+    border: none !important;
+    font-weight: 900 !important;
+    font-size: 0.85rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .card-qty-stepper span {
+    font-size: 0.82rem !important;
+    font-weight: 800 !important;
+    color: var(--brand-primary) !important;
+    min-width: 18px !important;
+    text-align: center !important;
+  }
+
+  /* Bottom Floating Mobile Cart Bar */
+  .mobile-cart-bar {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding: 10px 16px !important;
+    background: rgba(9, 16, 29, 0.96) !important;
+    backdrop-filter: blur(16px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35) !important;
+    z-index: 999 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+}

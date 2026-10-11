@@ -189,9 +189,19 @@ const Storefront = (() => {
   }
 
   async function init() {
+    // Purge any stale cache on client load if version changed
+    const APP_VERSION = '7.0';
+    if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
+      localStorage.setItem('rs_client_ver', APP_VERSION);
+      if ('caches' in window) {
+        caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {});
+      }
+    }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js?v=7.0').then(reg => {
+        reg.update();
+      }).catch(() => {});
     }
   
     try {
@@ -210,7 +220,6 @@ const Storefront = (() => {
       showLoader(true);
       _tenant = await StorefrontAPI.fetchTenant(slug);
 
-      // Automatic fallback to default shop101 if requested slug is not found
       if (!_tenant && slug !== 'shop101') {
         console.warn(`Shop '${slug}' not found, falling back to default shop101...`);
         slug = 'shop101';
@@ -225,13 +234,9 @@ const Storefront = (() => {
 
       document.title = `${_tenant.shop_name} — Red Shark Online Store`;
 
-      const [cats, prods] = await Promise.all([
-        StorefrontAPI.fetchCategories(_tenant.id),
-        StorefrontAPI.fetchProducts(_tenant.id)
-      ]);
+      // 1. Fetch categories FIRST so the Home Categories Grid renders immediately (< 300ms)
+      _categories = (await StorefrontAPI.fetchCategories(_tenant.id)) || [];
 
-      _categories = cats;
-      _products = prods;
       // Merge custom category cover images saved in _tenant.banner_url
       if (_tenant.banner_url) {
         try {
@@ -245,7 +250,6 @@ const Storefront = (() => {
         } catch(e) {}
       }
 
-
       renderHeader();
       initCarousel();
       renderCategoriesSlider();
@@ -254,9 +258,21 @@ const Storefront = (() => {
 
       // Show Categories Grid on first open as requested
       showCategoriesGrid();
+      showLoader(false);
+
+      // 2. Concurrently fetch all products in the background without blocking UI
+      StorefrontAPI.fetchProducts(_tenant.id).then(prods => {
+        _products = prods || [];
+        renderBigCategoriesGrid(); // update actual product counts
+        if (_viewMode === 'products') {
+          renderGroupedProducts();
+        }
+      }).catch(err => {
+        console.error('Background products loading error:', err);
+      });
+
     } catch (err) {
       console.error('Storefront initialization error:', err);
-    } finally {
       showLoader(false);
     }
   }
@@ -630,7 +646,8 @@ const Storefront = (() => {
               return `
                 <div class="product-card ${cartQty > 0 ? 'has-cart' : ''}" data-product-id="${prod.id}">
                   <div class="product-img-wrap">
-                    ${prod.image_url ? `<img src="${prod.image_url}" alt="${name}" loading="lazy">` : `<span>📦</span>`}
+                    ${prod.image_url ? `<img src="${prod.image_url}" alt="${name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                    <div class="prod-no-img" style="${prod.image_url ? 'display:none' : 'display:flex'}"><span>🛍️</span></div>
                     ${stockBadge}
                   </div>
                   <div class="product-info">
@@ -1053,17 +1070,19 @@ const Storefront = (() => {
   // Live Search Filter (automatically reveals products view if user types)
   function onSearch(query) {
     _searchQuery = query;
+    const bigView = document.getElementById('categories-big-view');
+    const prodsView = document.getElementById('products-view');
     if (query.trim() !== '') {
       _viewMode = 'products';
-      const bigView = document.getElementById('categories-big-view');
-      const prodsView = document.getElementById('products-view');
       if (bigView) bigView.style.display = 'none';
       if (prodsView) prodsView.style.display = 'block';
 
       const vTitle = document.getElementById('current-view-title');
-      if (vTitle) vTitle.textContent = `🔍 نتائج البحث: "${query}"`;
+      if (vTitle) vTitle.textContent = _currentLang === 'ar' ? `🔍 نتائج البحث: "${query}"` : `🔍 Search: "${query}"`;
+      renderGroupedProducts();
+    } else {
+      showCategoriesGrid();
     }
-    renderGroupedProducts();
   }
 
   function applyTheme(theme) {

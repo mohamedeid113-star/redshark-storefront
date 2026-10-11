@@ -1,5 +1,5 @@
-// Red Shark Storefront — Service Worker v3.0
-const CACHE_NAME = 'rs-storefront-v5';
+﻿// Red Shark Storefront – Service Worker v7.0
+const CACHE_NAME = 'rs-storefront-v7.0';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -17,6 +17,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Always fetch fresh from network for CSS and JS
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+  // Always fetch fresh from network with no-store to guarantee immediate CSS and JS updates
+  event.respondWith(
+    fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request))
+  );
 });
