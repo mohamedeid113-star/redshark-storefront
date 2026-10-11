@@ -72,7 +72,7 @@
           <span id="admin-lang-text">English</span>
         </button>
 
-        <a href="index.html" target="_blank" class="icon-btn" id="btn-view-store">
+        <a href="javascript:void(0)" onclick="Admin.openStorefront()" class="icon-btn" id="btn-view-store" title="View Storefront">
           <span>🏪</span>
           <span id="admin-view-store-text">معاينة المتجر</span>
         </a>
@@ -179,6 +179,15 @@
           <textarea id="admin-desc-ar" class="field-input" rows="2" placeholder="أفضل تشكيلة من المنتجات الغذائية والمواد التموينية..."></textarea>
         </div>
       </div>
+
+      
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-top:14px">
+          <input type="checkbox" id="admin-show-header-badges" style="width:18px;height:18px">
+          <span id="lbl-show-badges-text">إظهار شريط الشارات في أعلى المتجر (مفتوح للطلبات، رسوم التوصيل، مخزون الكاشير)</span>
+        </label>
+        <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.4;margin-top:4px" id="lbl-show-badges-hint">
+          افتراضياً، يتم إخفاء هذا الشريط لتوفير المساحة وتسهيل تصفح المنتجات على الهواتف. يمكنك تفعيله إذا أردت إبراز الشارات للزبائن.
+        </div>
 
       <!-- POS LIVE STOCK TOGGLE -->
       <div style="margin-top:24px;padding:16px;background:var(--bg-secondary);border-radius:var(--radius-md);border:1px solid var(--border-color)">
@@ -470,6 +479,6 @@
   </div>
 
   <script src="js/supabase-client.js"></script>
-  <script src="js/storefront-admin.js"></script>
+  <script src="js/storefront-admin.js?v=3.1"></script>
 </body>
 </html>

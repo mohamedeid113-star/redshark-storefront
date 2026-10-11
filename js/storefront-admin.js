@@ -336,6 +336,12 @@ const Admin = (() => {
     window.location.reload();
   }
 
+    function openStorefront() {
+    const slug = (_currentSlug || getShopSlug() || 'shop101');
+    const targetUrl = '/?shop=' + encodeURIComponent(slug);
+    window.open(targetUrl, '_blank');
+  }
+
   function updateHeaderShopBadge(slug) {
     const el = document.getElementById('admin-active-shop-text');
     if (el) el.textContent = slug || 'shop';
@@ -1384,6 +1390,7 @@ const Admin = (() => {
   }
 
   return {
+    openStorefront,
     init,
     verifyCredentials,
     verifyPin: verifyCredentials,

@@ -145,18 +145,46 @@ const Storefront = (() => {
 
   function getShopSlug() {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('shop')) return params.get('shop');
-    if (params.get('slug')) return params.get('slug');
+    if (params.get('shop') && params.get('shop').trim()) {
+      const s = params.get('shop').trim().toLowerCase();
+      if (s !== 'shop' && s !== 'null' && s !== 'undefined') {
+        localStorage.setItem('rs_last_shop_slug', s);
+        return s;
+      }
+    }
+    if (params.get('slug') && params.get('slug').trim()) {
+      const s = params.get('slug').trim().toLowerCase();
+      if (s !== 'shop' && s !== 'null' && s !== 'undefined') {
+        localStorage.setItem('rs_last_shop_slug', s);
+        return s;
+      }
+    }
 
     const pathParts = window.location.pathname.split('/').filter(Boolean);
     const sIdx = pathParts.indexOf('store');
-    if (sIdx !== -1 && pathParts[sIdx + 1]) return pathParts[sIdx + 1];
-
-    const hostParts = window.location.hostname.split('.');
-    if (hostParts.length > 2 && hostParts[0] !== 'www' && hostParts[0] !== 'pos' && hostParts[0] !== 'app') {
-      return hostParts[0];
+    if (sIdx !== -1 && pathParts[sIdx + 1]) {
+      const s = pathParts[sIdx + 1].trim().toLowerCase();
+      if (s !== 'shop' && s !== 'null' && s !== 'undefined') {
+        localStorage.setItem('rs_last_shop_slug', s);
+        return s;
+      }
     }
-    return localStorage.getItem('rs_last_shop_slug') || 'shop101';
+
+    // Check subdomain, EXCLUDING system subdomains like shop, www, pos, app, admin
+    const hostParts = window.location.hostname.toLowerCase().split('.');
+    const systemSubdomains = ['shop', 'www', 'pos', 'app', 'api', 'admin', 'localhost', '127', 'demo'];
+    if (hostParts.length > 2 && !systemSubdomains.includes(hostParts[0])) {
+      const s = hostParts[0].trim();
+      localStorage.setItem('rs_last_shop_slug', s);
+      return s;
+    }
+
+    const saved = localStorage.getItem('rs_last_shop_slug');
+    if (saved && !systemSubdomains.includes(saved) && saved !== 'null' && saved !== 'undefined') {
+      return saved;
+    }
+
+    return 'shop101';
   }
 
   async function init() {
@@ -177,16 +205,22 @@ const Storefront = (() => {
         if (btn) btn.style.display = 'inline-flex';
       });
 
-      const slug = getShopSlug();
-      localStorage.setItem('rs_last_shop_slug', slug);
-
+      let slug = getShopSlug();
       showLoader(true);
       _tenant = await StorefrontAPI.fetchTenant(slug);
+
+      // Automatic fallback to default shop101 if requested slug is not found
+      if (!_tenant && slug !== 'shop101') {
+        console.warn(`Shop '${slug}' not found, falling back to default shop101...`);
+        slug = 'shop101';
+        _tenant = await StorefrontAPI.fetchTenant('shop101');
+      }
 
       if (!_tenant) {
         renderNotFound(slug);
         return;
       }
+      localStorage.setItem('rs_last_shop_slug', _tenant.slug || slug);
 
       document.title = `${_tenant.shop_name} — Red Shark Online Store`;
 
@@ -227,6 +261,18 @@ const Storefront = (() => {
 
   // ── 1. HEADER & TOP SHOP INFO ──
   function renderHeader() {
+    // Hide header info sub-bar by default unless explicitly turned on by store admin
+    const subbar = document.getElementById('header-info-subbar');
+    let showBadges = false;
+    if (_tenant && _tenant.banner_url) {
+      try {
+        const bp = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : _tenant.banner_url;
+        if (bp && bp.show_header_badges === true) showBadges = true;
+      } catch(e) {}
+    }
+    if (subbar) {
+      subbar.style.display = showBadges ? 'block' : 'none';
+    }
     const brandName = document.getElementById('header-brand-name');
     const brandLogo = document.getElementById('header-brand-logo');
     const openStatus = document.getElementById('header-open-status');
