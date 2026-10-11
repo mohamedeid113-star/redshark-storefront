@@ -10,7 +10,7 @@ const Admin = (() => {
   let _categories = [];
   let _categoryImages = {};
   let _slides = [];
-  let _lang = localStorage.getItem('rs_admin_lang') || 'ar';
+  let _lang = localStorage.getItem('rs_admin_lang') || 'en';
 
     const I18N = {
     ar: {

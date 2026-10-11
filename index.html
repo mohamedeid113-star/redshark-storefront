@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -33,6 +33,12 @@
       </a>
 
       <div class="header-actions">
+        <!-- Download App (APK) Button -->
+        <button class="icon-btn" onclick="Storefront.openAppDownloadModal()" id="btn-download-app-header" style="background:rgba(5,150,105,0.15);color:var(--brand-primary);border:1px solid rgba(5,150,105,0.3);font-weight:800;gap:6px" title="Download Android APK / Install App">
+          <span>📱</span>
+          <span id="btn-download-app-text">Download App (APK)</span>
+        </button>
+
         <!-- PWA Install -->
         <button id="btn-pwa-install" class="icon-btn" style="display:none" onclick="Storefront.promptInstallPWA()">
           <span>📱</span>
@@ -309,5 +315,41 @@
       if (l) l.style.display = 'none';
     }, 2800);
   </script>
+
+  <!-- DOWNLOAD APP & APK MODAL -->
+  <div id="modal-app-download" class="modal-backdrop" onclick="if(event.target===this) Storefront.closeAppDownloadModal()" style="display:none">
+    <div class="modal-sheet" style="max-width:480px;text-align:center">
+      <div style="font-size:3.5rem;margin-bottom:8px">📲</div>
+      <h3 style="font-size:1.35rem;font-weight:900;margin-bottom:6px" id="modal-app-title">Get Our Mobile App</h3>
+      <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px" id="modal-app-desc">
+        Enjoy fast ordering, exclusive discounts, and live delivery tracking directly from your phone!
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px">
+        <!-- Option 1: Native PWA 1-Click Install -->
+        <button class="btn-checkout-primary" onclick="Storefront.installPWA()" id="btn-install-pwa" style="padding:14px;font-size:1rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px">
+          <span>⚡</span>
+          <span id="txt-install-app">Install Instant Web App</span>
+        </button>
+
+        <!-- Option 2: Direct Android APK Download -->
+        <a href="assets/RedSharkStore.apk" download="RedSharkStore.apk" class="icon-btn" style="padding:14px;font-size:0.95rem;font-weight:800;border:1.5px solid var(--border-color);background:var(--bg-card);color:var(--text-main);display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none">
+          <span>🤖</span>
+          <span id="txt-download-apk">Download Android APK (Direct File)</span>
+        </a>
+      </div>
+
+      <div style="background:#f1f5f9;border-radius:10px;padding:12px;font-size:0.8rem;color:var(--text-muted);text-align:start" id="app-install-instructions">
+        💡 <strong>Quick Installation Tips:</strong><br>
+        • On Android Chrome / Edge: Tap <strong>"Install Instant Web App"</strong> to add the store directly to your home screen with zero storage used.<br>
+        • Or tap <strong>"Download Android APK"</strong> to install the standalone application file.
+      </div>
+
+      <button type="button" class="icon-btn" onclick="Storefront.closeAppDownloadModal()" style="margin-top:16px;width:100%;border:none;background:none;color:var(--text-muted)">
+        ✕ Close
+      </button>
+    </div>
+  </div>
+
 </body>
 </html>

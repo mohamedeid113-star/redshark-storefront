@@ -8,7 +8,7 @@ const Storefront = (() => {
   let _categories = [];
   let _products = [];
   let _cart = [];
-  let _currentLang = localStorage.getItem('rs_lang') || 'ar';
+  let _currentLang = localStorage.getItem('rs_lang') || 'en';
   let _currentTheme = localStorage.getItem('rs_theme') || 'fresh-light';
   let _selectedCategory = 'all'; // 'all', or category id
   let _viewMode = 'categories'; // 'categories' (big grid) or 'products' (items grid)
@@ -160,6 +160,11 @@ const Storefront = (() => {
   }
 
   async function init() {
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  
     try {
       applyTheme(_currentTheme);
       applyLang(_currentLang);
@@ -1093,7 +1098,43 @@ const Storefront = (() => {
     }
   }
 
+  
+  let _pwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    _pwaPrompt = e;
+  });
+
+  function openAppDownloadModal() {
+    const modal = document.getElementById('modal-app-download');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeAppDownloadModal() {
+    const modal = document.getElementById('modal-app-download');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function installPWA() {
+    if (_pwaPrompt) {
+      _pwaPrompt.prompt();
+      const choice = await _pwaPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        closeAppDownloadModal();
+      }
+      _pwaPrompt = null;
+    } else {
+      // Browser instructions
+      alert(_currentLang === 'ar' 
+        ? 'للتثبيت على هاتفك: اضغط على خيارات المتصفح (⋮ أو زر المشاركة) ثم اختر "إضافة إلى الشاشة الرئيسية" (Add to Home screen).'
+        : 'To install on your phone: Tap browser menu (⋮ or Share) and select "Add to Home Screen".');
+    }
+  }
+
   return {
+    openAppDownloadModal,
+    closeAppDownloadModal,
+    installPWA,
     init,
     showCategoriesGrid,
     selectCategory,
