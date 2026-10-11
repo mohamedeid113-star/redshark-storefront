@@ -339,6 +339,12 @@ const Admin = (() => {
   function updateHeaderShopBadge(slug) {
     const el = document.getElementById('admin-active-shop-text');
     if (el) el.textContent = slug || 'shop';
+
+    const btnView = document.getElementById('btn-view-store');
+    if (btnView) {
+      const activeSlug = slug || getShopSlug() || 'shop101';
+      btnView.href = 'index.html?shop=' + encodeURIComponent(activeSlug);
+    }
   }
 
   async function init() {
