@@ -10,23 +10,37 @@
 </head>
 <body style="background:var(--bg-primary)">
 
-  <!-- SECURITY PIN LOCK OVERLAY -->
-  <div id="admin-pin-modal" class="pin-security-overlay" style="display:none">
-    <div class="pin-security-card">
-      <div style="font-size:3.2rem;margin-bottom:12px">🔒</div>
-      <h2 style="font-size:1.35rem;font-weight:900;margin-bottom:6px" id="pin-modal-title">لوحة تحكم المتجر الإلكتروني</h2>
+  <!-- SECURITY LOGIN OVERLAY -->
+  <div id="admin-pin-modal" class="pin-security-overlay" style="display:flex">
+    <div class="pin-security-card" style="max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,0.3);border-radius:18px;border:1px solid #cbd5e1">
+      <div style="font-size:3.2rem;margin-bottom:10px">🔐</div>
+      <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:6px" id="pin-modal-title">لوحة تحكم المتجر الإلكتروني</h2>
       <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px" id="pin-modal-desc">
-        هذه الصفحة مخصصة لمدير المتجر فقط. يرجى إدخال رمز PIN للمتابعة.
+        يرجى إدخال كلمة المرور (أو رمز PIN) الخاص بمتجرك للمتابعة.
       </p>
-      
-      <div style="margin-bottom:16px">
-        <input type="password" id="admin-pin-input" class="field-input" placeholder="••••" style="text-align:center;font-size:1.5rem;letter-spacing:6px;padding:10px" maxlength="10" onkeydown="if(event.key==='Enter') Admin.verifyPin()">
-        <div style="font-size:0.75rem;color:var(--text-subtle);margin-top:6px" id="pin-default-hint">الرمز الافتراضي: 1234</div>
+
+      <div style="text-align:start;margin-bottom:14px">
+        <label class="field-label" id="lbl-login-slug" style="font-weight:700">معرف المتجر (Shop Slug) *</label>
+        <input type="text" id="admin-login-slug" class="field-input" placeholder="مثال: shop101" style="font-family:monospace;direction:ltr;padding:10px;font-size:0.95rem;background:#f8fafc">
       </div>
 
-      <button class="btn-checkout-primary" onclick="Admin.verifyPin()" style="width:100%">
+      <div style="text-align:start;margin-bottom:18px">
+        <label class="field-label" id="lbl-login-pwd" style="font-weight:700">كلمة المرور / رمز PIN *</label>
+        <div style="position:relative">
+          <input type="password" id="admin-login-pwd" class="field-input" placeholder="••••••••" style="padding:10px;font-size:1.1rem;direction:ltr;font-family:monospace" onkeydown="if(event.key==='Enter') Admin.verifyCredentials()">
+          <button type="button" onclick="Admin.toggleLoginPwdVisibility()" style="position:absolute;inset-inline-end:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem" title="إظهار / إخفاء">👁️</button>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px" id="pin-default-hint">الرمز الافتراضي لمتجرك: <strong style="color:var(--brand-primary)">1234</strong></div>
+      </div>
+
+      <button class="btn-checkout-primary" onclick="Admin.verifyCredentials()" id="btn-login-submit" style="width:100%;padding:13px;font-size:1rem;font-weight:900;border-radius:10px">
         <span id="pin-modal-btn">🔓 دخول لوحة التحكم</span>
       </button>
+
+      <div style="margin-top:18px;font-size:0.78rem;color:var(--text-muted);border-top:1px solid #f1f5f9;padding-top:12px">
+        <span id="lbl-master-link-hint">هل أنت صاحب المنصة الرئيسي؟</span>
+        <a href="superadmin.html" style="color:var(--brand-primary);font-weight:800;text-decoration:none;margin-inline-start:4px" id="link-superadmin">لوحة إدارة المتاجر (Master) ←</a>
+      </div>
     </div>
   </div>
 

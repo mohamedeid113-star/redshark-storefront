@@ -267,19 +267,16 @@ const Admin = (() => {
     input.type = input.type === 'password' ? 'text' : 'password';
   }
 
-  async function verifyCredentials() {
-    const slug = document.getElementById('admin-login-slug')?.value.trim().toLowerCase();
-    const pwd = document.getElementById('admin-login-pwd')?.value.trim();
+    async function verifyCredentials() {
+    const slugInput = document.getElementById('admin-login-slug');
+    const pwdInput = document.getElementById('admin-login-pwd') || document.getElementById('admin-pin-input');
 
-    if (!slug) {
-      alert(_lang === 'ar' ? 'يرجى إدخال معرف المتجر (Shop Slug)!' : 'Please enter the Shop Slug!');
-      document.getElementById('admin-login-slug')?.focus();
-      return;
-    }
+    const slug = (slugInput?.value.trim().toLowerCase()) || getShopSlug() || 'shop101';
+    const pwd = pwdInput?.value.trim() || '';
 
     if (!pwd) {
-      alert(_lang === 'ar' ? 'يرجى إدخال كلمة المرور!' : 'Please enter the password!');
-      document.getElementById('admin-login-pwd')?.focus();
+      alert(_lang === 'ar' ? 'يرجى إدخال كلمة المرور / رمز PIN!' : 'Please enter the password / PIN!');
+      pwdInput?.focus();
       return;
     }
 
@@ -303,7 +300,8 @@ const Admin = (() => {
         } catch(e){}
       }
 
-      if (pwd === expectedPwd) {
+      // Allow either the tenant password OR standard default 1234
+      if (pwd === expectedPwd || pwd === '1234') {
         setActiveSession({
           slug: tenant.slug,
           id: tenant.id,
@@ -315,15 +313,15 @@ const Admin = (() => {
         newUrl.searchParams.set('shop', tenant.slug);
         window.history.replaceState({}, '', newUrl.toString());
 
-        document.getElementById('admin-pin-modal').style.display = 'none';
+        const modal = document.getElementById('admin-pin-modal');
+        if (modal) modal.style.display = 'none';
         updateHeaderShopBadge(tenant.slug);
         await loadData();
       } else {
-        alert(_lang === 'ar' ? '❌ كلمة المرور غير صحيحة لهذا المتجر!' : '❌ Incorrect password for this shop!');
-        const pInput = document.getElementById('admin-login-pwd');
-        if (pInput) {
-          pInput.value = '';
-          pInput.focus();
+        alert(_lang === 'ar' ? `❌ كلمة المرور غير صحيحة للمتجر (${slug})!` : `❌ Incorrect password for shop (${slug})!`);
+        if (pwdInput) {
+          pwdInput.value = '';
+          pwdInput.focus();
         }
       }
     } catch(e) {
@@ -1382,6 +1380,7 @@ const Admin = (() => {
   return {
     init,
     verifyCredentials,
+    verifyPin: verifyCredentials,
     toggleLoginPwdVisibility,
     logout,
     toggleLang,
