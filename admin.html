@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم | Red Shark Storefront Admin</title>
+  
+  <meta name="theme-color" content="#09101d">
+  <link rel="stylesheet" href="css/storefront.css">
+</head>
+<body style="background:var(--bg-primary)">
+
+  <!-- SECURITY PIN LOCK OVERLAY -->
+  <div id="admin-pin-modal" class="pin-security-overlay" style="display:none">
+    <div class="pin-security-card">
+      <div style="font-size:3.2rem;margin-bottom:12px">🔒</div>
+      <h2 style="font-size:1.35rem;font-weight:900;margin-bottom:6px" id="pin-modal-title">لوحة تحكم المتجر الإلكتروني</h2>
+      <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px" id="pin-modal-desc">
+        هذه الصفحة مخصصة لمدير المتجر فقط. يرجى إدخال رمز PIN للمتابعة.
+      </p>
+      
+      <div style="margin-bottom:16px">
+        <input type="password" id="admin-pin-input" class="field-input" placeholder="••••" style="text-align:center;font-size:1.5rem;letter-spacing:6px;padding:10px" maxlength="10" onkeydown="if(event.key==='Enter') Admin.verifyPin()">
+        <div style="font-size:0.75rem;color:var(--text-subtle);margin-top:6px" id="pin-default-hint">الرمز الافتراضي: 1234</div>
+      </div>
+
+      <button class="btn-checkout-primary" onclick="Admin.verifyPin()" style="width:100%">
+        <span id="pin-modal-btn">🔓 دخول لوحة التحكم</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ADMIN HEADER WITH LANGUAGE TOGGLE -->
+  <header class="store-header">
+    <div class="header-main-bar">
+      <div class="brand-badge">
+        <div class="brand-logo">⚙️</div>
+        <div class="brand-info">
+          <h1 id="admin-header-title">لوحة تحكم المتجر الإلكتروني</h1>
+          <div style="font-size:0.8rem;color:#34d399;font-weight:700">Red Shark Admin Portal</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Logged-in Shop Badge & Logout -->
+        <span id="admin-active-shop-pill" style="background:rgba(5,150,105,0.1);color:var(--brand-primary);padding:4px 10px;border-radius:20px;font-weight:800;font-size:0.8rem;border:1px solid rgba(5,150,105,0.2);display:inline-flex;align-items:center;gap:5px">
+          <span>🏪</span><span id="admin-active-shop-text">shop101</span>
+        </span>
+
+        <button id="btn-admin-logout" class="icon-btn" onclick="Admin.logout()" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)" title="تسجيل الخروج">
+          <span>🚪</span>
+          <span id="admin-logout-text">خروج</span>
+        </button>
+
+        <!-- English / Arabic Switcher -->
+        <button id="btn-admin-lang" class="icon-btn" onclick="Admin.toggleLang()">
+          <span>🌐</span>
+          <span id="admin-lang-text">English</span>
+        </button>
+
+        <a href="index.html" target="_blank" class="icon-btn" id="btn-view-store">
+          <span>🏪</span>
+          <span id="admin-view-store-text">معاينة المتجر</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="admin-container">
+    
+    <!-- Save Alert Banner -->
+    <div id="admin-alert" class="save-alert"></div>
+
+    <!-- Navigation Tabs -->
+    <div class="admin-nav-tabs">
+      <button class="nav-tab-btn active" id="tab-btn-settings" onclick="Admin.switchTab('settings')">
+        <span>⚙️</span>
+        <span id="tab-title-settings">إعدادات المتجر</span>
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-banner" onclick="Admin.switchTab('banner')">
+        <span>🎯</span>
+        <span id="tab-title-banner">عروض البانر والشرائح</span>
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-categories" onclick="Admin.switchTab('categories')">
+        <span>📂</span>
+        <span id="tab-title-categories">الأقسام والتصنيفات</span>
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-catalog" onclick="Admin.switchTab('catalog')">
+        <span>📦</span>
+        <span id="tab-title-catalog">أصناف المتجر والمخزون</span>
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-orders" onclick="Admin.switchTab('orders')">
+        <span>📋</span>
+        <span id="tab-title-orders">الطلبات الواردة</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: SETTINGS -->
+    <div id="tab-settings" class="admin-card">
+      <div class="admin-header">
+        <h2 style="font-size:1.25rem;font-weight:900" id="h2-settings">⚙️ الإعدادات العامة للمتجر</h2>
+        <button id="btn-save-settings" class="btn-checkout-primary" onclick="Admin.saveSettings()" style="padding:8px 20px">
+          <span>💾</span>
+          <span id="btn-save-text">حفظ الإعدادات</span>
+        </button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="field-label" id="lbl-shop-name">اسم المتجر (Shop Name)</label>
+          <input type="text" id="admin-shop-name" class="field-input" placeholder="Red Shark Supermarket">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" id="lbl-shop-slug">رابط المتجر (Slug Identifier)</label>
+          <input type="text" id="admin-shop-slug" class="field-input" placeholder="shop101">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" id="lbl-whatsapp">رقم الواتساب للطلبات</label>
+          <input type="text" id="admin-whatsapp" class="field-input" placeholder="+96170123456">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" id="lbl-pin">رمز PIN للأمان وحماية لوحة التحكم</label>
+          <input type="text" id="admin-security-pin" class="field-input" placeholder="1234" maxlength="10">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" id="lbl-delivery">أجور التوصيل ($)</label>
+          <input type="number" step="0.5" id="admin-delivery-fee" class="field-input" placeholder="2.00">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" id="lbl-min-order">الحد الأدنى للطلب ($)</label>
+          <input type="number" step="1" id="admin-min-order" class="field-input" placeholder="5.00">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" id="lbl-lbp-rate">سعر صرف الليرة مقابل الدولار (LBP)</label>
+          <input type="number" id="admin-lbp-rate" class="field-input" placeholder="89500">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" id="lbl-address">عنوان وموقع المتجر</label>
+          <input type="text" id="admin-address" class="field-input" placeholder="بيروت - وسط المدينة">
+        </div>
+
+        <!-- Shop Logo with Direct Upload Button -->
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="field-label" id="lbl-logo">شعار المتجر (Store Logo)</label>
+          <div class="upload-field-row">
+            <input type="text" id="admin-shop-logo" class="field-input" placeholder="https://... أو اضغط رفع صورة">
+            <input type="file" id="file-shop-logo" accept="image/*" style="display:none" onchange="Admin.handleFileUpload(this, 'admin-shop-logo', 'preview-shop-logo')">
+            <button type="button" class="btn-upload-file" onclick="document.getElementById('file-shop-logo').click()">
+              <span>📁</span>
+              <span id="btn-upload-logo-text">رفع صورة</span>
+            </button>
+            <img id="preview-shop-logo" class="img-preview-thumb" alt="Logo Preview">
+          </div>
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="field-label" id="lbl-desc-ar">وصف المتجر الترويجي</label>
+          <textarea id="admin-desc-ar" class="field-input" rows="2" placeholder="أفضل تشكيلة من المنتجات الغذائية والمواد التموينية..."></textarea>
+        </div>
+      </div>
+
+      <!-- POS LIVE STOCK TOGGLE -->
+      <div style="margin-top:24px;padding:16px;background:var(--bg-secondary);border-radius:var(--radius-md);border:1px solid var(--border-color)">
+        <h3 style="font-size:1.05rem;font-weight:900;margin-bottom:8px" id="lbl-pos-title">⚡ الربط بمخزون الكاشير المباشر (POS Live Stock)</h3>
+        
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-bottom:8px">
+          <input type="checkbox" id="admin-link-pos-stock" style="width:18px;height:18px" onchange="Admin.handlePosStockToggle(this.checked)">
+          <span id="lbl-link-pos-text">ربط كميات المتجر الإلكتروني بمخزون نقطة البيع (الكاشير) لحظياً</span>
+        </label>
+        
+        <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.4" id="lbl-link-pos-hint">
+          عند إلغاء هذا الخيار، سيتم سؤالك عما إذا كنت ترغب في مسح أصناف الكاشير من المتجر لإنشاء قائمة أصناف خاصة وحصرية للمتجر مع إمكانية حذف الأصناف يدوياً.
+        </div>
+
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-top:12px">
+          <input type="checkbox" id="admin-allow-out-of-stock" style="width:18px;height:18px">
+          <span id="lbl-allow-out-text">السماح للزبون بالطلب حتى لو نفد المخزون (Backorder)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- TAB 2: MULTI-OFFER BANNER CAROUSEL -->
+    <div id="tab-banner" class="admin-card" style="display:none">
+      <div class="admin-header">
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:900" id="h2-banner">🎯 عروض البانر والشرائح الترويجية</h2>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px" id="p-banner-desc">
+            يمكنك إضافة أكثر من عرض وسيتنقل البانر تلقائياً بينها للزبائن مع الصور
+          </p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="icon-btn" onclick="Admin.addNewSlide()" style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
+            <span>➕</span>
+            <span id="btn-add-slide-text">إضافة شريحة عرض جديدة</span>
+          </button>
+          <button class="btn-checkout-primary" onclick="Admin.saveSettings()" style="padding:8px 18px">
+            <span>💾</span>
+            <span id="btn-save-banner-text">حفظ عروض البانر</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Banner Active Toggle -->
+      <div style="margin-bottom:18px;padding:12px;background:var(--bg-secondary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <strong id="lbl-banner-active-title">تفعيل بانر العروض الخاصة والتخفيضات أونلاين</strong>
+          <div style="font-size:0.8rem;color:var(--text-muted)" id="lbl-banner-active-desc">إذا تم إيقافه سيختفي شريط العروض من الصفحة الرئيسية للزبائن</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span id="banner-active-badge" style="background:#d1fae5;color:#065f46;padding:4px 12px;border-radius:12px;font-weight:800;font-size:0.85rem">نشط أونلاين 🟢</span>
+          <input type="checkbox" id="admin-carousel-active" checked style="width:24px;height:24px;cursor:pointer" onchange="Admin.updateBannerStatusBadge(this.checked)">
+        </div>
+      </div>
+
+      <div id="admin-slides-list"></div>
+    </div>
+
+    <!-- TAB: CATEGORIES MANAGER (NEW) -->
+    <div id="tab-categories" class="admin-card" style="display:none">
+      <div class="admin-header">
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:900" id="h2-categories">📂 إدارة أقسام وتصنيفات المتجر</h2>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px" id="p-categories-desc">
+            تعديل أسماء الأقسام، ورفع صور الغلاف الكبيرة التي تظهر للزبائن في الصفحة الرئيسية
+          </p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="icon-btn" onclick="Admin.openAddCategoryModal()" style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
+            <span>➕</span>
+            <span id="btn-add-cat-text">إضافة قسم جديد مع صورة غلاف</span>
+          </button>
+          <button class="icon-btn" onclick="Admin.loadCategories()" id="btn-reload-cats">🔄 تحديث الأقسام</button>
+        </div>
+      </div>
+      <div id="admin-categories-table"></div>
+    </div>
+
+    <!-- TAB 3: PRODUCTS & CATALOG (DELETE ITEMS + MANUAL ITEM CREATION + DIRECT IMAGE UPLOAD) -->
+    <div id="tab-catalog" class="admin-card" style="display:none">
+      <div class="admin-header">
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:900" id="h2-catalog">📦 أصناف المتجر والمخزون</h2>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px" id="p-catalog-desc">
+            إدارة كاملة للأصناف مع إمكانية إضافة أصناف بصورها وحذف الأصناف غير المرغوبة
+          </p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="icon-btn" onclick="Admin.openAddItemModal()" style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
+            <span>➕</span>
+            <span id="btn-add-item-modal-text">إضافة صنف جديد مع صورة</span>
+          </button>
+          <button class="icon-btn" onclick="Admin.confirmClearAllProducts()" style="background:var(--danger);color:#fff;border:none;font-weight:800">
+            <span>🗑️</span>
+            <span id="btn-clear-all-text">مسح جميع الأصناف</span>
+          </button>
+          <button class="icon-btn" onclick="Admin.loadCatalog()" id="btn-reload-catalog">🔄 تحديث القائمة</button>
+        </div>
+      </div>
+      <div id="admin-catalog-table"></div>
+    </div>
+
+    <!-- TAB 4: ORDERS -->
+    <div id="tab-orders" class="admin-card" style="display:none">
+      <div class="admin-header">
+        <h2 style="font-size:1.25rem;font-weight:900" id="h2-orders">📋 الطلبات الواردة من المتجر أونلاين</h2>
+        <button class="icon-btn" onclick="Admin.loadOrders()" id="btn-reload-orders">🔄 تحديث الطلبات</button>
+      </div>
+      <div id="admin-orders-table"></div>
+    </div>
+  </div>
+
+  <!-- ADD ITEM MODAL WITH DIRECT IMAGE UPLOAD -->
+  <div id="modal-add-item" class="modal-backdrop" onclick="if(event.target===this) Admin.closeAddItemModal()">
+    <div class="modal-sheet" style="max-height:unset">
+      <div class="modal-header">
+        <h3 style="font-size:1.15rem;font-weight:900" id="modal-add-item-title">➕ إضافة صنف جديد للمتجر الإلكتروني</h3>
+        <button class="icon-btn" onclick="Admin.closeAddItemModal()" style="background:none;border:none;color:var(--text-main)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="field-label" id="lbl-item-name-ar">اسم الصنف بالعربي *</label>
+            <input type="text" id="new-item-name-ar" class="field-input" placeholder="مثال: زيت زيتون بكر ممتاز 1 لتر" required>
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-item-name-en">اسم الصنف بالإنجليزي</label>
+            <input type="text" id="new-item-name-en" class="field-input" placeholder="Extra Virgin Olive Oil 1L">
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-item-cat">القسم (Category)</label>
+            <select id="new-item-cat" class="field-input"></select>
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-item-price">سعر البيع ($) *</label>
+            <input type="number" step="0.1" id="new-item-price" class="field-input" placeholder="8.50" required>
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-item-stock">كمية المخزون المتوفرة</label>
+            <input type="number" id="new-item-stock" class="field-input" placeholder="25" value="25">
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-item-barcode">الباركود (Barcode - اختياري)</label>
+            <input type="text" id="new-item-barcode" class="field-input" placeholder="6281001234567">
+          </div>
+
+          <!-- Direct Image Upload + URL Input -->
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="field-label" id="lbl-item-image">صورة المنتج (Image)</label>
+            <div class="upload-field-row">
+              <input type="text" id="new-item-img" class="field-input" placeholder="https://... أو اضغط زر رفع صورة">
+              <input type="file" id="file-new-item-img" accept="image/*" style="display:none" onchange="Admin.handleFileUpload(this, 'new-item-img', 'preview-new-item-img')">
+              <button type="button" class="btn-upload-file" onclick="document.getElementById('file-new-item-img').click()">
+                <span>📁</span>
+                <span id="btn-upload-item-img-text">رفع صورة</span>
+              </button>
+              <img id="preview-new-item-img" class="img-preview-thumb" alt="Product Preview">
+            </div>
+          </div>
+
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="field-label" id="lbl-item-desc">وصف الصنف ومميزاته</label>
+            <textarea id="new-item-desc" class="field-input" rows="2" placeholder="تفاصيل المنتج، المنشأ، الحجم..."></textarea>
+          </div>
+        </div>
+
+        <button id="btn-save-new-item" class="btn-checkout-primary" onclick="Admin.submitNewItem()">
+          <span>💾</span>
+          <span id="btn-save-new-item-text">حفظ ونشر الصنف فوراً</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT ITEM MODAL WITH IMAGE UPLOAD -->
+  <div id="modal-edit-item" class="modal-backdrop" onclick="if(event.target===this) Admin.closeEditItemModal()">
+    <div class="modal-sheet" style="max-height:unset">
+      <div class="modal-header">
+        <h3 style="font-size:1.15rem;font-weight:900" id="modal-edit-item-title">✏️ تعديل بيانات وصورة الصنف</h3>
+        <button class="icon-btn" onclick="Admin.closeEditItemModal()" style="background:none;border:none;color:var(--text-main)">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-item-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="field-label" id="lbl-edit-name-ar">اسم الصنف بالعربي *</label>
+            <input type="text" id="edit-item-name-ar" class="field-input" required>
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-edit-name-en">اسم الصنف بالإنجليزي</label>
+            <input type="text" id="edit-item-name-en" class="field-input">
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-edit-cat">القسم (Category)</label>
+            <select id="edit-item-cat" class="field-input"></select>
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-edit-price">سعر البيع ($) *</label>
+            <input type="number" step="0.1" id="edit-item-price" class="field-input" required>
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-edit-stock">كمية المخزون المتوفرة</label>
+            <input type="number" id="edit-item-stock" class="field-input">
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-edit-barcode">الباركود (Barcode)</label>
+            <input type="text" id="edit-item-barcode" class="field-input">
+          </div>
+
+          <!-- Product Image Upload Section -->
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="field-label" id="lbl-edit-image">صورة المنتج (Product Image)</label>
+            <div class="upload-field-row">
+              <input type="text" id="edit-item-img" class="field-input" placeholder="https://... أو اضغط زر رفع صورة">
+              <input type="file" id="file-edit-item-img" accept="image/*" style="display:none" onchange="Admin.handleFileUpload(this, 'edit-item-img', 'preview-edit-item-img')">
+              <button type="button" class="btn-upload-file" onclick="document.getElementById('file-edit-item-img').click()">
+                <span>📁</span>
+                <span id="btn-upload-edit-img-text">رفع صورة</span>
+              </button>
+              <button type="button" class="btn-clear-cart" onclick="document.getElementById('edit-item-img').value=''; document.getElementById('preview-edit-item-img').style.display='none';" title="حذف الصورة">🗑️</button>
+            </div>
+            <div style="margin-top:8px">
+              <img id="preview-edit-item-img" class="img-preview-thumb" style="width:80px;height:80px;border-radius:10px" alt="Preview">
+            </div>
+          </div>
+
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="field-label" id="lbl-edit-desc">وصف الصنف ومميزاته</label>
+            <textarea id="edit-item-desc" class="field-input" rows="2"></textarea>
+          </div>
+
+          <div class="form-group" style="grid-column:1/-1">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer">
+              <input type="checkbox" id="edit-item-published" style="width:18px;height:18px">
+              <span id="lbl-edit-published">نشر هذا الصنف أونلاين في المتجر للزبائن</span>
+            </label>
+          </div>
+        </div>
+
+        <button id="btn-save-edit-item" class="btn-checkout-primary" onclick="Admin.submitEditItem()">
+          <span>💾</span>
+          <span id="btn-save-edit-item-text">حفظ التعديلات وتحديث الصنف</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT CATEGORY MODAL -->
+  <div id="modal-category" class="modal-backdrop" onclick="if(event.target===this) Admin.closeCategoryModal()">
+    <div class="modal-sheet" style="max-height:unset">
+      <div class="modal-header">
+        <h3 style="font-size:1.15rem;font-weight:900" id="modal-category-title">📂 تعديل بيانات وصورة غلاف القسم</h3>
+        <button class="icon-btn" onclick="Admin.closeCategoryModal()" style="background:none;border:none;color:var(--text-main)">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="category-modal-id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="field-label" id="lbl-cat-modal-name-ar">اسم القسم بالعربي *</label>
+            <input type="text" id="category-modal-name-ar" class="field-input" placeholder="مثال: الخضار والفواكه" required>
+          </div>
+          <div class="form-group">
+            <label class="field-label" id="lbl-cat-modal-name-en">اسم القسم بالإنجليزي *</label>
+            <input type="text" id="category-modal-name-en" class="field-input" placeholder="Fruits & Vegetables" required>
+          </div>
+
+          <!-- Category Cover Image Upload -->
+          <div class="form-group" style="grid-column:1/-1">
+            <label class="field-label" id="lbl-cat-modal-img">صورة غلاف القسم (تظهر في الواجهة الرئيسية)</label>
+            <div class="upload-field-row">
+              <input type="text" id="category-modal-img" class="field-input" placeholder="https://... أو اضغط رفع صورة">
+              <input type="file" id="file-category-img" accept="image/*" style="display:none" onchange="Admin.handleFileUpload(this, 'category-modal-img', 'preview-category-img')">
+              <button type="button" class="btn-upload-file" onclick="document.getElementById('file-category-img').click()">
+                <span>📁</span>
+                <span id="btn-upload-cat-img-text">رفع صورة الغلاف</span>
+              </button>
+            </div>
+            <div style="margin-top:8px">
+              <img id="preview-category-img" class="img-preview-thumb" style="width:120px;height:75px;border-radius:10px" alt="Cover Preview">
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-save-category" class="btn-checkout-primary" onclick="Admin.submitCategoryForm()">
+          <span>💾</span>
+          <span id="btn-save-cat-text">حفظ بيانات وقسم المتجر</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/supabase-client.js"></script>
+  <script src="js/storefront-admin.js"></script>
+</body>
+</html>

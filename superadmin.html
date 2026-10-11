@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Portal — إدارة المتاجر المركزية | Red Shark</title>
+  <link rel="stylesheet" href="css/storefront.css">
+  <style>
+    .super-header {
+      background: linear-gradient(135deg, #09101d 0%, #0f172a 100%);
+      color: #fff;
+      padding: 16px 24px;
+      border-bottom: 1px solid #1e293b;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .super-badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      background: rgba(5, 150, 105, 0.1);
+      color: var(--brand-primary);
+    }
+    .shops-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .shops-table th {
+      padding: 12px 14px;
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 800;
+      text-align: start;
+      border-bottom: 2px solid var(--border-color);
+    }
+    .shops-table td {
+      padding: 14px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    .shops-table tr:hover {
+      background: #f8fafc;
+    }
+    .pwd-pill {
+      font-family: monospace;
+      background: #f1f5f9;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-action-sm {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+  </style>
+</head>
+<body style="background:var(--bg-primary);min-height:100vh">
+
+  <!-- MASTER AUTH OVERLAY -->
+  <div id="master-auth-modal" class="pin-security-overlay" style="display:flex">
+    <div class="pin-security-card" style="max-width:440px">
+      <div style="font-size:3.5rem;margin-bottom:12px">🛡️</div>
+      <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:6px">Red Shark Master Portal</h2>
+      <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px">
+        لوحة التحكم المركزية لإدارة المتاجر وحسابات العملاء. يرجى إدخال المفتاح الرئيسي للمتابعة.
+      </p>
+
+      <div style="margin-bottom:18px;text-align:start">
+        <label class="field-label">مفتاح المدير العام (Master Key)</label>
+        <input type="password" id="master-key-input" class="field-input" placeholder="••••••••••••" style="font-size:1.1rem;padding:12px" onkeydown="if(event.key==='Enter') SuperAdmin.login()">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">المفتاح الافتراضي المبدئي: <strong style="color:var(--brand-primary)">redshark2026</strong></div>
+      </div>
+
+      <button class="btn-checkout-primary" onclick="SuperAdmin.login()" style="width:100%;padding:12px">
+        <span>🔓 دخول لوحة الماستر</span>
+      </button>
+
+      <div style="margin-top:16px;font-size:0.8rem">
+        <a href="admin.html" style="color:var(--text-muted);text-decoration:none">← الانتقال إلى لوحة تحكم المتجر العادي</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP HEADER -->
+  <header class="super-header">
+    <div class="header-container" style="display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:1.8rem">🦈</div>
+        <div>
+          <div style="font-size:1.1rem;font-weight:900;display:flex;align-items:center;gap:8px">
+            <span>Red Shark Super Admin</span>
+            <span class="super-badge">Master Control</span>
+          </div>
+          <div style="font-size:0.75rem;color:#94a3b8">إدارة متاجر وسلاسل العملاء وتراخيص المتجر السحابي</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="icon-btn" onclick="SuperAdmin.openNewShopModal()" style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
+          <span>➕</span>
+          <span>إضافة متجر جديد</span>
+        </button>
+        <button class="icon-btn" onclick="SuperAdmin.logout()" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3)">
+          <span>🚪</span>
+          <span>خروج</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="admin-container" style="max-width:1200px;margin:24px auto;padding:0 16px">
+
+    <!-- STATS ROW -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-icon">🏪</div>
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">إجمالي المتاجر المسجلة</div>
+          <div id="stat-total-shops" style="font-size:1.6rem;font-weight:900;color:var(--text-main)">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981">🟢</div>
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">المتاجر النشطة أونلاين</div>
+          <div id="stat-active-shops" style="font-size:1.6rem;font-weight:900;color:#10b981">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(37,99,235,0.1);color:#2563eb">☁️</div>
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">الخادم السحابي</div>
+          <div style="font-size:0.95rem;font-weight:800;color:#2563eb;margin-top:4px">Connected (Supabase)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHOPS LIST CARD -->
+    <div class="admin-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:900">قائمة المتاجر والعملاء</h2>
+          <p style="font-size:0.82rem;color:var(--text-muted)">يمكنك تعديل اسم المتجر، تعيين كلمة المرور لكل عميل، ومشاركة روابط المتاجر</p>
+        </div>
+        <div style="display:flex;gap:10px">
+          <input type="text" id="search-shops-input" class="field-input" placeholder="🔍 ابحث بالاسم أو Slug..." oninput="SuperAdmin.filterShops(this.value)" style="width:240px">
+          <button class="icon-btn" onclick="SuperAdmin.loadShops()">🔄 تحديث</button>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto">
+        <table class="shops-table">
+          <thead>
+            <tr>
+              <th>المتجر (Shop Name)</th>
+              <th>معرف المتجر (Slug)</th>
+              <th>كلمة مرور المدير (Password)</th>
+              <th>واتساب الطلبات</th>
+              <th>الحالة</th>
+              <th style="text-align:center">روابط وإجراءات المتجر</th>
+            </tr>
+          </thead>
+          <tbody id="shops-table-body">
+            <tr>
+              <td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted)">جاري تحميل المتاجر...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ADD / EDIT SHOP MODAL -->
+  <div id="modal-shop" class="modal-backdrop" onclick="if(event.target===this) SuperAdmin.closeShopModal()">
+    <div class="modal-sheet" style="max-height:unset;max-width:520px">
+      <div class="modal-header">
+        <h3 style="font-size:1.15rem;font-weight:900" id="modal-shop-title">➕ إضافة متجر جديد</h3>
+        <button class="icon-btn" onclick="SuperAdmin.closeShopModal()" style="background:none;border:none">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-shop-id">
+
+        <div class="form-group">
+          <label class="field-label">اسم المتجر (Shop Name) *</label>
+          <input type="text" id="shop-name-input" class="field-input" placeholder="مثال: سوبرماركت البركة">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">معرف المتجر في الرابط (Shop Slug) *</label>
+          <input type="text" id="shop-slug-input" class="field-input" placeholder="مثال: albaraka أو shop102" style="direction:ltr;font-family:monospace">
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">أحرف إنجليزية وأرقام وشرطات فقط بدون مسافات.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">كلمة مرور لوحة التحكم لهذا المتجر (Password / PIN) *</label>
+          <input type="text" id="shop-pwd-input" class="field-input" placeholder="مثال: 1234 أو secret2026" style="direction:ltr;font-family:monospace;font-weight:800">
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">هذه كلمة المرور التي سيدخل بها صاحب هذا المحل فقط إلى admin.html.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">رقم الواتساب للطلبات (WhatsApp Phone)</label>
+          <input type="text" id="shop-phone-input" class="field-input" placeholder="+96170123456" style="direction:ltr">
+        </div>
+
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="field-label">أجور التوصيل ($)</label>
+            <input type="number" id="shop-delivery-input" class="field-input" value="2" step="0.5">
+          </div>
+          <div class="form-group">
+            <label class="field-label">سعر صرف الليرة (LBP)</label>
+            <input type="number" id="shop-lbp-input" class="field-input" value="89500" step="500">
+          </div>
+        </div>
+
+        <button class="btn-checkout-primary" onclick="SuperAdmin.saveShop()" style="width:100%;padding:12px;margin-top:10px">
+          <span>💾</span>
+          <span id="btn-save-shop-text">حفظ وتفعيل المتجر فوراً</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/supabase-client.js"></script>
+  <script>
+    const SuperAdmin = (() => {
+      const MASTER_KEY_STORAGE = 'rs_superadmin_auth';
+      const DEFAULT_MASTER_KEY = 'redshark2026';
+
+      let _allTenants = [];
+
+      function init() {
+        const auth = sessionStorage.getItem(MASTER_KEY_STORAGE);
+        if (auth === 'true') {
+          document.getElementById('master-auth-modal').style.display = 'none';
+          loadShops();
+        } else {
+          document.getElementById('master-auth-modal').style.display = 'flex';
+        }
+      }
+
+      function login() {
+        const input = document.getElementById('master-key-input')?.value.trim();
+        if (input === DEFAULT_MASTER_KEY || input === localStorage.getItem('rs_custom_master_key')) {
+          sessionStorage.setItem(MASTER_KEY_STORAGE, 'true');
+          document.getElementById('master-auth-modal').style.display = 'none';
+          loadShops();
+        } else {
+          alert('❌ مفتاح المدير العام غير صحيح!');
+          document.getElementById('master-key-input').value = '';
+          document.getElementById('master-key-input').focus();
+        }
+      }
+
+      function logout() {
+        sessionStorage.removeItem(MASTER_KEY_STORAGE);
+        window.location.reload();
+      }
+
+      async function loadShops() {
+        try {
+          const resp = await fetch('https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants?select=*&order=created_at.desc', {
+            headers: {
+              'apikey': StorefrontAPI.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg',
+              'Authorization': 'Bearer ' + (StorefrontAPI.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg')
+            }
+          });
+
+          if (!resp.ok) throw new Error('Failed to fetch tenants: ' + resp.status);
+          _allTenants = await resp.json();
+
+          renderShops(_allTenants);
+          updateStats();
+        } catch (e) {
+          console.error(e);
+          alert('⚠️ خطأ في تحميل المتاجر: ' + e.message);
+        }
+      }
+
+      function updateStats() {
+        document.getElementById('stat-total-shops').textContent = _allTenants.length;
+        document.getElementById('stat-active-shops').textContent = _allTenants.filter(t => t.is_active !== false).length;
+      }
+
+      function getShopPassword(t) {
+        if (!t.banner_url) return '1234';
+        try {
+          const obj = typeof t.banner_url === 'string' ? JSON.parse(t.banner_url) : t.banner_url;
+          return obj.admin_password || '1234';
+        } catch(e) {
+          return '1234';
+        }
+      }
+
+      function renderShops(list) {
+        const tbody = document.getElementById('shops-table-body');
+        if (!tbody) return;
+
+        if (list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted)">لا توجد متاجر مطابقة</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = list.map(t => {
+          const pwd = getShopPassword(t);
+          return `
+            <tr>
+              <td>
+                <div style="font-weight:900;color:var(--text-main);font-size:0.95rem">${t.shop_name || 'بدون اسم'}</div>
+                <div style="font-size:0.75rem;color:var(--text-muted)">${t.business_type || 'retail'} • ${t.currency || 'USD'}</div>
+              </td>
+              <td>
+                <span class="pwd-pill" style="color:var(--brand-primary);font-weight:800">${t.slug}</span>
+              </td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span class="pwd-pill" id="pwd-val-${t.id}">••••••••</span>
+                  <button type="button" class="icon-btn" onclick="SuperAdmin.togglePwdDisplay('${t.id}', '${pwd}')" style="padding:2px 6px;font-size:0.75rem" title="إظهار/إخفاء">👁️</button>
+                  <button type="button" class="icon-btn" onclick="navigator.clipboard.writeText('${pwd}');alert('تم نسخ كلمة المرور!')" style="padding:2px 6px;font-size:0.75rem" title="نسخ">📋</button>
+                </div>
+              </td>
+              <td>
+                <span style="font-size:0.85rem;color:var(--text-muted)">${t.whatsapp_phone || t.owner_phone || '—'}</span>
+              </td>
+              <td>
+                <span style="background:${t.is_active !== false ? '#d1fae5' : '#fee2e2'};color:${t.is_active !== false ? '#065f46' : '#dc2626'};padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:800">
+                  ${t.is_active !== false ? 'نشط 🟢' : 'معطل ⚠️'}
+                </span>
+              </td>
+              <td style="text-align:center">
+                <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+                  <a href="index.html?shop=${t.slug}" target="_blank" class="btn-action-sm" style="background:#e0f2fe;color:#0369a1" title="معاينة المتجر أونلاين">
+                    <span>🏪 المتجر</span>
+                  </a>
+                  <a href="admin.html?shop=${t.slug}" target="_blank" class="btn-action-sm" style="background:#fef3c7;color:#b45309" title="دخول لوحة تحكم المتجر">
+                    <span>⚙️ الإدارة</span>
+                  </a>
+                  <button class="btn-action-sm" onclick="SuperAdmin.openEditShopModal('${t.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1">
+                    <span>✏️ تعديل</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function togglePwdDisplay(id, realPwd) {
+        const el = document.getElementById('pwd-val-' + id);
+        if (!el) return;
+        if (el.textContent === '••••••••') {
+          el.textContent = realPwd;
+        } else {
+          el.textContent = '••••••••';
+        }
+      }
+
+      function filterShops(query) {
+        const q = (query || '').toLowerCase().trim();
+        if (!q) {
+          renderShops(_allTenants);
+          return;
+        }
+        const filtered = _allTenants.filter(t => 
+          (t.shop_name && t.shop_name.toLowerCase().includes(q)) ||
+          (t.slug && t.slug.toLowerCase().includes(q)) ||
+          (t.owner_phone && t.owner_phone.includes(q))
+        );
+        renderShops(filtered);
+      }
+
+      function openNewShopModal() {
+        document.getElementById('edit-shop-id').value = '';
+        document.getElementById('modal-shop-title').textContent = '➕ إضافة متجر جديد';
+        document.getElementById('btn-save-shop-text').textContent = 'حفظ وتفعيل المتجر فوراً';
+        document.getElementById('shop-name-input').value = '';
+        document.getElementById('shop-slug-input').value = '';
+        document.getElementById('shop-pwd-input').value = '1234';
+        document.getElementById('shop-phone-input').value = '';
+        document.getElementById('shop-delivery-input').value = '2';
+        document.getElementById('shop-lbp-input').value = '89500';
+        document.getElementById('shop-slug-input').disabled = false;
+        document.getElementById('modal-shop').style.display = 'flex';
+      }
+
+      function openEditShopModal(id) {
+        const t = _allTenants.find(x => x.id === id);
+        if (!t) return;
+        document.getElementById('edit-shop-id').value = t.id;
+        document.getElementById('modal-shop-title').textContent = '✏️ تعديل بيانات وكلمة مرور: ' + t.shop_name;
+        document.getElementById('btn-save-shop-text').textContent = 'حفظ التعديلات';
+        document.getElementById('shop-name-input').value = t.shop_name || '';
+        document.getElementById('shop-slug-input').value = t.slug || '';
+        document.getElementById('shop-slug-input').disabled = true; // Protect slug renaming to maintain URL integrity
+        document.getElementById('shop-pwd-input').value = getShopPassword(t);
+        document.getElementById('shop-phone-input').value = t.whatsapp_phone || t.owner_phone || '';
+        document.getElementById('shop-delivery-input').value = t.delivery_fee || 2;
+        document.getElementById('shop-lbp-input').value = t.currency_lbp_rate || 89500;
+        document.getElementById('modal-shop').style.display = 'flex';
+      }
+
+      function closeShopModal() {
+        document.getElementById('modal-shop').style.display = 'none';
+      }
+
+      async function saveShop() {
+        const id = document.getElementById('edit-shop-id').value;
+        const name = document.getElementById('shop-name-input').value.trim();
+        const slug = document.getElementById('shop-slug-input').value.trim().toLowerCase().replace(/\s+/g, '-');
+        const pwd = document.getElementById('shop-pwd-input').value.trim();
+        const phone = document.getElementById('shop-phone-input').value.trim();
+        const delivery = parseFloat(document.getElementById('shop-delivery-input').value) || 2;
+        const lbp = parseFloat(document.getElementById('shop-lbp-input').value) || 89500;
+
+        if (!name || !slug || !pwd) {
+          alert('يرجى ملء اسم المتجر، والـ Slug، وكلمة المرور.');
+          return;
+        }
+
+        const apiKey = StorefrontAPI.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg';
+
+        try {
+          if (!id) {
+            // Check if slug exists
+            if (_allTenants.some(t => t.slug === slug)) {
+              alert('⚠️ هذا الـ Slug مستخدم بالفعل! اختر اسماً مميزاً آخر.');
+              return;
+            }
+
+            const bannerObj = {
+              admin_password: pwd,
+              active: true,
+              slides: [
+                {
+                  active: true,
+                  title: 'مرحباً بكم في متجرنا الإلكتروني!',
+                  subtitle: 'تسوق أفضل المنتجات بأفضل الأسعار مع توصيل سريع ومباشر',
+                  badge: '🔥 عروض افتتاح المتجر',
+                  image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80'
+                }
+              ]
+            };
+
+            const payload = {
+              shop_name: name,
+              slug: slug,
+              whatsapp_phone: phone,
+              owner_phone: phone,
+              delivery_fee: delivery,
+              currency_lbp_rate: lbp,
+              currency: 'USD',
+              is_active: true,
+              link_pos_stock: true,
+              allow_out_of_stock: false,
+              banner_url: JSON.stringify(bannerObj)
+            };
+
+            const resp = await fetch('https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants', {
+              method: 'POST',
+              headers: {
+                'apikey': apiKey,
+                'Authorization': 'Bearer ' + apiKey,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (!resp.ok) throw new Error(await resp.text());
+            alert('🎉 تم إنشاء المتجر الجديد بنجاح!');
+          } else {
+            // Update existing shop
+            const existing = _allTenants.find(t => t.id === id);
+            let bannerObj = {};
+            try {
+              bannerObj = typeof existing.banner_url === 'string' ? JSON.parse(existing.banner_url) : (existing.banner_url || {});
+            } catch(e){}
+            bannerObj.admin_password = pwd;
+
+            const payload = {
+              shop_name: name,
+              whatsapp_phone: phone,
+              delivery_fee: delivery,
+              currency_lbp_rate: lbp,
+              banner_url: JSON.stringify(bannerObj)
+            };
+
+            const resp = await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants?id=eq.${id}`, {
+              method: 'PATCH',
+              headers: {
+                'apikey': apiKey,
+                'Authorization': 'Bearer ' + apiKey,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (!resp.ok) throw new Error(await resp.text());
+            alert('✅ تم تحديث بيانات وكلمة مرور المتجر بنجاح!');
+          }
+
+          closeShopModal();
+          await loadShops();
+        } catch(e) {
+          alert('❌ فشل الحفظ: ' + e.message);
+        }
+      }
+
+      return {
+        init,
+        login,
+        logout,
+        loadShops,
+        filterShops,
+        togglePwdDisplay,
+        openNewShopModal,
+        openEditShopModal,
+        closeShopModal,
+        saveShop
+      };
+    })();
+
+    window.SuperAdmin = SuperAdmin;
+    document.addEventListener('DOMContentLoaded', () => SuperAdmin.init());
+  </script>
+</body>
+</html>

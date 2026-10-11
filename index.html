@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Red Shark Storefront</title>
+  
+  <meta name="theme-color" content="#09101d">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  
+  <link rel="stylesheet" href="css/storefront.css">
+</head>
+<body>
+
+  <!-- Loading Screen (with auto-fade safety) -->
+  <div id="app-loader" style="position:fixed;inset:0;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.3s ease">
+    <div style="text-align:center">
+      <div style="font-size:3.5rem;animation:bounce 1.4s infinite">🛒</div>
+      <div style="margin-top:12px;font-weight:900;font-size:1.1rem;color:var(--brand-primary)">جاري تحميل المتجر...</div>
+    </div>
+  </div>
+
+  <!-- STORE HEADER -->
+  <header class="store-header">
+    <div class="header-main-bar">
+      <a href="#" class="brand-badge" onclick="Storefront.showCategoriesGrid(); return false;">
+        <div class="brand-logo" id="header-brand-logo">🦈</div>
+        <div class="brand-info">
+          <h1 id="header-brand-name">Red Shark Store</h1>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <!-- PWA Install -->
+        <button id="btn-pwa-install" class="icon-btn" style="display:none" onclick="Storefront.promptInstallPWA()">
+          <span>📱</span>
+          <span>تثبيت</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="btn-toggle-theme" class="icon-btn" onclick="Storefront.toggleTheme()" title="تغيير المظهر">
+          <span>🌙</span>
+        </button>
+
+        <!-- Language Switcher -->
+        <button id="btn-toggle-lang" class="icon-btn" onclick="Storefront.toggleLang()">
+          <span>🌐</span>
+          <span>EN</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- INTEGRATED TOP SHOP INFO SUB-BAR -->
+    <div class="header-info-subbar">
+      <div class="header-info-inner">
+        <div class="header-info-pills">
+          <span class="header-pill open-now">
+            <span class="status-dot"></span>
+            <span id="header-open-status">مفتوح للطلبات الآن</span>
+          </span>
+          <span class="header-pill pos-live" id="header-stock-pill">
+            <span>⚡</span>
+            <span id="header-stock-text">مربوط بمخزون الكاشير المباشر</span>
+          </span>
+          <span class="header-pill" id="header-delivery-pill">
+            <span>🛵</span>
+            <span id="header-delivery-text">رسوم التوصيل: $2.00</span>
+          </span>
+          <span class="header-pill" id="header-address-pill" style="display:none">
+            <span>📍</span>
+            <span id="header-address-text">بيروت</span>
+          </span>
+        </div>
+        <div class="header-desc-text" id="header-desc-text"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MULTI-SLIDE SCROLLING CAROUSEL -->
+  <div class="carousel-wrapper" id="carousel-wrapper" style="display:none">
+    <div class="carousel-container">
+      <div class="carousel-track" id="carousel-track"></div>
+      <button class="carousel-btn prev" onclick="Storefront.prevSlide()">‹</button>
+      <button class="carousel-btn next" onclick="Storefront.nextSlide()">›</button>
+      <div class="carousel-dots" id="carousel-dots"></div>
+    </div>
+  </div>
+
+  <!-- Main 2-Column Responsive Container -->
+  <div class="storefront-container" id="main-content">
+    
+    <!-- LEFT/CENTER COLUMN: Products & Catalog -->
+    <div class="catalog-col">
+      <!-- Search Box -->
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-catalog" class="search-input" placeholder="ابحث بالاسم أو الباركود..." oninput="Storefront.onSearch(this.value)">
+      </div>
+
+      <!-- Horizontal Categories Slider -->
+      <div class="categories-slider" id="categories-slider"></div>
+
+      <!-- SECTION A: BIG CATEGORIES GRID (HOME VIEW) -->
+      <div id="categories-big-view">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 2px">
+          <div>
+            <h2 style="font-size:1.2rem;font-weight:900" id="title-categories-view">📂 أقسام وتصنيفات المتجر</h2>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-top:2px" id="sub-categories-view">اختر القسم لتصفح منتجاته أو اضغط عرض جميع الأصناف</p>
+          </div>
+          <button class="icon-btn" onclick="Storefront.showAllProducts()" style="background:var(--brand-primary);color:#fff;border:none">
+            <span>🛍️</span>
+            <span id="btn-show-all-text">عرض جميع الأصناف</span>
+          </button>
+        </div>
+        <div class="categories-big-grid" id="categories-big-grid"></div>
+      </div>
+
+      <!-- SECTION B: CATEGORY PRODUCTS & SEARCH VIEW -->
+      <div id="products-view" style="display:none">
+        <div class="cat-back-bar" id="cat-back-bar">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="btn-back-categories" onclick="Storefront.showCategoriesGrid()">
+              <span>←</span>
+              <span id="btn-back-cats-text">الرجوع لجميع الأقسام</span>
+            </button>
+            <span style="font-weight:900;font-size:1.05rem" id="current-view-title">الأصناف</span>
+          </div>
+          <span style="font-size:0.8rem;color:var(--text-subtle);font-weight:700" id="current-view-count">0 صنف</span>
+        </div>
+
+        <!-- Grouped Categories Container -->
+        <div id="grouped-categories-container"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: VISIBLE LIVE SHOPPING CART (DESKTOP) -->
+    <aside class="side-cart-col">
+      <div class="side-cart-card">
+        <div class="cart-header">
+          <h3>
+            <span>🛍️</span>
+            <span id="cart-title-text">سلة المشتريات</span>
+            <span id="side-cart-badge" style="background:var(--brand-primary);color:#fff;font-size:0.75rem;padding:2px 8px;border-radius:12px;font-weight:900">0</span>
+          </h3>
+          <button class="btn-clear-cart" onclick="Storefront.clearCart()">🗑️ <span id="btn-clear-cart-text">إفراغ السلة</span></button>
+        </div>
+
+        <div class="cart-items-wrapper" id="side-cart-items"></div>
+
+        <div class="cart-summary">
+          <div class="cart-summary-row">
+            <span id="label-subtotal">المجموع الفرعي</span>
+            <span id="side-subtotal">$0.00</span>
+          </div>
+          <div class="cart-summary-row">
+            <span id="label-delivery">أجور التوصيل</span>
+            <span id="side-delivery-fee">$0.00</span>
+          </div>
+          <div class="cart-summary-row total">
+            <span id="label-grand-total">الإجمالي النهائي</span>
+            <div style="text-align:end">
+              <div id="side-grand-total" style="color:var(--brand-primary)">$0.00</div>
+              <div id="side-grand-lbp" style="font-size:0.78rem;color:var(--brand-accent);font-weight:900">≈ 0 ل.ل</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkout-fields">
+          <div>
+            <label class="field-label" id="label-name">الاسم الكامل *</label>
+            <input type="text" id="side-checkout-name" class="field-input" placeholder="مثال: رابح أحمد">
+          </div>
+          <div>
+            <label class="field-label" id="label-phone">رقم الهاتف (واتساب) *</label>
+            <input type="tel" id="side-checkout-phone" class="field-input" placeholder="مثال: 70 123 456">
+          </div>
+          <div>
+            <label class="field-label" id="label-address">عنوان التوصيل *</label>
+            <input type="text" id="side-checkout-address" class="field-input" placeholder="المدينة، الشارع، البناية...">
+          </div>
+          <div>
+            <label class="field-label" id="label-notes">ملاحظات إضافية (اختياري)</label>
+            <input type="text" id="side-checkout-notes" class="field-input" placeholder="ملاحظات للتحضير أو السائق...">
+          </div>
+        </div>
+
+        <button id="btn-side-checkout" class="btn-checkout-primary" onclick="Storefront.submitOrderFromSide()">
+          <span>🛍️</span>
+          <span id="btn-submit-order-text">تأكيد وإرسال الطلب الآن</span>
+        </button>
+
+        <button class="btn-checkout-whatsapp" onclick="Storefront.orderViaWhatsAppFromSide()">
+          <span>💬</span>
+          <span id="btn-whatsapp-text">طلب سريع عبر واتساب</span>
+        </button>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Mobile Sticky Cart Bar -->
+  <div class="mobile-cart-bar" id="mobile-cart-bar">
+    <div class="mobile-cart-info">
+      <div style="font-size:0.75rem;opacity:0.8"><span id="mob-cart-title">سلة التسوق</span> (<span id="mob-cart-count">0</span> <span id="mob-cart-items-unit">أصناف</span>)</div>
+      <div id="mob-cart-total" style="font-size:1.15rem;font-weight:900;color:#34d399">$0.00</div>
+    </div>
+    <button class="btn-checkout-primary" onclick="Storefront.openMobileCartModal()" style="padding:8px 18px">
+      <span id="mob-cart-btn-text">عرض السلة</span>
+      <span>←</span>
+    </button>
+  </div>
+
+  <!-- Mobile Cart Checkout Sheet Modal -->
+  <div id="mobile-cart-modal" class="modal-backdrop" onclick="if(event.target===this) Storefront.closeMobileCartModal()">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3 style="font-size:1.1rem;font-weight:900" id="modal-cart-title-text">🛍️ مراجعة الطلب وسلة التسوق</h3>
+        <button class="icon-btn" onclick="Storefront.closeMobileCartModal()" style="background:none;border:none;color:var(--text-main)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="cart-items-wrapper" id="modal-cart-items" style="max-height:220px"></div>
+
+        <div class="cart-summary">
+          <div class="cart-summary-row">
+            <span id="modal-label-subtotal">المجموع الفرعي</span>
+            <span id="modal-subtotal">$0.00</span>
+          </div>
+          <div class="cart-summary-row">
+            <span id="modal-label-delivery">أجور التوصيل</span>
+            <span id="modal-delivery-fee">$0.00</span>
+          </div>
+          <div class="cart-summary-row total">
+            <span id="modal-label-grand-total">الإجمالي النهائي</span>
+            <div style="text-align:end">
+              <div id="modal-grand-total" style="color:var(--brand-primary)">$0.00</div>
+              <div id="modal-grand-lbp" style="font-size:0.78rem;color:var(--brand-accent);font-weight:900">≈ 0 ل.ل</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkout-fields">
+          <div>
+            <label class="field-label" id="modal-label-name">الاسم الكامل *</label>
+            <input type="text" id="modal-checkout-name" class="field-input" placeholder="مثال: رابح أحمد">
+          </div>
+          <div>
+            <label class="field-label" id="modal-label-phone">رقم الهاتف (واتساب) *</label>
+            <input type="tel" id="modal-checkout-phone" class="field-input" placeholder="مثال: 70 123 456">
+          </div>
+          <div>
+            <label class="field-label" id="modal-label-address">عنوان التوصيل *</label>
+            <input type="text" id="modal-checkout-address" class="field-input" placeholder="المدينة، الشارع، البناية...">
+          </div>
+          <div>
+            <label class="field-label" id="modal-label-notes">ملاحظات إضافية (اختياري)</label>
+            <input type="text" id="modal-checkout-notes" class="field-input" placeholder="ملاحظات للتحضير أو السائق...">
+          </div>
+        </div>
+
+        <button id="btn-modal-checkout" class="btn-checkout-primary" onclick="Storefront.submitOrderFromModal()">
+          <span>🛍️</span>
+          <span id="btn-modal-checkout-text">تأكيد وإرسال الطلب الآن</span>
+        </button>
+        <button class="btn-checkout-whatsapp" onclick="Storefront.orderViaWhatsAppFromModal()">
+          <span>💬</span>
+          <span id="btn-modal-whatsapp-text">طلب فوري عبر واتساب</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Confirmation Modal -->
+  <div id="success-modal" class="modal-backdrop" onclick="if(event.target===this) Storefront.closeSuccessModal()">
+    <div class="modal-sheet" style="padding:28px 20px;text-align:center;max-height:unset">
+      <div style="font-size:3.8rem;margin-bottom:8px">🎉</div>
+      <h3 style="font-size:1.35rem;font-weight:900;margin-bottom:6px" id="success-modal-title">🎉 تم إرسال طلبك بنجاح!</h3>
+      <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:18px">
+        <span id="success-modal-desc">وصل طلبك مباشرة إلى نظام الكاشير وسيتم البدء بتحضيره فوراً.</span>
+      </p>
+
+      <div style="background:var(--bg-primary);border-radius:var(--radius-md);padding:14px;margin-bottom:20px;display:flex;justify-content:space-around;border:1px solid var(--border-color)">
+        <div>
+          <div style="font-size:0.75rem;color:var(--text-muted)" id="success-lbl-order-id">رقم الطلب</div>
+          <div id="success-order-number" style="font-weight:900;font-size:1.2rem;color:var(--brand-primary)">RS-000000</div>
+        </div>
+        <div style="border-inline-start:1px solid var(--border-color)"></div>
+        <div>
+          <div style="font-size:0.75rem;color:var(--text-muted)" id="success-lbl-total">الإجمالي</div>
+          <div id="success-order-total" style="font-weight:900;font-size:1.2rem">$0.00</div>
+        </div>
+      </div>
+
+      <button class="btn-checkout-primary" onclick="Storefront.closeSuccessModal()">
+        <span id="btn-continue-shopping-text">متابعة التسوق</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/supabase-client.js"></script>
+  <script src="js/storefront.js"></script>
+
+  <!-- Automatic Loader Safety Timeout -->
+  <script>
+    setTimeout(function() {
+      var l = document.getElementById('app-loader');
+      if (l) l.style.display = 'none';
+    }, 2800);
+  </script>
+</body>
+</html>
