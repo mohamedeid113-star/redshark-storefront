@@ -61,13 +61,36 @@ const StorefrontAPI = (() => {
   // 3. Fetch Products for Shop
   async function fetchProducts(shopId) {
     try {
-      const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&is_published=eq.true&order=created_at.desc`;
-      const res = await fetch(url, { headers: getHeaders() });
-      if (res.ok) return await res.json();
+      let allProducts = [];
+      let from = 0;
+      const pageSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const to = from + pageSize - 1;
+        const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&is_published=eq.true&order=created_at.desc`;
+        const res = await fetch(url, {
+          headers: {
+            ...getHeaders(),
+            'Range-Unit': 'items',
+            'Range': `${from}-${to}`
+          }
+        });
+        if (!res.ok) break;
+        const page = await res.json();
+        if (!Array.isArray(page) || page.length === 0) break;
+        allProducts = allProducts.concat(page);
+        if (page.length < pageSize) {
+          hasMore = false;
+        } else {
+          from += pageSize;
+        }
+      }
+      return allProducts;
     } catch (err) {
       console.error('[StorefrontAPI] Error fetching products:', err);
+      return [];
     }
-    return [];
   }
 
   // 4. Submit New Online Order

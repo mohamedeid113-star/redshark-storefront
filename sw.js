@@ -1,5 +1,5 @@
 // Red Shark Storefront — Service Worker v3.0
-const CACHE_NAME = 'rs-storefront-v4';
+const CACHE_NAME = 'rs-storefront-v5';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

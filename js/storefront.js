@@ -6,6 +6,7 @@
 const Storefront = (() => {
   let _tenant = null;
   let _categories = [];
+  let _categoryImages = {};
   let _products = [];
   let _cart = [];
   let _currentLang = localStorage.getItem('rs_lang') || 'en';
@@ -234,8 +235,9 @@ const Storefront = (() => {
       // Merge custom category cover images saved in _tenant.banner_url
       if (_tenant.banner_url) {
         try {
-          const bp = JSON.parse(_tenant.banner_url);
-          if (bp.category_images) {
+          const bp = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : _tenant.banner_url;
+          if (bp && bp.category_images) {
+            _categoryImages = bp.category_images;
             _categories.forEach(c => {
               if (bp.category_images[c.id]) c.image_url = bp.category_images[c.id];
             });
@@ -469,15 +471,15 @@ const Storefront = (() => {
     const prodsView = document.getElementById('products-view');
 
     if (bigView) bigView.style.display = 'block';
+    if (prodsView) prodsView.style.display = 'none';
 
     const catSlider = document.getElementById('categories-slider');
     if (catSlider) {
-      catSlider.style.display = _viewMode === 'categories' ? 'none' : 'flex';
+      catSlider.style.display = 'flex';
     }
 
-    if (prodsView) prodsView.style.display = 'none';
-
     renderCategoriesSlider();
+    renderBigCategoriesGrid();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -626,7 +628,7 @@ const Storefront = (() => {
               }
 
               return `
-                <div class="product-card ${cartQty > 0 ? 'has-cart' : ''}">
+                <div class="product-card ${cartQty > 0 ? 'has-cart' : ''}" data-product-id="${prod.id}">
                   <div class="product-img-wrap">
                     ${prod.image_url ? `<img src="${prod.image_url}" alt="${name}" loading="lazy">` : `<span>📦</span>`}
                     ${stockBadge}
@@ -704,7 +706,52 @@ const Storefront = (() => {
   function saveCart() {
     sessionStorage.setItem('rs_cart', JSON.stringify(_cart));
     updateLiveCart();
-    if (_viewMode === 'products') renderGroupedProducts();
+    updateProductCardButtons();
+  }
+
+  function updateProductCardButtons() {
+    // Dynamically update card steppers without full DOM destruction
+    const cards = document.querySelectorAll('.product-card');
+    cards.forEach(card => {
+      const footer = card.querySelector('.product-footer');
+      const addBtn = card.querySelector('.btn-add-cart');
+      const stepper = card.querySelector('.card-qty-stepper');
+      if (!footer) return;
+
+      const prodId = card.getAttribute('data-product-id');
+      if (!prodId) return;
+
+      const cartItem = _cart.find(c => c.productId === prodId);
+      const cartQty = cartItem ? cartItem.quantity : 0;
+
+      card.classList.toggle('has-cart', cartQty > 0);
+
+      if (cartQty > 0) {
+        if (!stepper) {
+          if (addBtn) addBtn.remove();
+          const newStepper = document.createElement('div');
+          newStepper.className = 'card-qty-stepper';
+          newStepper.innerHTML = `
+            <button onclick="Storefront.updateCartQty('${prodId}', -1)">−</button>
+            <span>${cartQty}</span>
+            <button onclick="Storefront.updateCartQty('${prodId}', 1)">+</button>
+          `;
+          footer.appendChild(newStepper);
+        } else {
+          const span = stepper.querySelector('span');
+          if (span) span.textContent = cartQty;
+        }
+      } else {
+        if (stepper) {
+          stepper.remove();
+          const newBtn = document.createElement('button');
+          newBtn.className = 'btn-add-cart';
+          newBtn.onclick = () => Storefront.addToCart(prodId);
+          newBtn.innerHTML = `<span>+</span><span>${t('addToCart')}</span>`;
+          footer.appendChild(newBtn);
+        }
+      }
+    });
   }
 
   function addToCart(productId) {
