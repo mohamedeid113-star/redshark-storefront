@@ -190,7 +190,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '8.0';
+    const APP_VERSION = '9.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -199,7 +199,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=8.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=9.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
