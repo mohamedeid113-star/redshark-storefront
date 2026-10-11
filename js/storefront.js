@@ -190,7 +190,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '10.0';
+    const APP_VERSION = '11.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -199,7 +199,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=10.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=11.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -1225,12 +1225,18 @@ const Storefront = (() => {
 
   function openAppDownloadModal() {
     const modal = document.getElementById('modal-app-download');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('open');
+    }
   }
 
   function closeAppDownloadModal() {
     const modal = document.getElementById('modal-app-download');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('open');
+    }
   }
 
   async function installPWA() {
