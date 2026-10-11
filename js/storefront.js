@@ -190,7 +190,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '11.0';
+    const APP_VERSION = '12.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -199,7 +199,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=11.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=12.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -610,64 +610,48 @@ const Storefront = (() => {
 
     catGroups.forEach((group, catId) => {
       html += `
-        <section class="category-group-section" id="cat-group-${catId}" style="margin-bottom:18px">
-          <div class="category-group-header">
-            <h3 class="category-group-title">
-              <span>🛒</span>
+        <section class="category-group-section" id="cat-group-${catId}" style="margin-bottom:18px; padding:12px 10px; border-radius:14px; background:var(--bg-surface); border:1px solid var(--border-color);">
+          <div class="category-group-header" style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+            <h3 class="category-group-title" style="margin:0; font-size:1.05rem; font-weight:800; display:flex; align-items:center; gap:6px;">
+              <span>🏷️</span>
               <span>${group.name}</span>
             </h3>
-            <span class="category-group-count">${group.products.length} ${_currentLang === 'ar' ? 'صنف' : 'items'}</span>
+            <span class="category-group-count" style="font-size:0.8rem; font-weight:700; color:var(--text-subtle);">${group.products.length} ${_currentLang === 'ar' ? 'أصناف' : 'items'}</span>
           </div>
 
-          <div class="products-grid" style="display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; width: 100% !important; box-sizing: border-box !important;">
+          <div class="products-grid" style="display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; width: 100% !important; box-sizing: border-box !important;">
             ${group.products.map(prod => {
               const name = _currentLang === 'ar' ? (prod.name_ar || prod.name) : (prod.name_en || prod.name);
               const priceUSD = (parseFloat(prod.price) || 0).toFixed(2);
               const priceLBP = Math.round((parseFloat(prod.price) || 0) * lbpRate).toLocaleString();
-              const stock = parseInt(prod.stock_quantity) || 0;
-
               const inCart = _cart.find(c => c.productId === prod.id);
               const cartQty = inCart ? inCart.quantity : 0;
 
-              let stockBadge = '';
-              let isOutOfStock = false;
-
-              if (isLiveStock) {
-                if (stock <= 0) {
-                  isOutOfStock = !allowOutOfStock;
-                  stockBadge = `<span class="badge-stock out-of-stock" style="position: absolute !important; top: 5px !important; right: 5px !important; font-size: 0.62rem !important; font-weight: 800 !important; padding: 2px 6px !important; border-radius: 6px !important; z-index: 2 !important;">${t('outOfStock')}</span>`;
-                } else if (stock <= 5) {
-                  stockBadge = `<span class="badge-stock low-stock" style="position: absolute !important; top: 5px !important; right: 5px !important; font-size: 0.62rem !important; font-weight: 800 !important; padding: 2px 6px !important; border-radius: 6px !important; z-index: 2 !important;">${t('remaining')} ${stock}</span>`;
-                } else {
-                  stockBadge = `<span class="badge-stock in-stock" style="position: absolute !important; top: 5px !important; right: 5px !important; font-size: 0.62rem !important; font-weight: 800 !important; padding: 2px 6px !important; border-radius: 6px !important; z-index: 2 !important;">${t('inStock')}</span>`;
-                }
-              }
-
               return `
-                <div class="product-card ${cartQty > 0 ? 'has-cart' : ''}" data-product-id="${prod.id}" style="min-width: 0 !important; width: 100% !important; box-sizing: border-box !important; border-radius: 12px !important; padding: 8px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; background: var(--bg-surface) !important; border: 1px solid var(--border-color) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;">
-                  <div class="product-img-wrap" style="height: 100px !important; min-height: 100px !important; max-height: 100px !important; width: 100% !important; border-radius: 8px !important; overflow: hidden !important; position: relative !important; display: flex !important; align-items: center !important; justify-content: center !important; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important; margin-bottom: 6px !important;">
-                    ${prod.image_url ? `<img src="${prod.image_url}" alt="${name}" loading="lazy" style="height: 100px !important; width: 100% !important; object-fit: cover !important;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-                    <div class="prod-no-img" style="${prod.image_url ? 'display:none !important;' : 'display:flex !important;'} height: 100px !important; width: 100% !important; align-items: center !important; justify-content: center !important; font-size: 1.8rem !important; background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(59, 130, 246, 0.06) 100%) !important;"><span>🛍️</span></div>
-                    ${stockBadge}
+                <div class="product-card ${cartQty > 0 ? 'has-cart' : ''}" data-product-id="${prod.id}" style="min-width: 0 !important; width: 100% !important; box-sizing: border-box !important; border-radius: 12px !important; padding: 10px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; background: var(--bg-surface) !important; border: 1px solid var(--border-color) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;">
+                  <div class="product-img-wrap" style="height: 110px !important; min-height: 110px !important; max-height: 110px !important; width: 100% !important; border-radius: 10px !important; overflow: hidden !important; position: relative !important; display: flex !important; align-items: center !important; justify-content: center !important; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important; margin-bottom: 8px !important;">
+                    ${prod.image_url ? `<img src="${prod.image_url}" alt="${name}" loading="lazy" style="height: 110px !important; width: 100% !important; object-fit: cover !important;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                    <div class="prod-no-img" style="${prod.image_url ? 'display:none !important;' : 'display:flex !important;'} height: 110px !important; width: 100% !important; align-items: center !important; justify-content: center !important; font-size: 2.2rem !important; background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(59, 130, 246, 0.06) 100%) !important;"><span>🛍️</span></div>
                   </div>
-                  <div class="product-info" style="flex: 1 !important; min-width: 0 !important; margin-bottom: 4px !important;">
-                    <h4 class="product-title" title="${name}" style="font-size: 0.82rem !important; font-weight: 800 !important; line-height: 1.25 !important; height: 2.5em !important; overflow: hidden !important; text-overflow: ellipsis !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; margin: 0 0 4px 0 !important;">${name}</h4>
+                  <div class="product-info" style="flex: 1 !important; min-width: 0 !important; margin-bottom: 6px !important;">
+                    <h4 class="product-title" title="${name}" style="font-size: 0.85rem !important; font-weight: 800 !important; line-height: 1.3 !important; height: 2.6em !important; overflow: hidden !important; text-overflow: ellipsis !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; margin: 0 0 4px 0 !important;">${name}</h4>
                   </div>
-                  <div class="product-footer" style="display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 4px !important; margin-top: auto !important; padding-top: 6px !important; border-top: 1px dashed rgba(0, 0, 0, 0.06) !important;">
-                    <div class="product-price" style="display: flex !important; flex-direction: column !important; min-width: 0 !important;">
-                      <span class="price-usd" style="font-size: 0.95rem !important; font-weight: 900 !important; color: var(--brand-primary) !important; line-height: 1.1 !important;">${priceUSD}</span>
-                      <span class="price-lbp" style="font-size: 0.6rem !important; color: var(--text-muted) !important; font-weight: 600 !important; line-height: 1.1 !important;">≈ ${priceLBP} ${t('currencyLBP')}</span>
+                  <div class="product-footer" style="display: flex !important; flex-direction: column !important; gap: 8px !important; margin-top: auto !important; padding-top: 6px !important; border-top: 1px dashed rgba(0, 0, 0, 0.06) !important;">
+                    <div class="product-price" style="display: flex !important; justify-content: space-between !important; align-items: baseline !important;">
+                      <span class="price-usd" style="font-size: 1.05rem !important; font-weight: 900 !important; color: var(--brand-primary) !important;">${priceUSD}</span>
+                      <span class="price-lbp" style="font-size: 0.65rem !important; color: var(--text-muted) !important; font-weight: 600 !important;">≈ ${priceLBP} ${t('currencyLBP')}</span>
                     </div>
                     
                     ${cartQty > 0 ? `
-                      <div class="card-qty-stepper" style="display: inline-flex !important; align-items: center !important; background: rgba(16, 185, 129, 0.1) !important; border: 1px solid var(--brand-primary) !important; border-radius: 999px !important; padding: 2px 4px !important; gap: 3px !important;">
-                        <button onclick="Storefront.updateCartQty('${prod.id}', -1)" aria-label="Decrease" style="width: 22px !important; height: 22px !important; border-radius: 50% !important; background: var(--brand-primary) !important; color: #fff !important; border: none !important; font-weight: 900 !important; font-size: 0.8rem !important; cursor: pointer !important; padding: 0 !important;">−</button>
-                        <span style="font-size: 0.8rem !important; font-weight: 800 !important; color: var(--brand-primary) !important; min-width: 14px !important; text-align: center !important;">${cartQty}</span>
-                        <button onclick="Storefront.updateCartQty('${prod.id}', 1)" aria-label="Increase" style="width: 22px !important; height: 22px !important; border-radius: 50% !important; background: var(--brand-primary) !important; color: #fff !important; border: none !important; font-weight: 900 !important; font-size: 0.8rem !important; cursor: pointer !important; padding: 0 !important;">+</button>
+                      <div class="card-qty-stepper" style="display: flex !important; align-items: center !important; justify-content: space-between !important; background: rgba(16, 185, 129, 0.1) !important; border: 1px solid var(--brand-primary) !important; border-radius: 8px !important; padding: 4px 8px !important;">
+                        <button onclick="Storefront.updateCartQty('${prod.id}', -1)" aria-label="Decrease" style="width: 26px !important; height: 26px !important; border-radius: 6px !important; background: var(--brand-primary) !important; color: #fff !important; border: none !important; font-weight: 900 !important; font-size: 0.95rem !important; cursor: pointer !important;">−</button>
+                        <span style="font-size: 0.95rem !important; font-weight: 900 !important; color: var(--brand-primary) !important;">${cartQty}</span>
+                        <button onclick="Storefront.updateCartQty('${prod.id}', 1)" aria-label="Increase" style="width: 26px !important; height: 26px !important; border-radius: 6px !important; background: var(--brand-primary) !important; color: #fff !important; border: none !important; font-weight: 900 !important; font-size: 0.95rem !important; cursor: pointer !important;">+</button>
                       </div>
                     ` : `
-                      <button class="btn-add-cart-circle" onclick="Storefront.addToCart('${prod.id}')" ${isOutOfStock ? 'disabled' : ''} title="${isOutOfStock ? t('outOfStock') : t('addToCart')}" style="width: 32px !important; min-width: 32px !important; height: 32px !important; border-radius: 50% !important; background: ${isOutOfStock ? '#e2e8f0' : 'linear-gradient(135deg, var(--brand-primary) 0%, #059669 100%)'} !important; color: ${isOutOfStock ? '#94a3b8' : '#fff'} !important; border: none !important; font-size: 1.15rem !important; font-weight: 900 !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: ${isOutOfStock ? 'not-allowed' : 'pointer'} !important; box-shadow: ${isOutOfStock ? 'none' : '0 3px 8px rgba(16, 185, 129, 0.3)'} !important; padding: 0 !important;">
-                        ${isOutOfStock ? '✕' : '+'}
+                      <button class="btn-add-cart" onclick="Storefront.addToCart('${prod.id}')" style="display: flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; width: 100% !important; padding: 8px 10px !important; border-radius: 8px !important; background: linear-gradient(135deg, var(--brand-primary) 0%, #059669 100%) !important; color: #fff !important; border: none !important; font-size: 0.85rem !important; font-weight: 800 !important; cursor: pointer !important; box-shadow: 0 3px 8px rgba(16, 185, 129, 0.25) !important;">
+                        <span>+</span>
+                        <span>${t('addToCart')}</span>
                       </button>
                     `}
                   </div>
@@ -675,12 +659,10 @@ const Storefront = (() => {
               `;
             }).join('')}
           </div>
-        </section>
-      `;
+        </section>`;
     });
 
     container.innerHTML = html;
-  }
 
   function renderCategoriesSlider() {
     const container = document.getElementById('categories-slider');
@@ -774,14 +756,6 @@ const Storefront = (() => {
     if (!prod) return;
 
     const existing = _cart.find(c => c.productId === productId);
-    const currentQty = existing ? existing.quantity : 0;
-    const stock = parseInt(prod.stock_quantity) || 0;
-
-    if (_tenant.link_pos_stock && !_tenant.allow_out_of_stock && (currentQty + 1) > stock) {
-      alert(_currentLang === 'ar' ? 'عذراً، وصلت للحد الأقصى المتوفر بالمخزون' : 'Maximum stock limit reached');
-      return;
-    }
-
     if (existing) {
       existing.quantity += 1;
     } else {
