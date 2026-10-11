@@ -190,7 +190,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '7.0';
+    const APP_VERSION = '8.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -199,7 +199,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=7.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=8.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -662,14 +662,13 @@ const Storefront = (() => {
                     
                     ${cartQty > 0 ? `
                       <div class="card-qty-stepper">
-                        <button onclick="Storefront.updateCartQty('${prod.id}', -1)">−</button>
+                        <button onclick="Storefront.updateCartQty('${prod.id}', -1)" aria-label="Decrease">−</button>
                         <span>${cartQty}</span>
-                        <button onclick="Storefront.updateCartQty('${prod.id}', 1)">+</button>
+                        <button onclick="Storefront.updateCartQty('${prod.id}', 1)" aria-label="Increase">+</button>
                       </div>
                     ` : `
-                      <button class="btn-add-cart" onclick="Storefront.addToCart('${prod.id}')" ${isOutOfStock ? 'disabled' : ''}>
-                        <span>+</span>
-                        <span>${isOutOfStock ? t('outOfStock') : t('addToCart')}</span>
+                      <button class="btn-add-cart-circle" onclick="Storefront.addToCart('${prod.id}')" ${isOutOfStock ? 'disabled' : ''} title="${isOutOfStock ? t('outOfStock') : t('addToCart')}">
+                        ${isOutOfStock ? '✕' : '+'}
                       </button>
                     `}
                   </div>
@@ -727,11 +726,10 @@ const Storefront = (() => {
   }
 
   function updateProductCardButtons() {
-    // Dynamically update card steppers without full DOM destruction
     const cards = document.querySelectorAll('.product-card');
     cards.forEach(card => {
       const footer = card.querySelector('.product-footer');
-      const addBtn = card.querySelector('.btn-add-cart');
+      const addBtn = card.querySelector('.btn-add-cart, .btn-add-cart-circle');
       const stepper = card.querySelector('.card-qty-stepper');
       if (!footer) return;
 
@@ -762,9 +760,10 @@ const Storefront = (() => {
         if (stepper) {
           stepper.remove();
           const newBtn = document.createElement('button');
-          newBtn.className = 'btn-add-cart';
+          newBtn.className = 'btn-add-cart-circle';
           newBtn.onclick = () => Storefront.addToCart(prodId);
-          newBtn.innerHTML = `<span>+</span><span>${t('addToCart')}</span>`;
+          newBtn.innerHTML = '+';
+          newBtn.title = t('addToCart');
           footer.appendChild(newBtn);
         }
       }
