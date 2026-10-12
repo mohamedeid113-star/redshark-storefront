@@ -1578,23 +1578,27 @@ const Admin = (() => {
   }
 
   // ── Reports & Analytics Dashboard ───────────────────────────────
-// Implementation of loadReports, openMobileAppModal, closeMobileAppModal
+// Implementation of loadReports,
+    filterReportsInvoices, openMobileAppModal, closeMobileAppModal
 
 async function loadReports() {
   if (!_tenant) return;
   const isAR = _lang === 'ar';
   const dateFilter = document.getElementById('reports-date-filter')?.value || 'month';
+  const branchFilter = document.getElementById('reports-branch-filter')?.value || 'all';
   const topBody = document.getElementById('reports-top-products-body');
   const lowStockBody = document.getElementById('reports-low-stock-body');
+  const invoicesBody = document.getElementById('reports-invoices-body');
 
   if (topBody) topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ معالجة البيانات والتقارير...' : 'Calculating reports...') + '</td></tr>';
   if (lowStockBody) lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ فحص المخزون...' : 'Checking inventory...') + '</td></tr>';
+  if (invoicesBody) invoicesBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ جلب الفواتير...' : 'Loading invoices...') + '</td></tr>';
 
   try {
-    // 1. Fetch Orders from Supabase for this tenant
+    // 1. Fetch Orders & POS Sales from Supabase for this tenant
     let orders = [];
     try {
-      const url = StorefrontAPI.getUrl() + '/rest/v1/orders?shop_id=eq.' + encodeURIComponent(_tenant.id) + '&order=created_at.desc&limit=200';
+      const url = StorefrontAPI.getUrl() + '/rest/v1/orders?shop_id=eq.' + encodeURIComponent(_tenant.id) + '&order=created_at.desc&limit=300';
       const res = await fetch(url, {
         headers: {
           "apikey": StorefrontAPI.getKey(),
@@ -1606,9 +1610,41 @@ async function loadReports() {
       console.warn('Orders fetch error in loadReports:', e);
     }
 
-    // 2. Filter orders by selected date range
+    // Populate branch selector
+    const branchSel = document.getElementById('reports-branch-filter');
+    if (branchSel) {
+      const bSet = new Set(['main']);
+      orders.forEach(o => {
+        try {
+          const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
+          if (n.branch_id) bSet.add(n.branch_id);
+          if (n.terminal_id) bSet.add(n.terminal_id);
+        } catch(e) {}
+        if (o.delivery_address && o.delivery_address !== 'Sibline') bSet.add(o.delivery_address);
+      });
+      let bOpts = '<option value="all">' + (isAR ? '🌐 كافة الفروع والمحطات (All Branches)' : '🌐 All Branches & Terminals') + '</option>';
+      bSet.forEach(b => {
+        const bName = b === 'main' ? (isAR ? '📍 الفرع الرئيسي (Main Branch)' : '📍 Main Branch') : ('📍 ' + b);
+        bOpts += '<option value="' + b + '" ' + (branchFilter === b ? 'selected' : '') + '>' + bName + '</option>';
+      });
+      branchSel.innerHTML = bOpts;
+    }
+
+    // 2. Filter orders by selected branch & date range
     const now = new Date();
     const filteredOrders = orders.filter(o => {
+      // Branch filter
+      if (branchFilter !== 'all') {
+        let bMatch = false;
+        try {
+          const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
+          if (n.branch_id === branchFilter || n.terminal_id === branchFilter) bMatch = true;
+        } catch(e) {}
+        if (o.delivery_address === branchFilter) bMatch = true;
+        if (!bMatch) return false;
+      }
+
+      // Date filter
       if (!o.created_at) return true;
       const d = new Date(o.created_at);
       if (dateFilter === 'today') {
@@ -1623,6 +1659,7 @@ async function loadReports() {
 
     // 3. Compute totals
     let totalSales = 0;
+    let totalCost = 0;
     let completedCount = 0;
     const productCounts = {};
 
@@ -1633,21 +1670,26 @@ async function loadReports() {
         completedCount++;
       }
 
+      let meta = {};
+      try { meta = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {}); } catch(e) {}
+      totalCost += parseFloat(meta.cost || 0);
+
       let items = [];
       try {
         items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
       } catch(e) {}
 
       items.forEach(it => {
-        const name = it.name || it.item_name || 'Product';
-        const qty = parseFloat(it.qty || it.quantity || 1);
-        const price = parseFloat(it.price || 0);
+        const name = it.product_name || it.name || it.item_name || 'Product';
+        const qty = parseFloat(it.quantity || it.qty || 1);
+        const price = parseFloat(it.unit_price || it.price || 0);
         if (!productCounts[name]) productCounts[name] = { qty: 0, revenue: 0 };
         productCounts[name].qty += qty;
         productCounts[name].revenue += (qty * price);
       });
     });
 
+    const netProfit = totalSales - totalCost;
     const avgOrder = filteredOrders.length > 0 ? (totalSales / filteredOrders.length) : 0;
     const rate = parseFloat(_tenant.currency_lbp_rate || 89500);
 
@@ -1660,12 +1702,55 @@ async function loadReports() {
     const elOrders = document.getElementById('kpi-total-orders');
     if (elOrders) elOrders.textContent = filteredOrders.length;
     const elCompleted = document.getElementById('kpi-completed-orders');
-    if (elCompleted) elCompleted.textContent = completedCount + ' ' + (isAR ? 'طلب مكتمل' : 'completed');
+    if (elCompleted) elCompleted.textContent = completedCount + ' ' + (isAR ? 'فاتورة مكتملة' : 'completed');
 
     const elAvg = document.getElementById('kpi-avg-order');
     if (elAvg) elAvg.textContent = '$' + avgOrder.toFixed(2);
 
-    // Render Top Selling Items
+    // 4. Update Live Cashbox Drawer
+    try {
+      let bObj = {};
+      try { bObj = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : (_tenant.banner_url || {}); } catch(e) {}
+      const cBoxes = bObj.pos_cashboxes || [];
+      const cb = cBoxes[0] || { balance_usd: 100.95, cashier_name: 'Administrator', status: 'open' };
+
+      const elDrawer = document.getElementById('rpt-drawer-total');
+      if (elDrawer) elDrawer.textContent = '$' + parseFloat(cb.balance_usd || totalSales).toFixed(2);
+      const elDrawerLbp = document.getElementById('rpt-drawer-lbp');
+      if (elDrawerLbp) elDrawerLbp.textContent = '≈ ' + Math.round(parseFloat(cb.balance_usd || totalSales) * rate).toLocaleString() + ' ' + (isAR ? 'ل.ل' : 'LBP');
+      const elCashier = document.getElementById('rpt-drawer-cashier');
+      if (elCashier) elCashier.textContent = cb.cashier_name || 'Administrator';
+    } catch(e) {}
+
+    // 5. Render Invoices Table
+    if (invoicesBody) {
+      if (filteredOrders.length === 0) {
+        invoicesBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'لا توجد فواتير مسجلة في هذه الفترة' : 'No invoices in this period') + '</td></tr>';
+      } else {
+        invoicesBody.innerHTML = filteredOrders.map(o => {
+          let meta = {};
+          try { meta = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {}); } catch(e) {}
+          const isPos = meta.source === 'pos' || o.pos_synced;
+          const branchBadge = meta.terminal_id || meta.branch_id || 'الفرع الرئيسي';
+          const cashier = meta.cashier || (isPos ? 'Administrator' : 'Online Store');
+          const cost = parseFloat(meta.cost || 0);
+          const total = parseFloat(o.total || 0);
+          const profit = total - cost;
+          const time = new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          return '<tr style="border-bottom:1px solid #e2e8f0">' +
+            '<td style="padding:8px;font-weight:900;color:var(--brand-primary)">' + o.order_number + '</td>' +
+            '<td style="padding:8px"><div style="font-weight:700">' + branchBadge + '</div><div style="font-size:0.75rem;color:var(--text-muted)">' + time + '</div></td>' +
+            '<td style="padding:8px"><div style="font-weight:700">' + (o.customer_name || 'عميل عابر') + '</div><div style="font-size:0.75rem;color:var(--text-muted)">' + cashier + '</div></td>' +
+            '<td style="padding:8px;text-align:end;font-weight:900">$' + total.toFixed(2) + '</td>' +
+            '<td style="padding:8px;text-align:end;color:#d97706;font-weight:700">$' + cost.toFixed(2) + '</td>' +
+            '<td style="padding:8px;text-align:end;color:#059669;font-weight:900">+$' + profit.toFixed(2) + '</td>' +
+          '</tr>';
+        }).join('');
+      }
+    }
+
+    // 6. Render Top Selling Items
     const sortedProducts = Object.keys(productCounts).map(k => Object.assign({ name: k }, productCounts[k]))
       .sort((a,b) => b.qty - a.qty);
 
@@ -1683,11 +1768,9 @@ async function loadReports() {
       }
     }
 
-    // 4. Check Low Stock from Catalog
+    // 7. Check Low Stock from Catalog
     if (!_products || _products.length === 0) {
-      try {
-        _products = await StorefrontAPI.fetchProducts(_tenant.id);
-      } catch(e) {}
+      try { _products = await StorefrontAPI.fetchProducts(_tenant.id); } catch(e) {}
     }
 
     const lowStockItems = (_products || []).filter(p => {
@@ -1721,12 +1804,22 @@ async function loadReports() {
   } catch(err) {
     console.error('Error calculating reports:', err);
     if (topBody) topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:#dc2626">Failed to load reports: ' + err.message + '</td></tr>';
-    if (lowStockBody) lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:#dc2626">Failed to load inventory</td></tr>';
   }
 }
 
-// Mobile Admin App Modal Handlers
-function openMobileAppModal() {
+function filterReportsInvoices() {
+  const q = document.getElementById('admin-inv-search')?.value.toLowerCase().trim() || '';
+  const rows = document.querySelectorAll('#reports-invoices-body tr');
+  rows.forEach(r => {
+    if (!q) { r.style.display = ''; return; }
+    const txt = r.textContent.toLowerCase();
+    r.style.display = txt.includes(q) ? '' : 'none';
+  });
+}
+
+
+  // ── Mobile Admin App Modal Handlers ─────────────────────────────
+  function openMobileAppModal() {
   const modal = document.getElementById('modal-mobile-app');
   if (modal && _tenant) {
     modal.style.display = 'flex';

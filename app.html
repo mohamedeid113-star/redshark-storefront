@@ -3,28 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Red Shark — تطبيق المدير والمخزون الذكي</title>
+  <title>Red Shark — تطبيق المدير والمبيعات الذكي</title>
   
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="RedShark Admin">
-  <meta name="theme-color" content="#2563eb">
+  <meta name="theme-color" content="#1e293b">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/favicon.png">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   
   <!-- HTML5 Barcode/QR Scanner -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
     :root, [data-theme="light"] {
-      --bg: #f8fafc;
+      --bg: #f1f5f9;
       --surface: #ffffff;
       --surface-card: #ffffff;
-      --surface-subtle: #f1f5f9;
+      --surface-subtle: #f8fafc;
       --border: #e2e8f0;
       --primary: #2563eb;
       --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
@@ -33,814 +33,1394 @@
       --danger: #ef4444;
       --text: #0f172a;
       --text-muted: #64748b;
-      --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-      --font: 'Plus Jakarta Sans', 'Tajawal', sans-serif;
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --card-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+      --nav-bg: rgba(255, 255, 255, 0.88);
     }
 
     [data-theme="dark"] {
-      --bg: #090d16;
-      --surface: #131b2e;
-      --surface-card: rgba(23, 32, 53, 0.95);
-      --surface-subtle: #1a253e;
-      --border: rgba(255, 255, 255, 0.08);
+      --bg: #0b1120;
+      --surface: #1e293b;
+      --surface-card: #1e293b;
+      --surface-subtle: #0f172a;
+      --border: #334155;
       --primary: #3b82f6;
+      --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
       --text: #f8fafc;
       --text-muted: #94a3b8;
-      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      --nav-bg: rgba(30, 41, 59, 0.88);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); -webkit-tap-highlight-color: transparent; }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
     body {
+      font-family: 'Tajawal', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
-      font-size: 14px;
-      line-height: 1.4;
-      padding-bottom: calc(72px + var(--safe-bottom));
-      transition: background 0.2s ease, color 0.2s ease;
+      padding-bottom: 95px; /* bottom nav spacing */
     }
 
-    /* Top App Header */
+    /* TOP HEADER */
     .app-header {
-      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      background: var(--nav-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
       padding: 10px 14px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .brand-wrap {
+    .header-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-brand {
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .brand-logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+    .brand-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
       background: var(--primary-gradient);
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
     }
 
     .brand-title {
+      font-size: 1rem;
       font-weight: 900;
-      font-size: 0.95rem;
       line-height: 1.2;
     }
 
-    .shop-pill {
-      background: rgba(37,99,235,0.1);
-      color: var(--primary);
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 0.72rem;
-      font-weight: 800;
-      border: 1px solid rgba(37,99,235,0.2);
-    }
-
-    .header-btns {
-      display: flex;
-      gap: 6px;
+    .live-pulse {
+      display: inline-flex;
       align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--success);
     }
 
-    .icon-btn {
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hdr-btn {
       background: var(--surface-subtle);
       border: 1px solid var(--border);
       color: var(--text);
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 0.95rem;
       cursor: pointer;
-      font-size: 0.9rem;
+      transition: all 0.2s;
     }
+    .hdr-btn:active { transform: scale(0.92); }
 
-    /* Bottom Navigation Bar */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: calc(64px + var(--safe-bottom));
-      padding-bottom: var(--safe-bottom);
-      background: var(--surface);
-      border-top: 1px solid var(--border);
+    /* BRANCH SELECTOR BAR */
+    .branch-bar {
       display: flex;
       align-items: center;
-      justify-content: space-around;
-      z-index: 1000;
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.05);
+      gap: 8px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px 8px;
     }
 
-    .nav-tab {
+    .branch-select {
       flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 800;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* BOTTOM FLOATING NAV BAR */
+    .bottom-nav {
+      position: fixed;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      height: 68px;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 999;
+      padding: 0 6px;
+    }
+
+    .nav-item {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
-      padding: 6px 0;
-      color: var(--text-muted);
+      flex: 1;
+      height: 100%;
       cursor: pointer;
-      text-decoration: none;
-      transition: all 0.18s ease;
+      color: var(--text-muted);
+      transition: all 0.2s;
       position: relative;
     }
 
-    .nav-tab.active { color: var(--primary); }
-
-    .nav-tab .tab-icon {
-      font-size: 1.25rem;
-      line-height: 1;
-      transition: transform 0.18s ease;
+    .nav-item.active {
+      color: var(--primary);
+      transform: translateY(-2px);
     }
 
-    .nav-tab.active .tab-icon { transform: translateY(-2px) scale(1.1); }
+    .nav-icon {
+      font-size: 1.35rem;
+      margin-bottom: 2px;
+      transition: transform 0.2s;
+    }
+    .nav-item.active .nav-icon { transform: scale(1.15); }
 
-    .nav-tab .tab-label {
-      font-size: 0.68rem;
+    .nav-label {
+      font-size: 0.7rem;
       font-weight: 800;
     }
 
-    .tab-badge {
+    .nav-badge {
       position: absolute;
-      top: 4px;
-      right: 25%;
+      top: 6px;
+      right: 22%;
       background: var(--danger);
-      color: white;
-      font-size: 0.62rem;
+      color: #fff;
+      font-size: 0.65rem;
       font-weight: 900;
-      padding: 1px 5px;
+      min-width: 17px;
+      height: 17px;
       border-radius: 10px;
-      min-width: 16px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+      box-shadow: 0 2px 6px rgba(239,68,68,0.4);
     }
 
-    /* Tab View Content */
+    /* MAIN CONTAINER & TABS */
+    .app-main {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
     .tab-view {
       display: none;
-      padding: 14px;
-      animation: fadeIn 0.2s ease-in-out;
+      animation: fadeIn 0.25s ease-out;
     }
     .tab-view.active { display: block; }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
+      from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Scanner View */
-    .scanner-box {
-      border-radius: 16px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      background: #000;
-      position: relative;
-      min-height: 200px;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #reader { width: 100% !important; border: none !important; }
-
-    /* Scan Result Card */
-    .product-detail-card {
+    /* CARD STYLES */
+    .card {
       background: var(--surface-card);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 16px;
       box-shadow: var(--card-shadow);
+      margin-bottom: 12px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
       margin-bottom: 14px;
     }
 
-    /* Common Card */
-    .app-card {
-      background: var(--surface-card);
+    .stat-box {
+      border-radius: 16px;
+      padding: 12px 14px;
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 12px;
-      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
-    .search-inp {
-      width: 100%;
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 11px 14px;
-      color: var(--text);
-      font-size: 0.88rem;
-      outline: none;
-      margin-bottom: 12px;
+    .stat-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-muted);
     }
-    .search-inp:focus { border-color: var(--primary); }
 
-    /* Quick stock buttons */
-    .qty-btn {
+    .stat-val {
+      font-size: 1.45rem;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .stat-sub {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* SUB-TAB PILLS */
+    .subtabs-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .subtabs-bar::-webkit-scrollbar { display: none; }
+
+    .subtab-pill {
       background: var(--surface-subtle);
       border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 6px 12px;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 18px;
+      font-size: 0.78rem;
       font-weight: 800;
-      font-size: 0.85rem;
+      white-space: nowrap;
       cursor: pointer;
+      transition: all 0.2s;
     }
-    .qty-btn:active { background: var(--primary); color: #fff; }
 
-    /* Modal Backdrop */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 2000;
+    .subtab-pill.active {
+      background: var(--primary-gradient);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    /* LIST ITEMS / INVOICES */
+    .invoice-card {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+    .invoice-card:active { transform: scale(0.99); }
+
+    .inv-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .inv-ref {
+      font-family: 'Plus Jakarta Sans', monospace;
+      font-weight: 900;
+      font-size: 0.9rem;
+      color: var(--primary);
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .badge-cash { background: rgba(16,185,129,0.12); color: #059669; }
+    .badge-branch { background: rgba(59,130,246,0.12); color: #2563eb; }
+
+    .inv-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      font-size: 0.78rem;
+    }
+
+    .inv-price {
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    /* CASHBOX CARD */
+    .cashbox-card {
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(5,150,105,0.02));
+      margin-bottom: 12px;
+    }
+
+    .cashbox-amount {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #059669;
+      margin: 6px 0;
+    }
+
+    /* SCANNER VIEW */
+    .scanner-box {
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      background: #000;
+      min-height: 260px;
+    }
+
+    /* SEARCH & FILTER */
+    .search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-subtle);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+    }
+
+    /* QUICK BUTTONS */
+    .btn-action {
+      background: var(--primary-gradient);
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 800;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
-    }
-    .modal-content {
-      background: var(--surface);
-      border-radius: 16px;
-      padding: 20px;
+      gap: 6px;
       width: 100%;
-      max-width: 400px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .btn-action:active { transform: scale(0.98); }
+
+    /* PWA INSTALL BANNER */
+    .pwa-banner {
+      background: var(--surface-card);
+      border: 1px solid var(--primary);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
     }
   </style>
 </head>
 <body>
 
-  <!-- TOP APP HEADER -->
+  <!-- TOP HEADER -->
   <header class="app-header">
-    <div class="brand-wrap">
-      <div class="brand-logo">🦈</div>
-      <div>
-        <div class="brand-title" id="hdr-store-title">Red Shark Admin</div>
-        <div class="shop-pill" id="hdr-shop-slug">shop101</div>
+    <div class="header-top-row">
+      <div class="header-brand">
+        <div class="brand-avatar">🦈</div>
+        <div>
+          <div class="brand-title" id="hdr-shop-name">Red Shark Admin</div>
+          <div class="live-pulse">
+            <span class="pulse-dot"></span>
+            <span id="hdr-live-status">متصل لحظياً بالكاشير</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="hdr-btn" onclick="toggleTheme()" title="تبديل الوضع">🌓</button>
+        <button class="hdr-btn" onclick="toggleLang()" title="اللغة">🌐</button>
+        <button class="hdr-btn" onclick="refreshAppData()" title="تحديث">🔄</button>
       </div>
     </div>
 
-    <div class="header-btns">
-      <button class="icon-btn" onclick="toggleLang()" title="Language">🌐</button>
-      <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌓</button>
-      <button class="icon-btn" onclick="refreshCurrentTab()" title="تحديث">🔄</button>
+    <!-- BRANCH SELECTOR -->
+    <div class="branch-bar">
+      <span>🏪</span>
+      <select id="app-branch-select" class="branch-select" onchange="onBranchChange()">
+        <option value="all">🌐 كافة الفروع والمحطات (All Branches)</option>
+        <option value="main">📍 الفرع الرئيسي (Main Branch)</option>
+      </select>
     </div>
   </header>
 
-  <!-- ── TAB 1: SCANNER & PRICE CHECKER ───────────────────────── -->
-  <div id="view-scanner" class="tab-view active">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h2 style="font-size:1.1rem;font-weight:900">📷 فحص الأسعار وماسح الباركود</h2>
-      <button class="qty-btn" id="btn-toggle-cam" onclick="toggleCameraScanner()">
-        📷 تشغيل الكاميرا
-      </button>
-    </div>
-
-    <!-- Live Scanner Box -->
-    <div class="scanner-box" id="scanner-wrapper" style="display:none">
-      <div id="reader"></div>
-    </div>
-
-    <!-- Manual Barcode Search -->
-    <input type="text" id="scan-manual-inp" class="search-inp" placeholder="امسح الباركود بالكاميرا أو اكتبه يدوياً..." onkeydown="if(event.key==='Enter') lookupBarcode(this.value.trim())">
-
-    <!-- Scanned Product Card -->
-    <div id="scanned-product-result" style="display:none" class="product-detail-card">
-      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
-        <div id="scan-res-img-wrap" style="width:64px;height:64px;border-radius:12px;background:var(--surface-subtle);display:flex;align-items:center;justify-content:center;font-size:1.8rem;border:1px solid var(--border);overflow:hidden">
-          📦
-        </div>
-        <div style="flex:1">
-          <h3 id="scan-res-name" style="font-size:1rem;font-weight:900;margin-bottom:4px">اسم المنتج</h3>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-family:monospace" id="scan-res-barcode">1234567890</div>
-          <div style="font-size:0.75rem;color:var(--primary);font-weight:700" id="scan-res-category">القسم العام</div>
-        </div>
-      </div>
-
-      <!-- Price & Stock Row -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface-subtle);padding:10px;border-radius:12px;margin-bottom:12px">
+  <!-- PWA INSTALL BANNER (Shown if browser supports PWA) -->
+  <div id="pwa-install-banner" class="app-main" style="display:none;padding-bottom:0">
+    <div class="pwa-banner">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:1.5rem">📲</span>
         <div>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">سعر البيع:</div>
-          <div style="font-size:1.3rem;font-weight:900;color:var(--primary)" id="scan-res-price">$0.00</div>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700" id="scan-res-price-lbp">0 ل.ل</div>
-        </div>
-        <div>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">المخزون الحالي:</div>
-          <div style="font-size:1.3rem;font-weight:900;color:#059669" id="scan-res-stock">0</div>
-          <div style="font-size:0.72rem;color:var(--text-muted)">قطعة متوفرة</div>
+          <div style="font-size:0.85rem;font-weight:800">تثبيت التطبيق على هاتفك</div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">وصول فوري من شاشة الموبايل بدون متصفح</div>
         </div>
       </div>
+      <button class="btn-action" style="width:auto;padding:6px 12px;font-size:0.78rem" onclick="installPWA()">تثبيت الآن</button>
+    </div>
+  </div>
 
-      <!-- Quick Stock Adjustment -->
-      <div>
-        <div style="font-size:0.78rem;font-weight:800;margin-bottom:6px">⚡ تعديل المخزون المباشر (حفظ فوري في السحابة):</div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <button class="qty-btn" onclick="adjustScannedStock(-5)">-5</button>
-          <button class="qty-btn" onclick="adjustScannedStock(-1)">-1</button>
-          <input type="number" id="scan-direct-stock-inp" style="width:65px;padding:6px;border-radius:8px;border:1px solid var(--border);text-align:center;font-weight:900;font-size:0.95rem" onchange="setScannedStock(this.value)">
-          <button class="qty-btn" onclick="adjustScannedStock(1)">+1</button>
-          <button class="qty-btn" onclick="adjustScannedStock(5)">+5</button>
-          <button class="qty-btn" onclick="openEditPriceModal()" style="background:var(--primary);color:#fff;border:none">✏️ تعديل السعر</button>
+  <!-- MAIN TAB VIEWS -->
+  <main class="app-main">
+
+    <!-- ════════ TAB 1: REPORTS & ANALYTICS ════════ -->
+    <section id="tab-reports" class="tab-view active">
+      <!-- Date Filter Bar -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:0.95rem;font-weight:900" id="txt-rpt-title">📊 تقارير المبيعات الصافية</div>
+        <select id="rpt-date-filter" class="search-input" style="width:auto;margin:0;padding:6px 10px;font-size:0.8rem;font-weight:800" onchange="loadReports()">
+          <option value="today">اليوم (Today)</option>
+          <option value="yesterday">أمس (Yesterday)</option>
+          <option value="week">آخر 7 أيام</option>
+          <option value="month" selected>هذا الشهر</option>
+          <option value="all">جميع الفترات</option>
+        </select>
+      </div>
+
+      <!-- 4 Glowing KPI Cards -->
+      <div class="stats-grid">
+        <div class="stat-box" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25)">
+          <div class="stat-label">💰 إجمالي المبيعات</div>
+          <div class="stat-val" style="color:#059669" id="kpi-sales">$0.00</div>
+          <div class="stat-sub" id="kpi-sales-lbp">0 ل.ل</div>
+        </div>
+
+        <div class="stat-box" style="background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.25)">
+          <div class="stat-label">📈 صافي الربح</div>
+          <div class="stat-val" style="color:#2563eb" id="kpi-profit">$0.00</div>
+          <div class="stat-sub" id="kpi-margin">هامش 0%</div>
+        </div>
+
+        <div class="stat-box" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.25)">
+          <div class="stat-label">🏷️ إجمالي التكلفة (COGS)</div>
+          <div class="stat-val" style="color:#d97706" id="kpi-cost">$0.00</div>
+          <div class="stat-sub" id="kpi-cost-sub">تكلفة البضاعة</div>
+        </div>
+
+        <div class="stat-box" style="background:rgba(147,51,234,0.08);border-color:rgba(147,51,234,0.25)">
+          <div class="stat-label">🧾 عدد الفواتير</div>
+          <div class="stat-val" style="color:#9333ea" id="kpi-orders">0</div>
+          <div class="stat-sub" id="kpi-avg-basket">متوسط السلة: $0.00</div>
         </div>
       </div>
-    </div>
 
-    <!-- Quick Tip -->
-    <div style="font-size:0.78rem;color:var(--text-muted);text-align:center;margin-top:14px">
-      💡 وجه كاميرا الهاتف نحو باركود الصنف لفحص سعره ومخزونه وتعديله فوراً أينما كنت.
-    </div>
-  </div>
-
-  <!-- ── TAB 2: INVENTORY & CATALOG ────────────────────────────── -->
-  <div id="view-inventory" class="tab-view">
-    <h2 style="font-size:1.1rem;font-weight:900;margin-bottom:10px">📦 إدارة الأصناف والمخزون</h2>
-    <input type="text" id="inv-search-inp" class="search-inp" placeholder="ابحث بالاسم أو الباركود..." oninput="filterCatalog(this.value)">
-
-    <div id="inv-products-list" style="display:flex;flex-direction:column;gap:8px">
-      <div style="text-align:center;padding:20px;color:var(--text-muted)">جارِ تحميل الأصناف...</div>
-    </div>
-  </div>
-
-  <!-- ── TAB 3: OWNER REPORTS ──────────────────────────────────── -->
-  <div id="view-reports" class="tab-view">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <h2 style="font-size:1.1rem;font-weight:900">📊 تقارير المبيعات الحية</h2>
-      <select id="app-reports-date-filter" style="padding:6px 10px;border-radius:10px;border:1px solid var(--border);font-size:0.8rem;font-weight:700" onchange="loadMobileReports()">
-        <option value="today">اليوم (Today)</option>
-        <option value="week">آخر 7 أيام</option>
-        <option value="month" selected>هذا الشهر</option>
-        <option value="all">جميع الفترات</option>
-      </select>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div class="app-card" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25)">
-        <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">💰 إجمالي المبيعات</div>
-        <div style="font-size:1.4rem;font-weight:900;color:#059669" id="mob-rpt-sales">$0.00</div>
-        <div style="font-size:0.72rem;color:var(--text-muted)" id="mob-rpt-sales-lbp">0 ل.ل</div>
+      <!-- Sub-Report Pills -->
+      <div class="subtabs-bar">
+        <div class="subtab-pill active" onclick="switchReportSubTab('invoices')" id="subtab-btn-invoices">🧾 فواتير المبيعات</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('top-items')" id="subtab-btn-top-items">🏆 الأكثر مبيعاً</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('cashiers')" id="subtab-btn-cashiers">👤 حسب الكاشير</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('categories')" id="subtab-btn-categories">📂 حسب التصنيف</div>
       </div>
 
-      <div class="app-card" style="background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.25)">
-        <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">📦 عدد الطلبات</div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--primary)" id="mob-rpt-orders">0</div>
-        <div style="font-size:0.72rem;color:var(--text-muted)" id="mob-rpt-orders-sub">طلب مسجل</div>
+      <!-- SUB-VIEW 1: INVOICES BREAKDOWN -->
+      <div id="subview-invoices">
+        <input type="text" id="inv-search-inp" class="search-input" placeholder="🔍 تصفية برقم الفاتورة أو العميل..." oninput="filterInvoices()">
+        <div id="invoices-list-container">
+          <div style="text-align:center;padding:20px;color:var(--text-muted)">جارِ تحميل الفواتير...</div>
+        </div>
       </div>
-    </div>
 
-    <div class="app-card">
-      <div style="font-weight:800;font-size:0.9rem;margin-bottom:10px">🏆 الأكثر طلباً ومبيعاً</div>
-      <div id="mob-rpt-top-items" style="font-size:0.82rem">
-        <div style="color:var(--text-muted);text-align:center;padding:10px">جارِ التحميل...</div>
+      <!-- SUB-VIEW 2: TOP ITEMS -->
+      <div id="subview-top-items" style="display:none">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">🏆 الأصناف الأكثر طلباً ومبيعاً</div>
+          <div id="top-items-container">
+            <div style="text-align:center;padding:20px;color:var(--text-muted)">جارِ الحساب...</div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="app-card">
-      <div style="font-weight:800;font-size:0.9rem;margin-bottom:10px;color:var(--danger)">⚠️ أصناف قاربت على النفاد</div>
-      <div id="mob-rpt-low-stock" style="font-size:0.82rem">
-        <div style="color:var(--text-muted);text-align:center;padding:10px">جارِ التحميل...</div>
+      <!-- SUB-VIEW 3: CASHIERS -->
+      <div id="subview-cashiers" style="display:none">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">👤 مبيعات الكاشير والبائعين</div>
+          <div id="cashiers-container">
+            <div style="text-align:center;padding:20px;color:var(--text-muted)">جارِ الحساب...</div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ── TAB 4: ORDERS ─────────────────────────────────────────── -->
-  <div id="view-orders" class="tab-view">
-    <h2 style="font-size:1.1rem;font-weight:900;margin-bottom:12px">📋 الطلبات الواردة المباشرة</h2>
-    <div id="mob-orders-list" style="display:flex;flex-direction:column;gap:10px">
-      <div style="text-align:center;padding:20px;color:var(--text-muted)">جارِ تحميل الطلبات...</div>
-    </div>
-  </div>
-
-  <!-- ── TAB 5: APP SETTINGS & PWA ─────────────────────────────── -->
-  <div id="view-settings" class="tab-view">
-    <h2 style="font-size:1.1rem;font-weight:900;margin-bottom:12px">⚙️ التطبيق والإعدادات</h2>
-
-    <div class="app-card" style="text-align:center;padding:18px">
-      <div style="font-size:2.8rem;margin-bottom:6px">📲</div>
-      <h3 style="font-size:1.05rem;font-weight:900;margin-bottom:4px">تثبيت التطبيق على الشاشة الرئيسية</h3>
-      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px">
-        ثبّت التطبيق ليعمل كأي تطبيق أصلي على جهازك بضغطة زر دون الحاجة لمتجر Google Play أو App Store.
-      </p>
-      <button class="qty-btn" id="btn-install-pwa" onclick="installPWA()" style="background:var(--primary);color:#fff;border:none;padding:10px 24px;border-radius:12px;font-size:0.9rem">
-        ➕ تثبيت التطبيق الآن
-      </button>
-    </div>
-
-    <div class="app-card">
-      <div style="font-weight:800;font-size:0.9rem;margin-bottom:10px">🏪 متجر الكاشير المرتبط</div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="settings-shop-slug-inp" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:monospace;font-weight:700" value="shop101">
-        <button class="qty-btn" onclick="changeShopSlug()" style="background:var(--primary);color:#fff;border:none">حفظ</button>
+      <!-- SUB-VIEW 4: CATEGORIES -->
+      <div id="subview-categories" style="display:none">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">📂 مبيعات الأقسام والتصنيفات</div>
+          <div id="categories-container">
+            <div style="text-align:center;padding:20px;color:var(--text-muted)">جارِ الحساب...</div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- BOTTOM NAVIGATION -->
+    <!-- ════════ TAB 2: CASH DRAWERS (صندوق الكاشير) ════════ -->
+    <section id="tab-cashbox" class="tab-view">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:0.95rem;font-weight:900">💵 رصيد الصندوق ودرج الكاشير المالي</div>
+        <button class="hdr-btn" onclick="loadCashboxData()" title="تحديث الصندوق">🔄</button>
+      </div>
+
+      <div id="cashboxes-list-container">
+        <div style="text-align:center;padding:30px;color:var(--text-muted)">جارِ فحص أرصدة الصناديق في الفروع...</div>
+      </div>
+    </section>
+
+    <!-- ════════ TAB 3: BARCODE SCANNER ════════ -->
+    <section id="tab-scanner" class="tab-view">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📷 ماسح الباركود وفحص السعر والمخزون</div>
+          <button class="hdr-btn" id="btn-toggle-cam" onclick="toggleCamera()">🎥</button>
+        </div>
+
+        <div id="scanner-reader" class="scanner-box"></div>
+
+        <div style="margin-top:12px">
+          <input type="text" id="manual-barcode-inp" class="search-input" placeholder="أو اكتب الباركود يدوياً واضغط Enter..." onkeydown="if(event.key==='Enter') lookupBarcode(this.value)">
+        </div>
+
+        <!-- Scanned Product Card -->
+        <div id="scanned-result-card" style="display:none;margin-top:14px;padding:14px;border-radius:14px;background:var(--surface-subtle);border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:1.05rem;font-weight:900" id="scan-prod-name">Product Name</div>
+              <div style="font-size:0.75rem;color:var(--text-muted)" id="scan-prod-barcode">Barcode</div>
+            </div>
+            <div style="text-align:end">
+              <div style="font-size:1.4rem;font-weight:900;color:var(--primary)" id="scan-prod-price">$0.00</div>
+              <div style="font-size:0.75rem;color:var(--text-muted)" id="scan-prod-price-lbp">0 ل.ل</div>
+            </div>
+          </div>
+
+          <!-- Quick Stock Adjustment -->
+          <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+            <div style="font-size:0.8rem;font-weight:800;margin-bottom:6px">تعديل المخزون المباشر:</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="hdr-btn" onclick="adjustScannedStock(-1)" style="font-weight:900;font-size:1.1rem">-</button>
+              <input type="number" id="scan-prod-stock-inp" class="search-input" style="width:90px;text-align:center;font-weight:900;margin:0" value="0">
+              <button class="hdr-btn" onclick="adjustScannedStock(1)" style="font-weight:900;font-size:1.1rem">+</button>
+              <button class="btn-action" style="flex:1" onclick="saveScannedStock()">💾 حفظ وتحديث الكاشير</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ TAB 4: INVENTORY CATALOG ════════ -->
+    <section id="tab-inventory" class="tab-view">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:0.95rem;font-weight:900">📦 أصناف المتجر والمخزون</div>
+        <div style="font-size:0.75rem;font-weight:800;color:var(--primary)" id="inv-count-badge">0 صنف</div>
+      </div>
+
+      <input type="text" id="cat-search-inp" class="search-input" placeholder="🔍 بحث عن صنف بالاسم أو الباركود..." oninput="filterCatalogList()">
+
+      <div id="catalog-items-container">
+        <div style="text-align:center;padding:30px;color:var(--text-muted)">جارِ تحميل المنتجات...</div>
+      </div>
+    </section>
+
+    <!-- ════════ TAB 5: ONLINE ORDERS ════════ -->
+    <section id="tab-orders" class="tab-view">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:0.95rem;font-weight:900">📋 طلبات التوصيل الأونلاين الواردة</div>
+        <button class="hdr-btn" onclick="loadOnlineOrders()" title="تحديث الطلبات">🔄</button>
+      </div>
+
+      <div id="online-orders-container">
+        <div style="text-align:center;padding:30px;color:var(--text-muted)">جارِ جلب الطلبات...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM FLOATING NAVIGATION BAR -->
   <nav class="bottom-nav">
-    <div class="nav-tab active" onclick="switchAppTab('scanner')" id="tab-nav-scanner">
-      <div class="tab-icon">📷</div>
-      <div class="tab-label">فحص السعر</div>
+    <div class="nav-item active" onclick="switchNav('reports')" id="nav-item-reports">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">التقارير</div>
     </div>
-    <div class="nav-tab" onclick="switchAppTab('inventory')" id="tab-nav-inventory">
-      <div class="tab-icon">📦</div>
-      <div class="tab-label">المخزون</div>
+
+    <div class="nav-item" onclick="switchNav('cashbox')" id="nav-item-cashbox">
+      <div class="nav-icon">💵</div>
+      <div class="nav-label">الصندوق</div>
     </div>
-    <div class="nav-tab" onclick="switchAppTab('reports')" id="tab-nav-reports">
-      <div class="tab-icon">📊</div>
-      <div class="tab-label">التقارير</div>
+
+    <div class="nav-item" onclick="switchNav('scanner')" id="nav-item-scanner">
+      <div class="nav-icon">📷</div>
+      <div class="nav-label">الماسح</div>
     </div>
-    <div class="nav-tab" onclick="switchAppTab('orders')" id="tab-nav-orders">
-      <div class="tab-icon">📋</div>
-      <div class="tab-label">الطلبات</div>
-      <div class="tab-badge" id="nav-order-badge" style="display:none">0</div>
+
+    <div class="nav-item" onclick="switchNav('inventory')" id="nav-item-inventory">
+      <div class="nav-icon">📦</div>
+      <div class="nav-label">المخزون</div>
     </div>
-    <div class="nav-tab" onclick="switchAppTab('settings')" id="tab-nav-settings">
-      <div class="tab-icon">⚙️</div>
-      <div class="tab-label">التطبيق</div>
+
+    <div class="nav-item" onclick="switchNav('orders')" id="nav-item-orders">
+      <div class="nav-icon">📋</div>
+      <div class="nav-label">الطلبات</div>
+      <div class="nav-badge" id="online-orders-badge" style="display:none">0</div>
     </div>
   </nav>
 
-  <!-- EDIT PRICE MODAL -->
-  <div id="modal-edit-price" class="modal-overlay" style="display:none">
-    <div class="modal-content">
-      <h3 style="font-weight:900;margin-bottom:12px">✏️ تعديل سعر البيع ($)</h3>
-      <input type="number" id="edit-price-inp" step="0.01" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);font-size:1.2rem;font-weight:900;margin-bottom:14px">
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button class="qty-btn" onclick="document.getElementById('modal-edit-price').style.display='none'">إلغاء</button>
-        <button class="qty-btn" onclick="saveEditedPrice()" style="background:var(--primary);color:#fff;border:none">حفظ التعديل</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- JAVASCRIPT LOGIC -->
-  <script src="js/supabase-client.js"></script>
+  <!-- JAVASCRIPT CONTROLLER -->
   <script>
     const SUPABASE_URL = "https://mcebwpiswvwqcdwjpagy.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg";
 
     let _slug = new URLSearchParams(window.location.search).get('shop') || localStorage.getItem('redshark_admin_slug') || 'shop101';
-    let _allProducts = [];
-    let _currentScannedItem = null;
+    let _tenant = null;
+    let _orders = [];
+    let _products = [];
+    let _cashboxes = [];
+    let _currentLang = localStorage.getItem('rs_app_lang') || 'ar';
+    let _selectedBranch = 'all';
+    let _activeReportSubTab = 'invoices';
     let _html5QrCode = null;
-    let _isCamOpen = false;
+    let _isCameraActive = false;
+    let _currentScannedItem = null;
     let _deferredInstallPrompt = null;
-    let _exchangeRate = 89500;
+    let _audioChime = null;
 
     function getHeaders() {
       return {
         "apikey": SUPABASE_KEY,
         "Authorization": "Bearer " + SUPABASE_KEY,
-        "Content-Type": "application/json",
-        "Prefer": "return=representation"
+        "Content-Type": "application/json"
       };
     }
 
+    // ── INITIALIZATION ────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async () => {
-      document.getElementById('hdr-shop-slug').textContent = _slug;
-      document.getElementById('settings-shop-slug-inp').value = _slug;
-      localStorage.setItem('redshark_admin_slug', _slug);
+      applyTheme(localStorage.getItem('rs_app_theme') || 'light');
+      applyLang(_currentLang);
 
-      // Listen for PWA install prompt
+      // PWA Prompt Listener
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         _deferredInstallPrompt = e;
+        const b = document.getElementById('pwa-install-banner');
+        if (b) b.style.display = 'block';
       });
 
-      await loadTenantInfo();
-      await loadCatalog();
-      loadMobileReports();
-      loadMobileOrders();
-      setInterval(loadMobileOrders, 15000);
+      await loadTenantProfile();
+      await refreshAppData();
+
+      // Background order polling every 15s
+      setInterval(loadOnlineOrders, 15000);
     });
 
-    async function loadTenantInfo() {
+    async function loadTenantProfile() {
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(_slug)}&select=*`, { headers: getHeaders() });
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(_slug)}&select=*`, {
+          headers: getHeaders()
+        });
         if (res.ok) {
           const tenants = await res.json();
-          if (tenants.length > 0) {
-            const t = tenants[0];
-            if (t.name) document.getElementById('hdr-store-title').textContent = t.name;
-            if (t.lbp_rate) _exchangeRate = parseFloat(t.lbp_rate);
+          if (tenants && tenants.length > 0) {
+            _tenant = tenants[0];
+            document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug;
+            
+            // Parse cashboxes from banner_url if available
+            try {
+              const bObj = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : (_tenant.banner_url || {});
+              if (Array.isArray(bObj.pos_cashboxes)) {
+                _cashboxes = bObj.pos_cashboxes;
+                populateBranchSelector();
+              }
+            } catch(e) {}
           }
         }
-      } catch(e) {}
-    }
-
-    function switchAppTab(tab) {
-      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-
-      const v = document.getElementById('view-' + tab);
-      const b = document.getElementById('tab-nav-' + tab);
-      if (v) v.classList.add('active');
-      if (b) b.classList.add('active');
-
-      if (tab === 'reports') loadMobileReports();
-      if (tab === 'orders') loadMobileOrders();
-      if (tab === 'inventory' && _allProducts.length === 0) loadCatalog();
-    }
-
-    // Camera Barcode Scanner
-    async function toggleCameraScanner() {
-      const btn = document.getElementById('btn-toggle-cam');
-      const wrap = document.getElementById('scanner-wrapper');
-
-      if (_isCamOpen) {
-        if (_html5QrCode) {
-          await _html5QrCode.stop();
-          _html5QrCode.clear();
-        }
-        wrap.style.display = 'none';
-        btn.textContent = '📷 تشغيل الكاميرا';
-        _isCamOpen = false;
-      } else {
-        wrap.style.display = 'block';
-        btn.textContent = '⏹️ إيقاف الكاميرا';
-        _html5QrCode = new Html5Qrcode("reader");
-        _html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 250, height: 140 } },
-          (decodedText) => {
-            lookupBarcode(decodedText);
-            // Quick haptic vibration feedback
-            if (navigator.vibrate) navigator.vibrate(80);
-          },
-          (errorMessage) => {}
-        ).catch(err => {
-          alert('تعذر الوصول للكاميرا: ' + err);
-          wrap.style.display = 'none';
-          btn.textContent = '📷 تشغيل الكاميرا';
-          _isCamOpen = false;
-        });
-        _isCamOpen = true;
+      } catch(e) {
+        console.warn('Tenant load note:', e);
       }
     }
 
-    async function lookupBarcode(query) {
-      if (!query) return;
-      query = query.trim().toLowerCase();
+    function populateBranchSelector() {
+      const select = document.getElementById('app-branch-select');
+      if (!select) return;
 
-      // Find in local array or query Supabase
-      let item = _allProducts.find(p => (p.barcode && p.barcode.toLowerCase() === query) || (p.name && p.name.toLowerCase().includes(query)));
-      
-      if (!item) {
+      const branches = new Set(['main']);
+      _orders.forEach(o => {
         try {
-          const res = await fetch(`${SUPABASE_URL}/rest/v1/products?tenant_slug=eq.${encodeURIComponent(_slug)}&or=(barcode.eq.${encodeURIComponent(query)},name.ilike.*.${encodeURIComponent(query)}*)&limit=1`, { headers: getHeaders() });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.length > 0) item = data[0];
-          }
+          const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
+          if (n.branch_id) branches.add(n.branch_id);
+          if (n.terminal_id) branches.add(n.terminal_id);
         } catch(e) {}
+        if (o.delivery_address && o.delivery_address !== 'Sibline') branches.add(o.delivery_address);
+      });
+
+      _cashboxes.forEach(cb => {
+        if (cb.branch_id) branches.add(cb.branch_id);
+      });
+
+      let opts = '<option value="all">🌐 كافة الفروع والمحطات (All Branches)</option>';
+      branches.forEach(b => {
+        const name = b === 'main' ? '📍 الفرع الرئيسي (Main Branch)' : `📍 ${b}`;
+        opts += `<option value="${b}">${name}</option>`;
+      });
+      select.innerHTML = opts;
+      select.value = _selectedBranch;
+    }
+
+    async function refreshAppData() {
+      await Promise.all([
+        loadReports(),
+        loadCashboxData(),
+        loadCatalog(),
+        loadOnlineOrders()
+      ]);
+    }
+
+    function onBranchChange() {
+      const sel = document.getElementById('app-branch-select');
+      _selectedBranch = sel ? sel.value : 'all';
+      loadReports();
+      renderCashboxes();
+    }
+
+    // ── NAVIGATION ────────────────────────────────────────────────────────────
+    function switchNav(tab) {
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+      const view = document.getElementById('tab-' + tab);
+      const nav = document.getElementById('nav-item-' + tab);
+      if (view) view.classList.add('active');
+      if (nav) nav.classList.add('active');
+
+      if (tab === 'scanner' && !_isCameraActive) {
+        startCamera();
+      } else if (tab !== 'scanner' && _isCameraActive) {
+        stopCamera();
       }
 
-      const resBox = document.getElementById('scanned-product-result');
-      if (item) {
-        _currentScannedItem = item;
-        resBox.style.display = 'block';
-        document.getElementById('scan-res-name').textContent = item.name || item.item_name;
-        document.getElementById('scan-res-barcode').textContent = item.barcode || 'بدون باركود';
-        document.getElementById('scan-res-category').textContent = item.category || 'عام';
-        
-        const price = parseFloat(item.price || 0);
-        document.getElementById('scan-res-price').textContent = '$' + price.toFixed(2);
-        document.getElementById('scan-res-price-lbp').textContent = Math.round(price * _exchangeRate).toLocaleString() + ' ل.ل';
-        document.getElementById('scan-res-stock').textContent = item.stock || 0;
-        document.getElementById('scan-direct-stock-inp').value = item.stock || 0;
-
-        const imgWrap = document.getElementById('scan-res-img-wrap');
-        if (item.image_url) {
-          imgWrap.innerHTML = `<img src="${item.image_url}" style="width:100%;height:100%;object-fit:cover">`;
-        } else {
-          imgWrap.textContent = '📦';
-        }
-      } else {
-        alert('لم يتم العثور على صنف بالباركود: ' + query);
-      }
+      if (tab === 'reports') loadReports();
+      if (tab === 'cashbox') loadCashboxData();
+      if (tab === 'inventory') renderCatalogList();
+      if (tab === 'orders') loadOnlineOrders();
     }
 
-    async function adjustScannedStock(delta) {
-      if (!_currentScannedItem) return;
-      const current = parseInt(_currentScannedItem.stock || 0);
-      const newStock = Math.max(0, current + delta);
-      setScannedStock(newStock);
+    function switchReportSubTab(sub) {
+      _activeReportSubTab = sub;
+      document.querySelectorAll('.subtab-pill').forEach(p => p.classList.remove('active'));
+      const btn = document.getElementById('subtab-btn-' + sub);
+      if (btn) btn.classList.add('active');
+
+      ['invoices', 'top-items', 'cashiers', 'categories'].forEach(s => {
+        const el = document.getElementById('subview-' + s);
+        if (el) el.style.display = (s === sub) ? 'block' : 'none';
+      });
     }
 
-    async function setScannedStock(newStock) {
-      if (!_currentScannedItem) return;
-      newStock = parseInt(newStock) || 0;
-      _currentScannedItem.stock = newStock;
-      document.getElementById('scan-res-stock').textContent = newStock;
-      document.getElementById('scan-direct-stock-inp').value = newStock;
+    // ── 1. REPORTS CONTROLLER ────────────────────────────────────────────────
+    async function loadReports() {
+      if (!_tenant) return;
+      const dateFilter = document.getElementById('rpt-date-filter')?.value || 'month';
+      const isAR = _currentLang === 'ar';
 
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${_currentScannedItem.id}`, {
-          method: 'PATCH',
-          headers: getHeaders(),
-          body: JSON.stringify({ stock: newStock })
-        });
-      } catch(e) {}
-    }
-
-    function openEditPriceModal() {
-      if (!_currentScannedItem) return;
-      document.getElementById('edit-price-inp').value = parseFloat(_currentScannedItem.price || 0);
-      document.getElementById('modal-edit-price').style.display = 'flex';
-    }
-
-    async function saveEditedPrice() {
-      if (!_currentScannedItem) return;
-      const newPrice = parseFloat(document.getElementById('edit-price-inp').value) || 0;
-      _currentScannedItem.price = newPrice;
-      document.getElementById('scan-res-price').textContent = '$' + newPrice.toFixed(2);
-      document.getElementById('scan-res-price-lbp').textContent = Math.round(newPrice * _exchangeRate).toLocaleString() + ' ل.ل';
-      document.getElementById('modal-edit-price').style.display = 'none';
-
-      try {
-        await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${_currentScannedItem.id}`, {
-          method: 'PATCH',
-          headers: getHeaders(),
-          body: JSON.stringify({ price: newPrice })
-        });
-      } catch(e) {}
-    }
-
-    // Catalog & Inventory
-    async function loadCatalog() {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/products?tenant_slug=eq.${encodeURIComponent(_slug)}&order=name.asc&limit=300`, { headers: getHeaders() });
+        // Fetch orders from Supabase
+        const url = `${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${_tenant.id}&order=created_at.desc&limit=250`;
+        const res = await fetch(url, { headers: getHeaders() });
         if (res.ok) {
-          _allProducts = await res.json();
-          renderCatalogList(_allProducts);
+          _orders = await res.json();
+          populateBranchSelector();
         }
       } catch(e) {}
+
+      // Filter by Branch & Date
+      const now = new Date();
+      const filtered = _orders.filter(o => {
+        // Branch match
+        if (_selectedBranch !== 'all') {
+          let bMatch = false;
+          try {
+            const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
+            if (n.branch_id === _selectedBranch || n.terminal_id === _selectedBranch) bMatch = true;
+          } catch(e) {}
+          if (o.delivery_address === _selectedBranch) bMatch = true;
+          if (!bMatch) return false;
+        }
+
+        // Date match
+        if (!o.created_at) return true;
+        const d = new Date(o.created_at);
+        if (dateFilter === 'today') {
+          return d.toDateString() === now.toDateString();
+        } else if (dateFilter === 'yesterday') {
+          const yest = new Date(now);
+          yest.setDate(yest.getDate() - 1);
+          return d.toDateString() === yest.toDateString();
+        } else if (dateFilter === 'week') {
+          return (now - d) <= (7 * 24 * 60 * 60 * 1000);
+        } else if (dateFilter === 'month') {
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }
+        return true;
+      });
+
+      // Calculate totals
+      let totalSales = 0;
+      let totalCost = 0;
+      let ordersCount = filtered.length;
+      const productCounts = {};
+      const cashierCounts = {};
+      const categoryCounts = {};
+
+      filtered.forEach(o => {
+        const amount = parseFloat(o.total || 0);
+        totalSales += amount;
+
+        let meta = {};
+        try { meta = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {}); } catch(e) {}
+
+        const cost = parseFloat(meta.cost || 0);
+        totalCost += cost;
+
+        const cashier = meta.cashier || 'الكاشير (Cashier)';
+        if (!cashierCounts[cashier]) cashierCounts[cashier] = { sales: 0, count: 0 };
+        cashierCounts[cashier].sales += amount;
+        cashierCounts[cashier].count++;
+
+        let items = [];
+        try { items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []); } catch(e) {}
+
+        items.forEach(it => {
+          const name = it.product_name || it.name || 'Product';
+          const qty = parseFloat(it.quantity || it.qty || 1);
+          const price = parseFloat(it.unit_price || it.price || 0);
+          if (!productCounts[name]) productCounts[name] = { qty: 0, revenue: 0 };
+          productCounts[name].qty += qty;
+          productCounts[name].revenue += (qty * price);
+        });
+      });
+
+      const netProfit = totalSales - totalCost;
+      const margin = totalSales > 0 ? ((netProfit / totalSales) * 100).toFixed(1) : '0';
+      const avgBasket = ordersCount > 0 ? (totalSales / ordersCount).toFixed(2) : '0.00';
+      const rate = parseFloat(_tenant.currency_lbp_rate || 89500);
+
+      // Update KPI Cards
+      document.getElementById('kpi-sales').textContent = '$' + totalSales.toFixed(2);
+      document.getElementById('kpi-sales-lbp').textContent = Math.round(totalSales * rate).toLocaleString() + ' ' + (isAR ? 'ل.ل' : 'LBP');
+      document.getElementById('kpi-profit').textContent = '$' + netProfit.toFixed(2);
+      document.getElementById('kpi-margin').textContent = (isAR ? 'هامش الربح: ' : 'Margin: ') + margin + '%';
+      document.getElementById('kpi-cost').textContent = '$' + totalCost.toFixed(2);
+      document.getElementById('kpi-orders').textContent = ordersCount;
+      document.getElementById('kpi-avg-basket').textContent = (isAR ? 'متوسط الفاتورة: $' : 'Avg Basket: $') + avgBasket;
+
+      // Render Sub-Views
+      renderInvoicesList(filtered);
+      renderTopItems(productCounts);
+      renderCashiers(cashierCounts);
     }
 
-    function renderCatalogList(items) {
-      const list = document.getElementById('inv-products-list');
-      if (!list) return;
+    function renderInvoicesList(invoices) {
+      const container = document.getElementById('invoices-list-container');
+      if (!container) return;
 
-      if (items.length === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">لا توجد أصناف مسجلة</div>';
+      if (!invoices || invoices.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">لا توجد فواتير مسجلة في هذه الفترة</div>';
         return;
       }
 
-      list.innerHTML = items.map(it => `
-        <div class="app-card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px" onclick="lookupBarcode('${it.barcode || it.name}')">
-          <div style="display:flex;align-items:center;gap:10px;flex:1;overflow:hidden">
-            <div style="width:40px;height:40px;border-radius:8px;background:var(--surface-subtle);display:flex;align-items:center;justify-content:center;font-size:1.2rem;overflow:hidden;flex-shrink:0">
-              ${it.image_url ? `<img src="${it.image_url}" style="width:100%;height:100%;object-fit:cover">` : '📦'}
+      container.innerHTML = invoices.map(inv => {
+        let meta = {};
+        try { meta = typeof inv.notes === 'string' ? JSON.parse(inv.notes) : (inv.notes || {}); } catch(e) {}
+        
+        const isPos = meta.source === 'pos' || inv.pos_synced;
+        const branchBadge = meta.terminal_id || meta.branch_id || 'الفرع الرئيسي';
+        const cashier = meta.cashier || (isPos ? 'Administrator' : 'Online Store');
+        const cost = parseFloat(meta.cost || 0);
+        const total = parseFloat(inv.total || 0);
+        const profit = total - cost;
+        const margin = total > 0 ? ((profit / total) * 100).toFixed(1) : '0';
+        const time = new Date(inv.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        return `
+          <div class="invoice-card">
+            <div class="inv-header">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="inv-ref">${inv.order_number}</span>
+                <span class="badge badge-branch">${branchBadge}</span>
+              </div>
+              <span class="badge badge-cash">${(inv.payment_method || 'CASH').toUpperCase()}</span>
             </div>
-            <div style="overflow:hidden">
-              <div style="font-weight:800;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
-              <div style="font-size:0.72rem;color:var(--text-muted)">${it.barcode || 'بدون باركود'}</div>
+
+            <div class="inv-body">
+              <div>
+                <div style="color:var(--text-muted);font-size:0.75rem">${inv.customer_name || 'عميل عابر'} • ${cashier}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted)">⏰ ${time} | ربح: <strong style="color:#059669">$${profit.toFixed(2)}</strong> (${margin}%)</div>
+              </div>
+              <div class="inv-price">$${total.toFixed(2)}</div>
             </div>
           </div>
-          <div style="text-align:end;flex-shrink:0">
-            <div style="font-weight:900;color:var(--primary);font-size:0.95rem">$${parseFloat(it.price || 0).toFixed(2)}</div>
-            <span style="font-size:0.72rem;background:${(it.stock||0)<=5?'rgba(239,68,68,0.1)':'rgba(16,185,129,0.1)'};color:${(it.stock||0)<=5?'#dc2626':'#059669'};padding:2px 6px;border-radius:10px;font-weight:800">
-              المخزون: ${it.stock || 0}
-            </span>
+        `;
+      }).join('');
+    }
+
+    function renderTopItems(counts) {
+      const container = document.getElementById('top-items-container');
+      if (!container) return;
+
+      const sorted = Object.keys(counts).map(k => ({ name: k, ...counts[k] }))
+        .sort((a,b) => b.qty - a.qty);
+
+      if (sorted.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">لا توجد مبيعات في هذه الفترة</div>';
+        return;
+      }
+
+      container.innerHTML = sorted.slice(0, 10).map((it, idx) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-weight:900;color:var(--primary);width:20px">${idx + 1}.</span>
+            <div>
+              <div style="font-weight:800;font-size:0.86rem">${it.name}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted)">الكمية المباعة: <strong>${it.qty}</strong></div>
+            </div>
+          </div>
+          <div style="font-weight:900;color:#059669;font-size:0.95rem">$${it.revenue.toFixed(2)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderCashiers(cashiers) {
+      const container = document.getElementById('cashiers-container');
+      if (!container) return;
+
+      const keys = Object.keys(cashiers);
+      if (keys.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">لا توجد بيانات</div>';
+        return;
+      }
+
+      container.innerHTML = keys.map(k => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-weight:800;font-size:0.9rem">👤 ${k}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted)">${cashiers[k].count} فواتير مسجلة</div>
+          </div>
+          <div style="font-weight:900;color:var(--primary);font-size:1rem">$${cashiers[k].sales.toFixed(2)}</div>
+        </div>
+      `).join('');
+    }
+
+    // ── 2. CASH DRAWERS CONTROLLER ──────────────────────────────────────────
+    async function loadCashboxData() {
+      await loadTenantProfile();
+      renderCashboxes();
+    }
+
+    function renderCashboxes() {
+      const container = document.getElementById('cashboxes-list-container');
+      if (!container) return;
+
+      if (!_cashboxes || _cashboxes.length === 0) {
+        // Fallback default main terminal box
+        _cashboxes = [{
+          terminal_id: 'POS-2',
+          branch_name: 'الفرع الرئيسي (Main Branch)',
+          cashier_name: 'Administrator',
+          status: 'open',
+          opening_amount: 0,
+          cash_sales: 100.95,
+          balance_usd: 100.95,
+          balance_lbp: 9035025,
+          last_updated: new Date().toISOString()
+        }];
+      }
+
+      container.innerHTML = _cashboxes.map(cb => {
+        const time = cb.last_updated ? new Date(cb.last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'الآن';
+        const isOpen = cb.status === 'open';
+
+        return `
+          <div class="cashbox-card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:900;font-size:1rem">🏪 ${cb.branch_name || cb.terminal_id}</div>
+                <div style="font-size:0.75rem;color:var(--text-muted)">كاشير: <strong>${cb.cashier_name || 'Administrator'}</strong></div>
+              </div>
+              <span class="badge" style="background:${isOpen ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'};color:${isOpen ? '#059669' : '#dc2626'}">
+                ${isOpen ? 'الوردية مفتوحة 🟢' : 'الوردية مغلقة 🔴'}
+              </span>
+            </div>
+
+            <div style="margin-top:10px;text-align:center">
+              <div style="font-size:0.75rem;font-weight:800;color:var(--text-muted)">المبلغ الموجود في الدرج الآن (Cash in Drawer)</div>
+              <div class="cashbox-amount">$${parseFloat(cb.balance_usd || 0).toFixed(2)}</div>
+              <div style="font-size:0.85rem;font-weight:800;color:var(--text-muted)">≈ ${(cb.balance_lbp || Math.round((cb.balance_usd||0)*89500)).toLocaleString()} ل.ل</div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:10px;border-top:1px dashed rgba(16,185,129,0.3);font-size:0.75rem">
+              <div>رصيد الافتتاح: <strong>$${parseFloat(cb.opening_amount || 0).toFixed(2)}</strong></div>
+              <div style="text-align:end">مبيعات الكاش اليوم: <strong>$${parseFloat(cb.cash_sales || 0).toFixed(2)}</strong></div>
+            </div>
+
+            <div style="font-size:0.68rem;color:var(--text-muted);text-align:center;margin-top:6px">
+              آخر تحديث مباشر: ${time}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── 3. SCANNER CONTROLLER ────────────────────────────────────────────────
+    function toggleCamera() {
+      if (_isCameraActive) stopCamera();
+      else startCamera();
+    }
+
+    async function startCamera() {
+      const reader = document.getElementById('scanner-reader');
+      if (!reader) return;
+
+      try {
+        if (!_html5QrCode) {
+          _html5QrCode = new Html5Qrcode("scanner-reader");
+        }
+        await _html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 15, qrbox: { width: 240, height: 180 } },
+          (decodedText) => {
+            lookupBarcode(decodedText);
+            playBeep();
+          },
+          (errorMessage) => {}
+        );
+        _isCameraActive = true;
+      } catch(err) {
+        console.warn('Camera error:', err);
+      }
+    }
+
+    function stopCamera() {
+      if (_html5QrCode && _isCameraActive) {
+        _html5QrCode.stop().then(() => {
+          _isCameraActive = false;
+        }).catch(() => {});
+      }
+    }
+
+    function playBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 1760;
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.12);
+      } catch(e) {}
+    }
+
+    function lookupBarcode(code) {
+      if (!code) return;
+      code = code.trim();
+      const p = _products.find(x => x.barcode === code || String(x.pos_product_id) === code || x.name.toLowerCase().includes(code.toLowerCase()));
+      if (p) {
+        _currentScannedItem = p;
+        document.getElementById('scanned-result-card').style.display = 'block';
+        document.getElementById('scan-prod-name').textContent = p.name_ar || p.name;
+        document.getElementById('scan-prod-barcode').textContent = 'باركود: ' + (p.barcode || 'N/A');
+        document.getElementById('scan-prod-price').textContent = '$' + parseFloat(p.price || 0).toFixed(2);
+        const rate = parseFloat(_tenant?.currency_lbp_rate || 89500);
+        document.getElementById('scan-prod-price-lbp').textContent = Math.round(parseFloat(p.price || 0) * rate).toLocaleString() + ' ل.ل';
+        document.getElementById('scan-prod-stock-inp').value = p.stock_quantity || 0;
+      } else {
+        alert('❌ لم يتم العثور على صنف بالباركود: ' + code);
+      }
+    }
+
+    function adjustScannedStock(delta) {
+      const inp = document.getElementById('scan-prod-stock-inp');
+      if (inp) {
+        let val = parseInt(inp.value) || 0;
+        inp.value = Math.max(0, val + delta);
+      }
+    }
+
+    async function saveScannedStock() {
+      if (!_currentScannedItem) return;
+      const newStock = parseInt(document.getElementById('scan-prod-stock-inp').value) || 0;
+      _currentScannedItem.stock_quantity = newStock;
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${_currentScannedItem.id}`, {
+          method: 'PATCH',
+          headers: getHeaders(),
+          body: JSON.stringify({ stock_quantity: newStock, updated_at: new Date().toISOString() })
+        });
+
+        if (res.ok) {
+          alert('✅ تم تحديث المخزون بنجاح وجاري المزامنة مع الكاشير!');
+          loadCatalog();
+        }
+      } catch(e) {
+        alert('Error: ' + e.message);
+      }
+    }
+
+    // ── 4. CATALOG CONTROLLER ────────────────────────────────────────────────
+    async function loadCatalog() {
+      if (!_tenant) return;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/products?shop_id=eq.${_tenant.id}&order=name.asc`, {
+          headers: getHeaders()
+        });
+        if (res.ok) {
+          _products = await res.json();
+          renderCatalogList();
+        }
+      } catch(e) {}
+    }
+
+    function renderCatalogList() {
+      const container = document.getElementById('catalog-items-container');
+      const badge = document.getElementById('inv-count-badge');
+      if (badge) badge.textContent = _products.length + ' صنف';
+      if (!container) return;
+
+      const q = document.getElementById('cat-search-inp')?.value.toLowerCase().trim() || '';
+      const list = _products.filter(p => {
+        if (!q) return true;
+        return (p.name || '').toLowerCase().includes(q) || 
+               (p.name_ar || '').includes(q) || 
+               (p.barcode || '').includes(q);
+      });
+
+      if (list.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">لا توجد أصناف مطابقة للبحث</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(p => {
+        const stock = parseInt(p.stock_quantity || 0);
+        const isLow = stock <= 5;
+        const isZero = stock <= 0;
+        const badgeColor = isZero ? '#dc2626' : (isLow ? '#d97706' : '#059669');
+        const badgeBg = isZero ? 'rgba(239,68,68,0.1)' : (isLow ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)');
+
+        return `
+          <div class="card" style="margin-bottom:8px;padding:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-weight:800;font-size:0.92rem">${p.name_ar || p.name}</div>
+                <div style="font-size:0.75rem;color:var(--text-muted)">${p.barcode ? 'باركود: ' + p.barcode : 'بدون باركود'}</div>
+              </div>
+              <div style="text-align:end">
+                <div style="font-weight:900;color:var(--primary);font-size:1.05rem">$${parseFloat(p.price || 0).toFixed(2)}</div>
+                <span class="badge" style="background:${badgeBg};color:${badgeColor}">المخزون: ${stock}</span>
+              </div>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+              <button class="hdr-btn" onclick="quickEditStock('${p.id}', -1)" style="font-weight:900">-</button>
+              <button class="hdr-btn" onclick="quickEditStock('${p.id}', 1)" style="font-weight:900">+</button>
+              <button class="hdr-btn" onclick="lookupBarcode('${p.barcode || p.name}')" title="فحص">🔍</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function quickEditStock(prodId, delta) {
+      const p = _products.find(x => x.id === prodId);
+      if (!p) return;
+      const newStock = Math.max(0, (parseInt(p.stock_quantity) || 0) + delta);
+      p.stock_quantity = newStock;
+      renderCatalogList();
+
+      await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${prodId}`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ stock_quantity: newStock, updated_at: new Date().toISOString() })
+      });
+    }
+
+    function filterCatalogList() { renderCatalogList(); }
+    function filterInvoices() {
+      const q = document.getElementById('inv-search-inp')?.value.toLowerCase().trim() || '';
+      const filtered = _orders.filter(o => {
+        if (!q) return true;
+        return (o.order_number || '').toLowerCase().includes(q) || (o.customer_name || '').toLowerCase().includes(q);
+      });
+      renderInvoicesList(filtered);
+    }
+
+    // ── 5. ONLINE ORDERS CONTROLLER ──────────────────────────────────────────
+    async function loadOnlineOrders() {
+      if (!_tenant) return;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${_tenant.id}&order=created_at.desc&limit=30`, {
+          headers: getHeaders()
+        });
+        if (res.ok) {
+          const all = await res.json();
+          const onlineOnly = all.filter(o => o.order_number && o.order_number.startsWith('RS-'));
+          
+          const badge = document.getElementById('online-orders-badge');
+          const pending = onlineOnly.filter(o => o.order_status === 'received');
+          if (badge) {
+            badge.textContent = pending.length;
+            badge.style.display = pending.length > 0 ? 'flex' : 'none';
+          }
+
+          renderOnlineOrders(onlineOnly);
+        }
+      } catch(e) {}
+    }
+
+    function renderOnlineOrders(list) {
+      const container = document.getElementById('online-orders-container');
+      if (!container) return;
+
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">لا توجد طلبات أونلاين جديدة حالياً</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(o => `
+        <div class="card" style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-weight:900;color:var(--primary)">#${o.order_number}</span>
+            <span class="badge" style="background:rgba(37,99,235,0.12);color:var(--primary);text-transform:capitalize">${o.order_status}</span>
+          </div>
+
+          <div style="font-size:0.85rem;font-weight:800">${o.customer_name} • ${o.customer_phone || ''}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px">📍 ${o.delivery_address || 'توصيل محلي'}</div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border)">
+            <div style="font-weight:900;font-size:1.1rem">$${parseFloat(o.total||0).toFixed(2)}</div>
+            <select onchange="updateOnlineOrderStatus('${o.id}', this.value)" style="padding:4px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.75rem;font-weight:800">
+              <option value="received" ${o.order_status==='received'?'selected':''}>قيد الانتظار</option>
+              <option value="preparing" ${o.order_status==='preparing'?'selected':''}>جارِ التحضير</option>
+              <option value="out_for_delivery" ${o.order_status==='out_for_delivery'?'selected':''}>خرج للتوصيل</option>
+              <option value="completed" ${o.order_status==='completed'?'selected':''}>تم التسليم</option>
+              <option value="cancelled" ${o.order_status==='cancelled'?'selected':''}>إلغاء الطلب</option>
+            </select>
           </div>
         </div>
       `).join('');
     }
 
-    function filterCatalog(q) {
-      q = (q || '').toLowerCase();
-      const filtered = _allProducts.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.barcode && p.barcode.toLowerCase().includes(q)));
-      renderCatalogList(filtered);
+    async function updateOnlineOrderStatus(orderId, status) {
+      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ order_status: status, updated_at: new Date().toISOString() })
+      });
+      loadOnlineOrders();
     }
 
-    // Owner Reports
-    async function loadMobileReports() {
-      const filter = document.getElementById('app-reports-date-filter')?.value || 'month';
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?tenant_slug=eq.${encodeURIComponent(_slug)}&select=*&order=created_at.desc`, { headers: getHeaders() });
-        if (res.ok) {
-          const orders = await res.json();
-          let total = 0;
-          const counts = {};
-
-          orders.forEach(o => {
-            total += parseFloat(o.total_amount || o.grand_total || o.total || 0);
-            let items = [];
-            try { items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []); } catch(e){}
-            items.forEach(it => {
-              const n = it.name || 'Product';
-              counts[n] = (counts[n] || 0) + (parseFloat(it.qty || 1));
-            });
-          });
-
-          document.getElementById('mob-rpt-sales').textContent = '$' + total.toFixed(2);
-          document.getElementById('mob-rpt-sales-lbp').textContent = Math.round(total * _exchangeRate).toLocaleString() + ' ل.ل';
-          document.getElementById('mob-rpt-orders').textContent = orders.length;
-
-          // Top items
-          const topArr = Object.keys(counts).map(k => ({ name: k, qty: counts[k] })).sort((a,b) => b.qty - a.qty).slice(0, 5);
-          const topEl = document.getElementById('mob-rpt-top-items');
-          if (topArr.length === 0) topEl.innerHTML = '<div style="color:var(--text-muted)">لا توجد مبيعات</div>';
-          else topEl.innerHTML = topArr.map(t => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>${t.name}</span><strong>${t.qty} قطعة</strong></div>`).join('');
-
-          // Low stock
-          const lowArr = _allProducts.filter(p => (p.stock || 0) <= 5).slice(0, 5);
-          const lowEl = document.getElementById('mob-rpt-low-stock');
-          if (lowArr.length === 0) lowEl.innerHTML = '<div style="color:#059669;font-weight:700">✅ المخزون ممتاز</div>';
-          else lowEl.innerHTML = lowArr.map(p => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>${p.name}</span><strong style="color:var(--danger)">${p.stock || 0} متبقي</strong></div>`).join('');
-        }
-      } catch(e) {}
+    // ── THEME & LANG TOGGLES ────────────────────────────────────────────────
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute('data-theme') || 'light';
+      const nxt = cur === 'light' ? 'dark' : 'light';
+      applyTheme(nxt);
     }
 
-    // Orders
-    async function loadMobileOrders() {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?tenant_slug=eq.${encodeURIComponent(_slug)}&order=created_at.desc&limit=20`, { headers: getHeaders() });
-        if (res.ok) {
-          const orders = await res.json();
-          const list = document.getElementById('mob-orders-list');
-          const badge = document.getElementById('nav-order-badge');
-          
-          const pending = orders.filter(o => o.status === 'received' || o.status === 'pending');
-          if (pending.length > 0) {
-            badge.style.display = 'block';
-            badge.textContent = pending.length;
-          } else {
-            badge.style.display = 'none';
-          }
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('rs_app_theme', t);
+    }
 
-          if (orders.length === 0) {
-            list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">لا توجد طلبات جديدة</div>';
-            return;
-          }
+    function toggleLang() {
+      _currentLang = _currentLang === 'ar' ? 'en' : 'ar';
+      applyLang(_currentLang);
+      loadReports();
+    }
 
-          list.innerHTML = orders.map(o => `
-            <div class="app-card" style="border-right:4px solid ${o.status==='completed'?'#10b981':'#2563eb'}">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <span style="font-weight:900">#${(o.order_number || o.id).toString().slice(-6)}</span>
-                <span style="font-size:0.75rem;padding:2px 8px;border-radius:10px;background:rgba(37,99,235,0.1);color:#2563eb;font-weight:800">${o.status || 'received'}</span>
-              </div>
-              <div style="font-size:0.85rem;font-weight:800">${o.customer_name || 'زبون'} — ${o.customer_phone || ''}</div>
-              <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px">${o.delivery_address || ''}</div>
-              <div style="font-size:1.05rem;font-weight:900;color:var(--primary);text-align:end">$${parseFloat(o.total_amount || o.grand_total || 0).toFixed(2)}</div>
-            </div>
-          `).join('');
-        }
-      } catch(e) {}
+    function applyLang(lang) {
+      localStorage.setItem('rs_app_lang', lang);
+      document.documentElement.setAttribute('lang', lang);
+      document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
     }
 
     function installPWA() {
       if (_deferredInstallPrompt) {
         _deferredInstallPrompt.prompt();
-        _deferredInstallPrompt.userChoice.then(() => { _deferredInstallPrompt = null; });
-      } else {
-        alert('لتثبيت التطبيق: افتح خيارات المتصفح (⋮ أو زر المشاركة) ثم اختر "إضافة إلى الشاشة الرئيسية (Add to Home Screen)"');
-      }
-    }
-
-    function toggleTheme() {
-      const cur = document.documentElement.getAttribute('data-theme') || 'light';
-      const nxt = cur === 'light' ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', nxt);
-    }
-
-    function toggleLang() {
-      const cur = document.documentElement.getAttribute('dir') || 'rtl';
-      const nxt = cur === 'rtl' ? 'ltr' : 'rtl';
-      document.documentElement.setAttribute('dir', nxt);
-      document.documentElement.setAttribute('lang', nxt === 'rtl' ? 'ar' : 'en');
-    }
-
-    function refreshCurrentTab() {
-      loadCatalog();
-      loadMobileReports();
-      loadMobileOrders();
-    }
-
-    function changeShopSlug() {
-      const s = document.getElementById('settings-shop-slug-inp').value.trim();
-      if (s) {
-        window.location.search = '?shop=' + encodeURIComponent(s);
+        _deferredInstallPrompt.userChoice.then(() => {
+          _deferredInstallPrompt = null;
+          const b = document.getElementById('pwa-install-banner');
+          if (b) b.style.display = 'none';
+        });
       }
     }
   </script>
