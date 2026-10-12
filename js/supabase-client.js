@@ -18,7 +18,6 @@ const StorefrontAPI = (() => {
   function getHeaders() {
     const key = getKey();
     return {
-    fetchFirstBatchProducts,
       "apikey": key,
       "Authorization": `Bearer ${key}`,
       "Content-Type": "application/json",
@@ -161,6 +160,7 @@ const StorefrontAPI = (() => {
   return {
     fetchTenant,
     fetchCategories,
+    fetchFirstBatchProducts,
     fetchProducts,
     submitOrder,
     getUrl,
