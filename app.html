@@ -778,7 +778,13 @@
       await refreshAppData();
 
       // Background order polling every 15s
-      setInterval(loadOnlineOrders, 15000);
+      setInterval(loadOnlineOrders, 10000);
+      setInterval(() => {
+        const v = document.getElementById('tab-reports');
+        if (v && v.classList.contains('active')) loadReports();
+        const c = document.getElementById('tab-cashbox');
+        if (c && c.classList.contains('active')) loadCashboxData();
+      }, 8000);
     });
 
     async function loadTenantProfile() {

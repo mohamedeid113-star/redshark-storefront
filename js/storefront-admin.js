@@ -1886,4 +1886,13 @@ function closeMobileAppModal() {
 })();
 
 window.Admin = Admin;
-document.addEventListener('DOMContentLoaded', () => Admin.init());
+document.addEventListener('DOMContentLoaded', () => {
+  Admin.init();
+  // Auto-refresh reports and orders every 8 seconds
+  setInterval(() => {
+    const repTab = document.getElementById('tab-reports');
+    if (repTab && repTab.style.display !== 'none') {
+      Admin.loadReports();
+    }
+  }, 8000);
+});
