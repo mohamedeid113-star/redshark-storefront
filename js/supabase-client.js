@@ -18,6 +18,7 @@ const StorefrontAPI = (() => {
   function getHeaders() {
     const key = getKey();
     return {
+    fetchFirstBatchProducts,
       "apikey": key,
       "Authorization": `Bearer ${key}`,
       "Content-Type": "application/json",
@@ -59,6 +60,26 @@ const StorefrontAPI = (() => {
   }
 
   // 3. Fetch Products for Shop
+  async function fetchFirstBatchProducts(shopId) {
+    try {
+      const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&is_published=eq.true&order=created_at.desc`;
+      const res = await fetch(url, {
+        headers: {
+          ...getHeaders(),
+          'Range-Unit': 'items',
+          'Range': '0-999'
+        }
+      });
+      if (res.ok) {
+        const page = await res.json();
+        if (Array.isArray(page)) return page;
+      }
+    } catch (e) {
+      console.warn('fetchFirstBatchProducts error:', e);
+    }
+    return [];
+  }
+
   async function fetchProducts(shopId) {
     try {
       let allProducts = [];

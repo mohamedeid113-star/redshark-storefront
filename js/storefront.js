@@ -8,6 +8,7 @@ const Storefront = (() => {
   let _categories = [];
   let _categoryImages = {};
   let _products = [];
+  let _isLoadingProducts = true;
   let _cart = [];
   let _currentLang = localStorage.getItem('rs_lang') || 'en';
   let _currentTheme = localStorage.getItem('rs_theme') || 'fresh-light';
@@ -190,7 +191,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '13.0';
+    const APP_VERSION = '14.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -199,7 +200,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=13.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=14.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -234,10 +235,17 @@ const Storefront = (() => {
 
       document.title = `${_tenant.shop_name} — Red Shark Online Store`;
 
-      // 1. Fetch categories FIRST so the Home Categories Grid renders immediately (< 300ms)
-      _categories = (await StorefrontAPI.fetchCategories(_tenant.id)) || [];
+      // 1. Fetch categories and first batch of products in parallel for INSTANT display
+      const [cats, initialProds] = await Promise.all([
+        StorefrontAPI.fetchCategories(_tenant.id),
+        StorefrontAPI.fetchFirstBatchProducts ? StorefrontAPI.fetchFirstBatchProducts(_tenant.id) : StorefrontAPI.fetchProducts(_tenant.id)
+      ]);
 
-      // Merge custom category cover images saved in _tenant.banner_url
+      _categories = cats || [];
+      _products = initialProds || [];
+      _isLoadingProducts = false;
+
+      // Merge custom category cover images
       if (_tenant.banner_url) {
         try {
           const bp = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : _tenant.banner_url;
@@ -260,15 +268,15 @@ const Storefront = (() => {
       showCategoriesGrid();
       showLoader(false);
 
-      // 2. Concurrently fetch all products in the background without blocking UI
-      StorefrontAPI.fetchProducts(_tenant.id).then(prods => {
-        _products = prods || [];
-        renderBigCategoriesGrid(); // update actual product counts
-        if (_viewMode === 'products') {
-          renderGroupedProducts();
+      // Concurrently fetch remainder of catalog if any
+      StorefrontAPI.fetchProducts(_tenant.id).then(allProds => {
+        if (allProds && allProds.length > _products.length) {
+          _products = allProds;
+          renderBigCategoriesGrid();
+          if (_viewMode === 'products') renderGroupedProducts();
         }
       }).catch(err => {
-        console.error('Background products loading error:', err);
+        console.warn('Background full catalog fetch warning:', err);
       });
 
     } catch (err) {
@@ -567,10 +575,20 @@ const Storefront = (() => {
       });
     }
 
+    if (_products.length === 0 && _isLoadingProducts) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:50px 20px;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:var(--radius-lg)">
+          <div style="display:inline-block;width:34px;height:34px;border:3px solid rgba(16,185,129,0.2);border-top-color:var(--brand-primary);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+          <h3 style="font-size:1.05rem;font-weight:800;margin-top:12px;color:var(--text-main);">${_currentLang === 'ar' ? 'جاري تحميل قائمة المنتجات...' : 'Loading products...'}</h3>
+        </div>
+      `;
+      return;
+    }
+
     if (filtered.length === 0) {
       container.innerHTML = `
         <div style="text-align:center;padding:50px 20px;background:var(--bg-surface);border:1px dashed var(--border-color);border-radius:var(--radius-lg)">
-          <div style="font-size:3.2rem;margin-bottom:8px">🔍</div>
+          <div style="font-size:3.2rem;margin-bottom:8px">📦</div>
           <h3 style="font-size:1.15rem;font-weight:900">${_currentLang === 'ar' ? 'لم يتم العثور على أي منتج' : 'No products found'}</h3>
           <p style="color:var(--text-muted);font-size:0.85rem;margin-top:4px">${_currentLang === 'ar' ? 'جرب البحث بكلمة أخرى' : 'Try searching with a different term'}</p>
         </div>
