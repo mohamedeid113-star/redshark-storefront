@@ -505,7 +505,7 @@
       </div>
 
       <div class="header-actions">
-        <button id="btn-install-app-header" class="hdr-btn" onclick="openInstallModal()" style="background:rgba(37,99,235,0.15);color:var(--primary);font-weight:800;border:1px solid rgba(37,99,235,0.3);display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;font-size:0.75rem" title="تثبيت التطبيق على الهاتف"><span>📲</span> <span id="hdr-install-text">تثبيت التطبيق</span></button>
+        <button id="btn-install-app-header" class="hdr-btn" onclick="openInstallModal()" style="background:rgba(37,99,235,0.15);color:var(--primary);font-weight:800;border:1px solid rgba(37,99,235,0.3);display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;font-size:0.75rem" title="تثبيت التطبيق على الهاتف"><span>📲</span> <span id="hdr-install-text">📥 تنزيل التطبيق</span></button>
         <button class="hdr-btn" onclick="toggleTheme()" title="تبديل الوضع">🌓</button>
         <button class="hdr-btn" onclick="toggleLang()" title="اللغة">🌐</button>
         <button class="hdr-btn" onclick="refreshAppData()" title="تحديث">🔄</button>
@@ -528,11 +528,11 @@
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:1.5rem">📲</span>
         <div>
-          <div style="font-size:0.85rem;font-weight:800">تثبيت التطبيق على هاتفك</div>
+          <div style="font-size:0.85rem;font-weight:800">📥 تنزيل وتثبيت التطبيق على هاتفك</div>
           <div style="font-size:0.72rem;color:var(--text-muted)">وصول فوري من شاشة الموبايل بدون متصفح</div>
         </div>
       </div>
-      <button class="btn-action" style="width:auto;padding:6px 12px;font-size:0.78rem" onclick="installPWA()">تثبيت الآن</button>
+      <button class="btn-action" style="width:auto;padding:7px 14px;font-size:0.82rem;font-weight:900" onclick="installPWA()">⚡ تنزيل وتثبيت الآن</button>
     </div>
   </div>
 
@@ -775,6 +775,12 @@
         _deferredInstallPrompt = e;
         const b = document.getElementById('pwa-install-banner');
         if (b) b.style.display = 'block';
+        // Automatically show install prompt for 1-click download on Android
+        setTimeout(() => {
+          if (_deferredInstallPrompt && !isStandalone) {
+            _deferredInstallPrompt.prompt().catch(() => {});
+          }
+        }, 800);
       });
 
       await loadTenantProfile();
