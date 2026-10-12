@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Red Shark — تطبيق المدير والمخزون الذكي</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="RedShark Admin">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/favicon.png">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- HTML5 Barcode/QR Scanner -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-card: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      --font: 'Plus Jakarta Sans', 'Tajawal', sans-serif;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    [data-theme="dark"] {
+      --bg: #090d16;
+      --surface: #131b2e;
+      --surface-card: rgba(23, 32, 53, 0.95);
+      --surface-subtle: #1a253e;
+      --border: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      font-size: 14px;
+      line-height: 1.4;
+      padding-bottom: calc(72px + var(--safe-bottom));
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    /* Top App Header */
+    .app-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--primary-gradient);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .brand-title {
+      font-weight: 900;
+      font-size: 0.95rem;
+      line-height: 1.2;
+    }
+
+    .shop-pill {
+      background: rgba(37,99,235,0.1);
+      color: var(--primary);
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      border: 1px solid rgba(37,99,235,0.2);
+    }
+
+    .header-btns {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .icon-btn {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(64px + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 1000;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.05);
+    }
+
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 6px 0;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.18s ease;
+      position: relative;
+    }
+
+    .nav-tab.active { color: var(--primary); }
+
+    .nav-tab .tab-icon {
+      font-size: 1.25rem;
+      line-height: 1;
+      transition: transform 0.18s ease;
+    }
+
+    .nav-tab.active .tab-icon { transform: translateY(-2px) scale(1.1); }
+
+    .nav-tab .tab-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+    }
+
+    .tab-badge {
+      position: absolute;
+      top: 4px;
+      right: 25%;
+      background: var(--danger);
+      color: white;
+      font-size: 0.62rem;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 10px;
+      min-width: 16px;
+      text-align: center;
+    }
+
+    /* Tab View Content */
+    .tab-view {
+      display: none;
+      padding: 14px;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    .tab-view.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scanner View */
+    .scanner-box {
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #000;
+      position: relative;
+      min-height: 200px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #reader { width: 100% !important; border: none !important; }
+
+    /* Scan Result Card */
+    .product-detail-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 14px;
+    }
+
+    /* Common Card */
+    .app-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .search-inp {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 0.88rem;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    .search-inp:focus { border-color: var(--primary); }
+
+    /* Quick stock buttons */
+    .qty-btn {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .qty-btn:active { background: var(--primary); color: #fff; }
+
+    /* Modal Backdrop */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-content {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP APP HEADER -->
+  <header class="app-header">
+    <div class="brand-wrap">
+      <div class="brand-logo">🦈</div>
+      <div>
+        <div class="brand-title" id="hdr-store-title">Red Shark Admin</div>
+        <div class="shop-pill" id="hdr-shop-slug">shop101</div>
+      </div>
+    </div>
+
+    <div class="header-btns">
+      <button class="icon-btn" onclick="toggleLang()" title="Language">🌐</button>
+      <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌓</button>
+      <button class="icon-btn" onclick="refreshCurrentTab()" title="تحديث">🔄</button>
+    </div>
+  </header>
+
+  <!-- ── TAB 1: SCANNER & PRICE CHECKER ───────────────────────── -->
+  <div id="view-scanner" class="tab-view active">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 style="font-size:1.1rem;font-weight:900">📷 فحص الأسعار وماسح الباركود</h2>
+      <button class="qty-btn" id="btn-toggle-cam" onclick="toggleCameraScanner()">
+        📷 تشغيل الكاميرا
+      </button>
+    </div>
+
+    <!-- Live Scanner Box -->
+    <div class="scanner-box" id="scanner-wrapper" style="display:none">
+      <div id="reader"></div>
+    </div>
+
+    <!-- Manual Barcode Search -->
+    <input type="text" id="scan-manual-inp" class="search-inp" placeholder="امسح الباركود بالكاميرا أو اكتبه يدوياً..." onkeydown="if(event.key==='Enter') lookupBarcode(this.value.trim())">
+
+    <!-- Scanned Product Card -->
+    <div id="scanned-product-result" style="display:none" class="product-detail-card">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+        <div id="scan-res-img-wrap" style="width:64px;height:64px;border-radius:12px;background:var(--surface-subtle);display:flex;align-items:center;justify-content:center;font-size:1.8rem;border:1px solid var(--border);overflow:hidden">
+          📦
+        </div>
+        <div style="flex:1">
+          <h3 id="scan-res-name" style="font-size:1rem;font-weight:900;margin-bottom:4px">اسم المنتج</h3>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-family:monospace" id="scan-res-barcode">1234567890</div>
+          <div style="font-size:0.75rem;color:var(--primary);font-weight:700" id="scan-res-category">القسم العام</div>
+        </div>
+      </div>
+
+      <!-- Price & Stock Row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface-subtle);padding:10px;border-radius:12px;margin-bottom:12px">
+        <div>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">سعر البيع:</div>
+          <div style="font-size:1.3rem;font-weight:900;color:var(--primary)" id="scan-res-price">$0.00</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700" id="scan-res-price-lbp">0 ل.ل</div>
+        </div>
+        <div>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">المخزون الحالي:</div>
+          <div style="font-size:1.3rem;font-weight:900;color:#059669" id="scan-res-stock">0</div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">قطعة متوفرة</div>
+        </div>
+      </div>
+
+      <!-- Quick Stock Adjustment -->
+      <div>
+        <div style="font-size:0.78rem;font-weight:800;margin-bottom:6px">⚡ تعديل المخزون المباشر (حفظ فوري في السحابة):</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button class="qty-btn" onclick="adjustScannedStock(-5)">-5</button>
+          <button class="qty-btn" onclick="adjustScannedStock(-1)">-1</button>
+          <input type="number" id="scan-direct-stock-inp" style="width:65px;padding:6px;border-radius:8px;border:1px solid var(--border);text-align:center;font-weight:900;font-size:0.95rem" onchange="setScannedStock(this.value)">
+          <button class="qty-btn" onclick="adjustScannedStock(1)">+1</button>
+          <button class="qty-btn" onclick="adjustScannedStock(5)">+5</button>
+          <button class="qty-btn" onclick="openEditPriceModal()" style="background:var(--primary);color:#fff;border:none">✏️ تعديل السعر</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Tip -->
+    <div style="font-size:0.78rem;color:var(--text-muted);text-align:center;margin-top:14px">
+      💡 وجه كاميرا الهاتف نحو باركود الصنف لفحص سعره ومخزونه وتعديله فوراً أينما كنت.
+    </div>
+  </div>
+
+  <!-- ── TAB 2: INVENTORY & CATALOG ────────────────────────────── -->
+  <div id="view-inventory" class="tab-view">
+    <h2 style="font-size:1.1rem;font-weight:900;margin-bottom:10px">📦 إدارة الأصناف والمخزون</h2>
+    <input type="text" id="inv-search-inp" class="search-inp" placeholder="ابحث بالاسم أو الباركود..." oninput="filterCatalog(this.value)">
+
+    <div id="inv-products-list" style="display:flex;flex-direction:column;gap:8px">
+      <div style="text-align:center;padding:20px;color:var(--text-muted)">جارِ تحميل الأصناف...</div>
+    </div>
+  </div>
+
+  <!-- ── TAB 3: OWNER REPORTS ──────────────────────────────────── -->
+  <div id="view-reports" class="tab-view">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="font-size:1.1rem;font-weight:900">📊 تقارير المبيعات الحية</h2>
+      <select id="app-reports-date-filter" style="padding:6px 10px;border-radius:10px;border:1px solid var(--border);font-size:0.8rem;font-weight:700" onchange="loadMobileReports()">
+        <option value="today">اليوم (Today)</option>
+        <option value="week">آخر 7 أيام</option>
+        <option value="month" selected>هذا الشهر</option>
+        <option value="all">جميع الفترات</option>
+      </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="app-card" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25)">
+        <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">💰 إجمالي المبيعات</div>
+        <div style="font-size:1.4rem;font-weight:900;color:#059669" id="mob-rpt-sales">$0.00</div>
+        <div style="font-size:0.72rem;color:var(--text-muted)" id="mob-rpt-sales-lbp">0 ل.ل</div>
+      </div>
+
+      <div class="app-card" style="background:rgba(37,99,235,0.08);border-color:rgba(37,99,235,0.25)">
+        <div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">📦 عدد الطلبات</div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--primary)" id="mob-rpt-orders">0</div>
+        <div style="font-size:0.72rem;color:var(--text-muted)" id="mob-rpt-orders-sub">طلب مسجل</div>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div style="font-weight:800;font-size:0.9rem;margin-bottom:10px">🏆 الأكثر طلباً ومبيعاً</div>
+      <div id="mob-rpt-top-items" style="font-size:0.82rem">
+        <div style="color:var(--text-muted);text-align:center;padding:10px">جارِ التحميل...</div>
+      </div>
+    </div>
+
+    <div class="app-card">
+      <div style="font-weight:800;font-size:0.9rem;margin-bottom:10px;color:var(--danger)">⚠️ أصناف قاربت على النفاد</div>
+      <div id="mob-rpt-low-stock" style="font-size:0.82rem">
+        <div style="color:var(--text-muted);text-align:center;padding:10px">جارِ التحميل...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 4: ORDERS ─────────────────────────────────────────── -->
+  <div id="view-orders" class="tab-view">
+    <h2 style="font-size:1.1rem;font-weight:900;margin-bottom:12px">📋 الطلبات الواردة المباشرة</h2>
+    <div id="mob-orders-list" style="display:flex;flex-direction:column;gap:10px">
+      <div style="text-align:center;padding:20px;color:var(--text-muted)">جارِ تحميل الطلبات...</div>
+    </div>
+  </div>
+
+  <!-- ── TAB 5: APP SETTINGS & PWA ─────────────────────────────── -->
+  <div id="view-settings" class="tab-view">
+    <h2 style="font-size:1.1rem;font-weight:900;margin-bottom:12px">⚙️ التطبيق والإعدادات</h2>
+
+    <div class="app-card" style="text-align:center;padding:18px">
+      <div style="font-size:2.8rem;margin-bottom:6px">📲</div>
+      <h3 style="font-size:1.05rem;font-weight:900;margin-bottom:4px">تثبيت التطبيق على الشاشة الرئيسية</h3>
+      <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px">
+        ثبّت التطبيق ليعمل كأي تطبيق أصلي على جهازك بضغطة زر دون الحاجة لمتجر Google Play أو App Store.
+      </p>
+      <button class="qty-btn" id="btn-install-pwa" onclick="installPWA()" style="background:var(--primary);color:#fff;border:none;padding:10px 24px;border-radius:12px;font-size:0.9rem">
+        ➕ تثبيت التطبيق الآن
+      </button>
+    </div>
+
+    <div class="app-card">
+      <div style="font-weight:800;font-size:0.9rem;margin-bottom:10px">🏪 متجر الكاشير المرتبط</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="settings-shop-slug-inp" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:monospace;font-weight:700" value="shop101">
+        <button class="qty-btn" onclick="changeShopSlug()" style="background:var(--primary);color:#fff;border:none">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="bottom-nav">
+    <div class="nav-tab active" onclick="switchAppTab('scanner')" id="tab-nav-scanner">
+      <div class="tab-icon">📷</div>
+      <div class="tab-label">فحص السعر</div>
+    </div>
+    <div class="nav-tab" onclick="switchAppTab('inventory')" id="tab-nav-inventory">
+      <div class="tab-icon">📦</div>
+      <div class="tab-label">المخزون</div>
+    </div>
+    <div class="nav-tab" onclick="switchAppTab('reports')" id="tab-nav-reports">
+      <div class="tab-icon">📊</div>
+      <div class="tab-label">التقارير</div>
+    </div>
+    <div class="nav-tab" onclick="switchAppTab('orders')" id="tab-nav-orders">
+      <div class="tab-icon">📋</div>
+      <div class="tab-label">الطلبات</div>
+      <div class="tab-badge" id="nav-order-badge" style="display:none">0</div>
+    </div>
+    <div class="nav-tab" onclick="switchAppTab('settings')" id="tab-nav-settings">
+      <div class="tab-icon">⚙️</div>
+      <div class="tab-label">التطبيق</div>
+    </div>
+  </nav>
+
+  <!-- EDIT PRICE MODAL -->
+  <div id="modal-edit-price" class="modal-overlay" style="display:none">
+    <div class="modal-content">
+      <h3 style="font-weight:900;margin-bottom:12px">✏️ تعديل سعر البيع ($)</h3>
+      <input type="number" id="edit-price-inp" step="0.01" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);font-size:1.2rem;font-weight:900;margin-bottom:14px">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="qty-btn" onclick="document.getElementById('modal-edit-price').style.display='none'">إلغاء</button>
+        <button class="qty-btn" onclick="saveEditedPrice()" style="background:var(--primary);color:#fff;border:none">حفظ التعديل</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script src="js/supabase-client.js"></script>
+  <script>
+    const SUPABASE_URL = "https://mcebwpiswvwqcdwjpagy.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg";
+
+    let _slug = new URLSearchParams(window.location.search).get('shop') || localStorage.getItem('redshark_admin_slug') || 'shop101';
+    let _allProducts = [];
+    let _currentScannedItem = null;
+    let _html5QrCode = null;
+    let _isCamOpen = false;
+    let _deferredInstallPrompt = null;
+    let _exchangeRate = 89500;
+
+    function getHeaders() {
+      return {
+        "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+      };
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      document.getElementById('hdr-shop-slug').textContent = _slug;
+      document.getElementById('settings-shop-slug-inp').value = _slug;
+      localStorage.setItem('redshark_admin_slug', _slug);
+
+      // Listen for PWA install prompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        _deferredInstallPrompt = e;
+      });
+
+      await loadTenantInfo();
+      await loadCatalog();
+      loadMobileReports();
+      loadMobileOrders();
+      setInterval(loadMobileOrders, 15000);
+    });
+
+    async function loadTenantInfo() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(_slug)}&select=*`, { headers: getHeaders() });
+        if (res.ok) {
+          const tenants = await res.json();
+          if (tenants.length > 0) {
+            const t = tenants[0];
+            if (t.name) document.getElementById('hdr-store-title').textContent = t.name;
+            if (t.lbp_rate) _exchangeRate = parseFloat(t.lbp_rate);
+          }
+        }
+      } catch(e) {}
+    }
+
+    function switchAppTab(tab) {
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+
+      const v = document.getElementById('view-' + tab);
+      const b = document.getElementById('tab-nav-' + tab);
+      if (v) v.classList.add('active');
+      if (b) b.classList.add('active');
+
+      if (tab === 'reports') loadMobileReports();
+      if (tab === 'orders') loadMobileOrders();
+      if (tab === 'inventory' && _allProducts.length === 0) loadCatalog();
+    }
+
+    // Camera Barcode Scanner
+    async function toggleCameraScanner() {
+      const btn = document.getElementById('btn-toggle-cam');
+      const wrap = document.getElementById('scanner-wrapper');
+
+      if (_isCamOpen) {
+        if (_html5QrCode) {
+          await _html5QrCode.stop();
+          _html5QrCode.clear();
+        }
+        wrap.style.display = 'none';
+        btn.textContent = '📷 تشغيل الكاميرا';
+        _isCamOpen = false;
+      } else {
+        wrap.style.display = 'block';
+        btn.textContent = '⏹️ إيقاف الكاميرا';
+        _html5QrCode = new Html5Qrcode("reader");
+        _html5QrCode.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 140 } },
+          (decodedText) => {
+            lookupBarcode(decodedText);
+            // Quick haptic vibration feedback
+            if (navigator.vibrate) navigator.vibrate(80);
+          },
+          (errorMessage) => {}
+        ).catch(err => {
+          alert('تعذر الوصول للكاميرا: ' + err);
+          wrap.style.display = 'none';
+          btn.textContent = '📷 تشغيل الكاميرا';
+          _isCamOpen = false;
+        });
+        _isCamOpen = true;
+      }
+    }
+
+    async function lookupBarcode(query) {
+      if (!query) return;
+      query = query.trim().toLowerCase();
+
+      // Find in local array or query Supabase
+      let item = _allProducts.find(p => (p.barcode && p.barcode.toLowerCase() === query) || (p.name && p.name.toLowerCase().includes(query)));
+      
+      if (!item) {
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/products?tenant_slug=eq.${encodeURIComponent(_slug)}&or=(barcode.eq.${encodeURIComponent(query)},name.ilike.*.${encodeURIComponent(query)}*)&limit=1`, { headers: getHeaders() });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.length > 0) item = data[0];
+          }
+        } catch(e) {}
+      }
+
+      const resBox = document.getElementById('scanned-product-result');
+      if (item) {
+        _currentScannedItem = item;
+        resBox.style.display = 'block';
+        document.getElementById('scan-res-name').textContent = item.name || item.item_name;
+        document.getElementById('scan-res-barcode').textContent = item.barcode || 'بدون باركود';
+        document.getElementById('scan-res-category').textContent = item.category || 'عام';
+        
+        const price = parseFloat(item.price || 0);
+        document.getElementById('scan-res-price').textContent = '$' + price.toFixed(2);
+        document.getElementById('scan-res-price-lbp').textContent = Math.round(price * _exchangeRate).toLocaleString() + ' ل.ل';
+        document.getElementById('scan-res-stock').textContent = item.stock || 0;
+        document.getElementById('scan-direct-stock-inp').value = item.stock || 0;
+
+        const imgWrap = document.getElementById('scan-res-img-wrap');
+        if (item.image_url) {
+          imgWrap.innerHTML = `<img src="${item.image_url}" style="width:100%;height:100%;object-fit:cover">`;
+        } else {
+          imgWrap.textContent = '📦';
+        }
+      } else {
+        alert('لم يتم العثور على صنف بالباركود: ' + query);
+      }
+    }
+
+    async function adjustScannedStock(delta) {
+      if (!_currentScannedItem) return;
+      const current = parseInt(_currentScannedItem.stock || 0);
+      const newStock = Math.max(0, current + delta);
+      setScannedStock(newStock);
+    }
+
+    async function setScannedStock(newStock) {
+      if (!_currentScannedItem) return;
+      newStock = parseInt(newStock) || 0;
+      _currentScannedItem.stock = newStock;
+      document.getElementById('scan-res-stock').textContent = newStock;
+      document.getElementById('scan-direct-stock-inp').value = newStock;
+
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${_currentScannedItem.id}`, {
+          method: 'PATCH',
+          headers: getHeaders(),
+          body: JSON.stringify({ stock: newStock })
+        });
+      } catch(e) {}
+    }
+
+    function openEditPriceModal() {
+      if (!_currentScannedItem) return;
+      document.getElementById('edit-price-inp').value = parseFloat(_currentScannedItem.price || 0);
+      document.getElementById('modal-edit-price').style.display = 'flex';
+    }
+
+    async function saveEditedPrice() {
+      if (!_currentScannedItem) return;
+      const newPrice = parseFloat(document.getElementById('edit-price-inp').value) || 0;
+      _currentScannedItem.price = newPrice;
+      document.getElementById('scan-res-price').textContent = '$' + newPrice.toFixed(2);
+      document.getElementById('scan-res-price-lbp').textContent = Math.round(newPrice * _exchangeRate).toLocaleString() + ' ل.ل';
+      document.getElementById('modal-edit-price').style.display = 'none';
+
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${_currentScannedItem.id}`, {
+          method: 'PATCH',
+          headers: getHeaders(),
+          body: JSON.stringify({ price: newPrice })
+        });
+      } catch(e) {}
+    }
+
+    // Catalog & Inventory
+    async function loadCatalog() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/products?tenant_slug=eq.${encodeURIComponent(_slug)}&order=name.asc&limit=300`, { headers: getHeaders() });
+        if (res.ok) {
+          _allProducts = await res.json();
+          renderCatalogList(_allProducts);
+        }
+      } catch(e) {}
+    }
+
+    function renderCatalogList(items) {
+      const list = document.getElementById('inv-products-list');
+      if (!list) return;
+
+      if (items.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">لا توجد أصناف مسجلة</div>';
+        return;
+      }
+
+      list.innerHTML = items.map(it => `
+        <div class="app-card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px" onclick="lookupBarcode('${it.barcode || it.name}')">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;overflow:hidden">
+            <div style="width:40px;height:40px;border-radius:8px;background:var(--surface-subtle);display:flex;align-items:center;justify-content:center;font-size:1.2rem;overflow:hidden;flex-shrink:0">
+              ${it.image_url ? `<img src="${it.image_url}" style="width:100%;height:100%;object-fit:cover">` : '📦'}
+            </div>
+            <div style="overflow:hidden">
+              <div style="font-weight:800;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted)">${it.barcode || 'بدون باركود'}</div>
+            </div>
+          </div>
+          <div style="text-align:end;flex-shrink:0">
+            <div style="font-weight:900;color:var(--primary);font-size:0.95rem">$${parseFloat(it.price || 0).toFixed(2)}</div>
+            <span style="font-size:0.72rem;background:${(it.stock||0)<=5?'rgba(239,68,68,0.1)':'rgba(16,185,129,0.1)'};color:${(it.stock||0)<=5?'#dc2626':'#059669'};padding:2px 6px;border-radius:10px;font-weight:800">
+              المخزون: ${it.stock || 0}
+            </span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterCatalog(q) {
+      q = (q || '').toLowerCase();
+      const filtered = _allProducts.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.barcode && p.barcode.toLowerCase().includes(q)));
+      renderCatalogList(filtered);
+    }
+
+    // Owner Reports
+    async function loadMobileReports() {
+      const filter = document.getElementById('app-reports-date-filter')?.value || 'month';
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?tenant_slug=eq.${encodeURIComponent(_slug)}&select=*&order=created_at.desc`, { headers: getHeaders() });
+        if (res.ok) {
+          const orders = await res.json();
+          let total = 0;
+          const counts = {};
+
+          orders.forEach(o => {
+            total += parseFloat(o.total_amount || o.grand_total || o.total || 0);
+            let items = [];
+            try { items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []); } catch(e){}
+            items.forEach(it => {
+              const n = it.name || 'Product';
+              counts[n] = (counts[n] || 0) + (parseFloat(it.qty || 1));
+            });
+          });
+
+          document.getElementById('mob-rpt-sales').textContent = '$' + total.toFixed(2);
+          document.getElementById('mob-rpt-sales-lbp').textContent = Math.round(total * _exchangeRate).toLocaleString() + ' ل.ل';
+          document.getElementById('mob-rpt-orders').textContent = orders.length;
+
+          // Top items
+          const topArr = Object.keys(counts).map(k => ({ name: k, qty: counts[k] })).sort((a,b) => b.qty - a.qty).slice(0, 5);
+          const topEl = document.getElementById('mob-rpt-top-items');
+          if (topArr.length === 0) topEl.innerHTML = '<div style="color:var(--text-muted)">لا توجد مبيعات</div>';
+          else topEl.innerHTML = topArr.map(t => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>${t.name}</span><strong>${t.qty} قطعة</strong></div>`).join('');
+
+          // Low stock
+          const lowArr = _allProducts.filter(p => (p.stock || 0) <= 5).slice(0, 5);
+          const lowEl = document.getElementById('mob-rpt-low-stock');
+          if (lowArr.length === 0) lowEl.innerHTML = '<div style="color:#059669;font-weight:700">✅ المخزون ممتاز</div>';
+          else lowEl.innerHTML = lowArr.map(p => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>${p.name}</span><strong style="color:var(--danger)">${p.stock || 0} متبقي</strong></div>`).join('');
+        }
+      } catch(e) {}
+    }
+
+    // Orders
+    async function loadMobileOrders() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?tenant_slug=eq.${encodeURIComponent(_slug)}&order=created_at.desc&limit=20`, { headers: getHeaders() });
+        if (res.ok) {
+          const orders = await res.json();
+          const list = document.getElementById('mob-orders-list');
+          const badge = document.getElementById('nav-order-badge');
+          
+          const pending = orders.filter(o => o.status === 'received' || o.status === 'pending');
+          if (pending.length > 0) {
+            badge.style.display = 'block';
+            badge.textContent = pending.length;
+          } else {
+            badge.style.display = 'none';
+          }
+
+          if (orders.length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">لا توجد طلبات جديدة</div>';
+            return;
+          }
+
+          list.innerHTML = orders.map(o => `
+            <div class="app-card" style="border-right:4px solid ${o.status==='completed'?'#10b981':'#2563eb'}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-weight:900">#${(o.order_number || o.id).toString().slice(-6)}</span>
+                <span style="font-size:0.75rem;padding:2px 8px;border-radius:10px;background:rgba(37,99,235,0.1);color:#2563eb;font-weight:800">${o.status || 'received'}</span>
+              </div>
+              <div style="font-size:0.85rem;font-weight:800">${o.customer_name || 'زبون'} — ${o.customer_phone || ''}</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px">${o.delivery_address || ''}</div>
+              <div style="font-size:1.05rem;font-weight:900;color:var(--primary);text-align:end">$${parseFloat(o.total_amount || o.grand_total || 0).toFixed(2)}</div>
+            </div>
+          `).join('');
+        }
+      } catch(e) {}
+    }
+
+    function installPWA() {
+      if (_deferredInstallPrompt) {
+        _deferredInstallPrompt.prompt();
+        _deferredInstallPrompt.userChoice.then(() => { _deferredInstallPrompt = null; });
+      } else {
+        alert('لتثبيت التطبيق: افتح خيارات المتصفح (⋮ أو زر المشاركة) ثم اختر "إضافة إلى الشاشة الرئيسية (Add to Home Screen)"');
+      }
+    }
+
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute('data-theme') || 'light';
+      const nxt = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', nxt);
+    }
+
+    function toggleLang() {
+      const cur = document.documentElement.getAttribute('dir') || 'rtl';
+      const nxt = cur === 'rtl' ? 'ltr' : 'rtl';
+      document.documentElement.setAttribute('dir', nxt);
+      document.documentElement.setAttribute('lang', nxt === 'rtl' ? 'ar' : 'en');
+    }
+
+    function refreshCurrentTab() {
+      loadCatalog();
+      loadMobileReports();
+      loadMobileOrders();
+    }
+
+    function changeShopSlug() {
+      const s = document.getElementById('settings-shop-slug-inp').value.trim();
+      if (s) {
+        window.location.search = '?shop=' + encodeURIComponent(s);
+      }
+    }
+  </script>
+</body>
+</html>

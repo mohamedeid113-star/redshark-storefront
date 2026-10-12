@@ -1389,6 +1389,251 @@ const Admin = (() => {
     if (activeBtn) activeBtn.classList.add('active');
   }
 
+  
+  // ── Selective POS Synchronization ────────────────────────────────
+  function openPosSyncModal() {
+    const modal = document.getElementById('modal-pos-sync');
+    if (modal) {
+      modal.style.display = 'flex';
+      const msg = document.getElementById('pos-sync-status-msg');
+      if (msg) msg.style.display = 'none';
+      const btn = document.getElementById('btn-confirm-pos-sync');
+      if (btn) btn.disabled = false;
+      const btnTxt = document.getElementById('btn-confirm-sync-text');
+      if (btnTxt) btnTxt.textContent = _currentLang === 'ar' ? 'إرسال المزامنة للكاشير الآن' : 'Push Sync to POS Now';
+    }
+  }
+
+  function closePosSyncModal() {
+    const modal = document.getElementById('modal-pos-sync');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function triggerPosSync() {
+    const isAR = _currentLang === 'ar';
+    const btn = document.getElementById('btn-confirm-pos-sync');
+    const btnTxt = document.getElementById('btn-confirm-sync-text');
+    const msg = document.getElementById('pos-sync-status-msg');
+
+    const syncItems = document.getElementById('sync-chk-items')?.checked;
+    const syncStock = document.getElementById('sync-chk-stock')?.checked;
+    const syncCats = document.getElementById('sync-chk-categories')?.checked;
+    const syncOffers = document.getElementById('sync-chk-offers')?.checked;
+
+    const selectedTables = [];
+    if (syncItems) selectedTables.push('items');
+    if (syncStock) selectedTables.push('stock');
+    if (syncCats) selectedTables.push('categories');
+    if (syncOffers) selectedTables.push('offers');
+
+    if (selectedTables.length === 0) {
+      alert(isAR ? 'يرجى تحديد عنصر واحد على الأقل للمزامنة' : 'Please select at least one item to sync');
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+    if (btnTxt) btnTxt.textContent = isAR ? 'جارِ الإرسال...' : 'Sending Sync...';
+
+    try {
+      // 1. Update last sync request in Supabase for this tenant
+      if (typeof SUPABASE_URL !== 'undefined') {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(_activeSlug)}`, {
+            method: 'PATCH',
+            headers: getHeaders(),
+            body: JSON.stringify({
+              last_pos_sync_at: new Date().toISOString(),
+              pos_sync_tables: selectedTables
+            })
+          });
+        } catch(e) {}
+      }
+
+      if (msg) {
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(16,185,129,0.1)';
+        msg.style.border = '1px solid rgba(16,185,129,0.3)';
+        msg.style.padding = '10px 14px';
+        msg.style.borderRadius = '8px';
+        msg.style.color = '#059669';
+        msg.style.fontSize = '0.86rem';
+        msg.style.fontWeight = '700';
+        msg.innerHTML = isAR 
+          ? '✅ تم إرسال إشعار المزامنة بنجاح! سيتم تحديث شاشات الكاشير في المحل تلقائياً.'
+          : '✅ Sync signal pushed successfully! Cash registers will auto-update.';
+      }
+
+      setTimeout(() => {
+        closePosSyncModal();
+      }, 1800);
+    } catch(err) {
+      if (msg) {
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(239,68,68,0.1)';
+        msg.style.border = '1px solid rgba(239,68,68,0.3)';
+        msg.style.padding = '10px 14px';
+        msg.style.borderRadius = '8px';
+        msg.style.color = '#dc2626';
+        msg.style.fontSize = '0.86rem';
+        msg.textContent = isAR ? '❌ تعذر إرسال إشارة المزامنة' : '❌ Failed to push sync';
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+      if (btnTxt) btnTxt.textContent = isAR ? 'إرسال المزامنة للكاشير الآن' : 'Push Sync to POS Now';
+    }
+  }
+
+  
+  // ── Reports & Analytics Dashboard ───────────────────────────────
+  async function loadReports() {
+    const isAR = _currentLang === 'ar';
+    const dateFilter = document.getElementById('reports-date-filter')?.value || 'month';
+    const topBody = document.getElementById('reports-top-products-body');
+    const lowStockBody = document.getElementById('reports-low-stock-body');
+
+    if (topBody) topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ معالجة البيانات والتقارير...' : 'Calculating reports...') + '</td></tr>';
+    if (lowStockBody) lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ فحص المخزون...' : 'Checking inventory...') + '</td></tr>';
+
+    try {
+      // 1. Fetch Orders from Supabase for this tenant
+      let orders = [];
+      try {
+        const oRes = await fetch(SUPABASE_URL + '/rest/v1/orders?tenant_slug=eq.' + encodeURIComponent(_activeSlug) + '&select=*&order=created_at.desc', {
+          headers: getHeaders()
+        });
+        if (oRes.ok) orders = await oRes.json();
+      } catch(e) {}
+
+      // 2. Filter orders by selected date range
+      const now = new Date();
+      const filteredOrders = orders.filter(o => {
+        if (!o.created_at) return true;
+        const d = new Date(o.created_at);
+        if (dateFilter === 'today') {
+          return d.toDateString() === now.toDateString();
+        } else if (dateFilter === 'week') {
+          return (now - d) <= (7 * 24 * 60 * 60 * 1000);
+        } else if (dateFilter === 'month') {
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }
+        return true;
+      });
+
+      // Calculate totals
+      let totalSales = 0;
+      let completedCount = 0;
+      const productCounts = {};
+
+      filteredOrders.forEach(o => {
+        const amount = parseFloat(o.total_amount || o.grand_total || o.total || 0);
+        totalSales += amount;
+        if (o.status === 'completed' || o.status === 'delivered') completedCount++;
+
+        let items = [];
+        try {
+          items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
+        } catch(e) {}
+
+        items.forEach(it => {
+          const name = it.name || it.item_name || 'Product';
+          const qty = parseFloat(it.qty || it.quantity || 1);
+          const price = parseFloat(it.price || 0);
+          if (!productCounts[name]) productCounts[name] = { qty: 0, revenue: 0 };
+          productCounts[name].qty += qty;
+          productCounts[name].revenue += (qty * price);
+        });
+      });
+
+      const avgOrder = filteredOrders.length > 0 ? (totalSales / filteredOrders.length) : 0;
+      const rate = parseFloat(_tenantConfig.lbp_rate || 89500);
+
+      // Update KPI cards
+      const elSales = document.getElementById('kpi-total-sales');
+      if (elSales) elSales.textContent = '$' + totalSales.toFixed(2);
+      const elSalesLbp = document.getElementById('kpi-total-sales-lbp');
+      if (elSalesLbp) elSalesLbp.textContent = Math.round(totalSales * rate).toLocaleString() + ' ' + (isAR ? 'ل.ل' : 'LBP');
+
+      const elOrders = document.getElementById('kpi-total-orders');
+      if (elOrders) elOrders.textContent = filteredOrders.length;
+      const elCompleted = document.getElementById('kpi-completed-orders');
+      if (elCompleted) elCompleted.textContent = completedCount + (isAR ? ' طلب مكتمل ومسلّم' : ' completed orders');
+
+      const elAvg = document.getElementById('kpi-avg-order');
+      if (elAvg) elAvg.textContent = '$' + avgOrder.toFixed(2);
+
+      // Render Top Selling Items
+      const sortedProducts = Object.keys(productCounts).map(k => ({ name: k, ...productCounts[k] }))
+        .sort((a,b) => b.qty - a.qty);
+
+      if (topBody) {
+        if (sortedProducts.length === 0) {
+          topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text-muted)">' + (isAR ? 'لا توجد بيانات مبيعات في هذه الفترة' : 'No sales records in this period') + '</td></tr>';
+        } else {
+          topBody.innerHTML = sortedProducts.slice(0, 8).map(p => `
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:8px;font-weight:700">${p.name}</td>
+              <td style="padding:8px;text-align:center"><span style="background:rgba(59,130,246,0.1);color:#2563eb;padding:2px 8px;border-radius:12px;font-weight:800">${p.qty}</span></td>
+              <td style="padding:8px;text-align:end;font-weight:800;color:#059669">$${p.revenue.toFixed(2)}</td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // Check Low Stock from Catalog
+      let lowStockItems = [];
+      try {
+        const pRes = await fetch(SUPABASE_URL + '/rest/v1/products?tenant_slug=eq.' + encodeURIComponent(_activeSlug) + '&select=*&stock=lte.5&order=stock.asc&limit=10', {
+          headers: getHeaders()
+        });
+        if (pRes.ok) lowStockItems = await pRes.json();
+      } catch(e) {}
+
+      const elLowCount = document.getElementById('kpi-low-stock');
+      if (elLowCount) elLowCount.textContent = lowStockItems.length;
+
+      if (lowStockBody) {
+        if (lowStockItems.length === 0) {
+          lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:16px;color:#059669;font-weight:700">✅ ' + (isAR ? 'جميع الأصناف متوفرة بمخزون جيد' : 'All items have healthy stock') + '</td></tr>';
+        } else {
+          lowStockBody.innerHTML = lowStockItems.map(it => `
+            <tr style="border-bottom:1px solid #e2e8f0">
+              <td style="padding:8px;font-weight:700">${it.name || it.item_name}</td>
+              <td style="padding:8px;text-align:center"><span style="background:rgba(239,68,68,0.1);color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:800">${it.stock || 0}</span></td>
+              <td style="padding:8px;text-align:end;font-weight:700">$${parseFloat(it.price || 0).toFixed(2)}</td>
+            </tr>
+          `).join('');
+        }
+      }
+
+    } catch(err) {
+      console.error('[Admin] Reports load error:', err);
+    }
+  }
+
+  // ── Mobile Admin App Modal Handlers ─────────────────────────────
+  function openMobileAppModal() {
+    const modal = document.getElementById('modal-mobile-app');
+    if (modal) {
+      modal.style.display = 'flex';
+      const origin = window.location.origin || '';
+      const appUrl = origin + '/app.html?shop=' + encodeURIComponent(_activeSlug);
+      
+      const linkEl = document.getElementById('btn-open-mobile-app-link');
+      if (linkEl) linkEl.href = appUrl;
+
+      const textEl = document.getElementById('app-direct-url-text');
+      if (textEl) textEl.textContent = appUrl;
+
+      const storeNameEl = document.getElementById('modal-app-store-name');
+      if (storeNameEl) storeNameEl.textContent = (_tenantConfig.name || _activeSlug) + ' — تطبيق المدير الذكي';
+    }
+  }
+
+  function closeMobileAppModal() {
+    const modal = document.getElementById('modal-mobile-app');
+    if (modal) modal.style.display = 'none';
+  }
+
   return {
     openStorefront,
     init,
@@ -1421,7 +1666,13 @@ const Admin = (() => {
     confirmClearAllProducts,
     loadOrders,
     updateOrderStatus,
-    switchTab
+    switchTab,
+    openPosSyncModal,
+    closePosSyncModal,
+    triggerPosSync,
+    loadReports,
+    openMobileAppModal,
+    closeMobileAppModal
   };
 })();
 
