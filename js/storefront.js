@@ -191,7 +191,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '19.0';
+    const APP_VERSION = '20.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -200,7 +200,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=19.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=20.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -1307,77 +1307,101 @@ const Storefront = (() => {
     const input = document.getElementById('track-order-input');
     const resEl = document.getElementById('track-order-result');
     if (!input || !resEl) return;
-    const query = input.value.trim();
-    if (!query) {
+    const raw = input.value.trim();
+    if (!raw) {
       alert(_currentLang === 'ar' ? 'الرجاء إدخال رقم الطلب أو رقم الهاتف' : 'Please enter an order ID or phone number');
       return;
     }
 
     resEl.style.display = 'block';
-    resEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">جاري البحث عن الطلب...</div>';
+    resEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);"><div style="display:inline-block;width:30px;height:30px;border:3px solid rgba(220,38,38,0.2);border-top-color:#dc2626;border-radius:50%;animation:spin 0.8s linear infinite"></div><div style="margin-top:10px;font-weight:700;">جاري البحث عن طلبك...</div></div>';
 
     try {
-      const url = `${StorefrontAPI.getUrl()}/rest/v1/orders?shop_id=eq.${_tenant.id}&or=(order_number.eq.${encodeURIComponent(query)},customer_phone.eq.${encodeURIComponent(query)},id.eq.${encodeURIComponent(query)})&order=created_at.desc&limit=3`;
-      const res = await fetch(url, { headers: { ...StorefrontAPI.getKey() ? { 'apikey': StorefrontAPI.getKey(), 'Authorization': 'Bearer ' + StorefrontAPI.getKey() } : {} } });
+      const cleanQ = raw.replace(/[^a-zA-Z0-9_-]/g, '');
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw);
+
+      let orFilter = 'order_number.ilike.*' + encodeURIComponent(cleanQ) + '*,customer_phone.ilike.*' + encodeURIComponent(cleanQ) + '*';
+      if (isUUID) {
+        orFilter += ',id.eq.' + raw;
+      }
+
+      const url = StorefrontAPI.getUrl() + '/rest/v1/orders?shop_id=eq.' + _tenant.id + '&or=(' + orFilter + ')&order=created_at.desc&limit=5';
+      const res = await fetch(url, {
+        headers: {
+          ...StorefrontAPI.getKey() ? { 'apikey': StorefrontAPI.getKey(), 'Authorization': 'Bearer ' + StorefrontAPI.getKey() } : {}
+        }
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText);
+      }
+
       const orders = await res.json();
 
-      if (!orders || orders.length === 0) {
-        resEl.innerHTML = `
-          <div style="text-align:center;padding:20px;">
-            <div style="font-size:2rem;margin-bottom:6px">🔍</div>
-            <div style="font-weight:800;color:var(--text-main);">لم يتم العثور على أي طلب برقم (${query})</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">تأكد من رقم الطلب أو تواصل معنا عبر واتساب للمساعدة</div>
-          </div>
-        `;
+      if (!Array.isArray(orders) || orders.length === 0) {
+        resEl.innerHTML = '<div style="text-align:center;padding:24px 12px;">' +
+          '<div style="font-size:2.8rem;margin-bottom:8px">🔍</div>' +
+          '<div style="font-size:1.05rem;font-weight:900;color:var(--text-main);">لم يتم العثور على أي طلب برقم (' + raw + ')</div>' +
+          '<div style="font-size:0.82rem;color:var(--text-muted);margin-top:6px;line-height:1.5;">يرجى التأكد من كتابة رقم الهاتف أو كود الطلب بشكل صحيح، أو التواصل مع المتجر للمساعدة.</div>' +
+          '</div>';
         return;
       }
 
       const statusMap = {
-        'pending': { step: 1, label: '📥 تم استلام الطلب', color: '#f59e0b', desc: 'تم استلام طلبك وجاري مراجعته في الكاشير' },
+        'pending': { step: 1, label: '📥 تم استلام الطلب', color: '#f59e0b', desc: 'تم استلام طلبك وبانتظار المراجعة من الكاشير' },
         'confirmed': { step: 2, label: '👨‍🍳 جاري التجهيز', color: '#3b82f6', desc: 'يقوم فريق المتجر بتجهيز محتويات طلبك الآن' },
         'preparing': { step: 2, label: '👨‍🍳 جاري التجهيز', color: '#3b82f6', desc: 'يقوم فريق المتجر بتجهيز محتويات طلبك الآن' },
-        'delivering': { step: 3, label: '🛵 مع الدليفري', color: '#8b5cf6', desc: 'الطلب في طريقه إليك مع مندوب التوصيل' },
-        'completed': { step: 4, label: '✅ تم التسليم بنجاح', color: '#10b981', desc: 'تم تسليم الطلب للعميل، شكراً لتسوقكم معنا!' },
-        'cancelled': { step: 0, label: '❌ ملغي', color: '#ef4444', desc: 'تم إلغاء هذا الطلب' }
+        'out_for_delivery': { step: 3, label: '🛵 مع مندوب التوصيل', color: '#8b5cf6', desc: 'طلبك في الطريق إليك الآن مع مندوب التوصيل' },
+        'delivering': { step: 3, label: '🛵 مع مندوب التوصيل', color: '#8b5cf6', desc: 'طلبك في الطريق إليك الآن مع مندوب التوصيل' },
+        'completed': { step: 4, label: '✅ تم التسليم بنجاح', color: '#10b981', desc: 'تم تسليم الطلب للعميل بنجاح، شكراً لتسوقكم معنا!' },
+        'delivered': { step: 4, label: '✅ تم التسليم بنجاح', color: '#10b981', desc: 'تم تسليم الطلب للعميل بنجاح، شكراً لتسوقكم معنا!' },
+        'cancelled': { step: 0, label: '❌ تم الإلغاء', color: '#ef4444', desc: 'تم إلغاء هذا الطلب' }
       };
 
       resEl.innerHTML = orders.map(ord => {
-        const st = statusMap[ord.status] || statusMap['pending'];
-        const total = (parseFloat(ord.total_amount) || 0).toFixed(2);
-        const orderDate = new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const rawStatus = (ord.order_status || ord.status || 'pending').toLowerCase();
+        const st = statusMap[rawStatus] || statusMap['pending'];
+        const total = (parseFloat(ord.total) || parseFloat(ord.total_amount) || 0).toFixed(2);
+        const dateStr = new Date(ord.created_at).toLocaleDateString('ar', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 
-        return `
-          <div style="padding:14px; background:var(--bg-surface); border-radius:12px; margin-bottom:10px; border:1px solid var(--border-color);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <div>
-                <strong style="font-size:1rem; color:var(--text-main);">#${ord.order_number || ord.id.slice(0,8)}</strong>
-                <div style="font-size:0.75rem; color:var(--text-muted);">${orderDate} • ${ord.customer_name || 'عميل'}</div>
-              </div>
-              <span style="background:${st.color}15; color:${st.color}; border:1px solid ${st.color}35; font-size:0.8rem; font-weight:800; padding:4px 10px; border-radius:20px;">
-                ${st.label}
-              </span>
-            </div>
+        const itemsList = Array.isArray(ord.items) && ord.items.length > 0
+          ? ord.items.map(it => '<div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-muted);padding:3px 0;"><span>' + (it.product_name || it.name || 'صنف') + '</span><strong>× ' + (it.quantity || 1) + '</strong></div>').join('')
+          : '';
 
-            <!-- Progress Bar -->
-            <div style="display:flex; gap:4px; margin:12px 0 8px 0;">
-              <div style="flex:1; height:6px; border-radius:4px; background:${st.step >= 1 ? '#dc2626' : '#e2e8f0'};"></div>
-              <div style="flex:1; height:6px; border-radius:4px; background:${st.step >= 2 ? '#dc2626' : '#e2e8f0'};"></div>
-              <div style="flex:1; height:6px; border-radius:4px; background:${st.step >= 3 ? '#dc2626' : '#e2e8f0'};"></div>
-              <div style="flex:1; height:6px; border-radius:4px; background:${st.step >= 4 ? '#10b981' : '#e2e8f0'};"></div>
-            </div>
-
-            <p style="font-size:0.82rem; color:var(--text-main); margin:6px 0; font-weight:700;">${st.desc}</p>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;">
-              <span>الإجمالي: <strong style="color:#dc2626;">${total}</strong></span>
-              <a href="https://wa.me/${(_tenant.whatsapp_phone || _tenant.owner_phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent('مرحباً، أستفسر عن طلبي رقم #' + (ord.order_number || ord.id))}" target="_blank" style="color:#25d366; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
-                <span>💬 متابعة بالواتساب</span>
-              </a>
-            </div>
-          </div>
-        `;
+        return '<div style="padding:16px; background:var(--bg-surface); border-radius:14px; margin-bottom:12px; border:1.5px solid var(--border-color); box-shadow:0 2px 8px rgba(0,0,0,0.04);">' +
+          '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">' +
+            '<div>' +
+              '<div style="font-size:1.08rem; font-weight:900; color:var(--text-main);">#' + (ord.order_number || ord.id.slice(0,8)) + '</div>' +
+              '<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">' + dateStr + ' • ' + (ord.customer_name || 'عميل') + '</div>' +
+            '</div>' +
+            '<span style="background:' + st.color + '15; color:' + st.color + '; border:1.5px solid ' + st.color + '40; font-size:0.82rem; font-weight:900; padding:4px 12px; border-radius:20px;">' +
+              st.label +
+            '</span>' +
+          '</div>' +
+          '<div style="display:flex; gap:4px; margin:14px 0 10px 0;">' +
+            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 1 ? '#dc2626' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
+            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 2 ? '#dc2626' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
+            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 3 ? '#dc2626' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
+            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 4 ? '#10b981' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
+          '</div>' +
+          '<p style="font-size:0.86rem; color:var(--text-main); font-weight:800; margin:8px 0 12px 0; background:rgba(220,38,38,0.04); padding:8px 10px; border-radius:8px;">' +
+            st.desc +
+          '</p>' +
+          (itemsList ? '<div style="background:var(--bg-primary); border-radius:8px; padding:8px 10px; margin-bottom:10px;">' + itemsList + '</div>' : '') +
+          (ord.delivery_address ? '<div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">📍 العنوان: <strong>' + ord.delivery_address + '</strong></div>' : '') +
+          '<div style="display:flex; justify-content:space-between; align-items:center; font-size:0.9rem; border-top:1px dashed var(--border-color); padding-top:10px;">' +
+            '<span>المجموع الكلي: <strong style="color:#dc2626; font-size:1.05rem;">$' + total + '</strong></span>' +
+            '<a href="https://wa.me/' + ((_tenant.whatsapp_phone || _tenant.owner_phone || '').replace(/[^0-9]/g, '')) + '?text=' + encodeURIComponent('مرحباً، أتابع طلبي رقم #' + (ord.order_number || ord.id)) + '" target="_blank" style="background:#25d366; color:#fff; font-size:0.78rem; font-weight:900; text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; box-shadow:0 2px 6px rgba(37,211,102,0.3);">' +
+              '<span>💬 متابعة واتساب</span>' +
+            '</a>' +
+          '</div>' +
+        '</div>';
       }).join('');
+
     } catch(err) {
-      resEl.innerHTML = '<div style="color:#ef4444;text-align:center;padding:12px;">حدث خطأ أثناء تتبع الطلب، يرجى المحاولة لاحقاً</div>';
+      console.error('[TrackOrder] Error:', err);
+      resEl.innerHTML = '<div style="color:#ef4444;text-align:center;padding:16px;font-weight:700;">حدث خطأ أثناء تتبع الطلب، يرجى المحاولة لاحقاً</div>';
     }
   }
 
