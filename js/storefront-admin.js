@@ -1614,13 +1614,14 @@ async function loadReports() {
     const branchSel = document.getElementById('reports-branch-filter');
     if (branchSel) {
       const bSet = new Set(['main']);
+      (cBoxes || []).forEach(cb => {
+        if (cb.branch_id && cb.branch_id !== 'main') bSet.add(cb.branch_id);
+      });
       orders.forEach(o => {
         try {
           const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
-          if (n.branch_id) bSet.add(n.branch_id);
-          if (n.terminal_id) bSet.add(n.terminal_id);
+          if (n.branch_id && n.branch_id !== 'main') bSet.add(n.branch_id);
         } catch(e) {}
-        if (o.delivery_address && o.delivery_address !== 'Sibline') bSet.add(o.delivery_address);
       });
       let bOpts = '<option value="all">' + (isAR ? '🌐 كافة الفروع والمحطات (All Branches)' : '🌐 All Branches & Terminals') + '</option>';
       bSet.forEach(b => {

@@ -827,17 +827,14 @@
       if (!select) return;
 
       const branches = new Set(['main']);
+      _cashboxes.forEach(cb => {
+        if (cb.branch_id && cb.branch_id !== 'main') branches.add(cb.branch_id);
+      });
       _orders.forEach(o => {
         try {
           const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
-          if (n.branch_id) branches.add(n.branch_id);
-          if (n.terminal_id) branches.add(n.terminal_id);
+          if (n.branch_id && n.branch_id !== 'main') branches.add(n.branch_id);
         } catch(e) {}
-        if (o.delivery_address && o.delivery_address !== 'Sibline') branches.add(o.delivery_address);
-      });
-
-      _cashboxes.forEach(cb => {
-        if (cb.branch_id) branches.add(cb.branch_id);
       });
 
       let opts = '<option value="all">🌐 كافة الفروع والمحطات (All Branches)</option>';
