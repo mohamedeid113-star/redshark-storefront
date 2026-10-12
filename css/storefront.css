@@ -2094,3 +2094,47 @@ body[dir="rtl"] {
     font-size: 0.88rem !important;
   }
 }
+
+
+/* =====================================================================
+   MOBILE SWIPE & HORIZONTAL NAVIGATION FIXES
+===================================================================== */
+.categories-slider {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x pan-y !important;
+  scroll-behavior: smooth !important;
+  padding: 8px 4px !important;
+  gap: 8px !important;
+  scrollbar-width: none !important;
+}
+
+.categories-slider::-webkit-scrollbar {
+  display: none !important;
+}
+
+.cat-chip {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+  border-radius: 20px !important;
+  padding: 8px 14px !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+}
+
+/* Banner Carousel Touch Area */
+.promo-carousel {
+  touch-action: pan-y pinch-zoom !important;
+  user-select: none !important;
+}
+
+@media (max-width: 640px) {
+  html, body {
+    overflow-x: clip !important;
+    width: 100% !important;
+    touch-action: auto !important;
+  }
+}
