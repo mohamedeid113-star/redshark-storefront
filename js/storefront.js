@@ -191,7 +191,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '17.0';
+    const APP_VERSION = '18.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -200,7 +200,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=17.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=18.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -491,6 +491,17 @@ const Storefront = (() => {
     _viewMode = 'categories';
     _selectedCategory = 'all';
 
+    const tabCats = document.getElementById('tab-btn-categories');
+    const tabAll = document.getElementById('tab-btn-all');
+    if (tabCats && tabAll) {
+      tabCats.style.background = '#dc2626';
+      tabCats.style.color = '#fff';
+      tabCats.style.borderColor = '#dc2626';
+      tabAll.style.background = 'var(--bg-surface)';
+      tabAll.style.color = 'var(--text-main)';
+      tabAll.style.borderColor = 'var(--border-color)';
+    }
+
     const bigView = document.getElementById('categories-big-view');
     const prodsView = document.getElementById('products-view');
 
@@ -542,6 +553,17 @@ const Storefront = (() => {
   function showAllProducts() {
     _viewMode = 'products';
     _selectedCategory = 'all';
+
+    const tabCats = document.getElementById('tab-btn-categories');
+    const tabAll = document.getElementById('tab-btn-all');
+    if (tabCats && tabAll) {
+      tabAll.style.background = '#dc2626';
+      tabAll.style.color = '#fff';
+      tabAll.style.borderColor = '#dc2626';
+      tabCats.style.background = 'var(--bg-surface)';
+      tabCats.style.color = 'var(--text-main)';
+      tabCats.style.borderColor = 'var(--border-color)';
+    }
 
     const bigView = document.getElementById('categories-big-view');
     const prodsView = document.getElementById('products-view');

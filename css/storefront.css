@@ -1908,8 +1908,8 @@ body[dir="rtl"] {
    ===================================================================== */
 @media screen and (max-width: 640px) {
   html, body {
-    width: 100vw !important;
-    max-width: 100vw !important;
+    width: 100% !important;
+    max-width: 100% !important;
     overflow-x: hidden !important;
   }
 
@@ -2136,5 +2136,63 @@ body[dir="rtl"] {
     overflow-x: clip !important;
     width: 100% !important;
     touch-action: auto !important;
+  }
+}
+
+
+/* =====================================================================
+   DEFINITIVE MOBILE ROW FIT & DISPLAY FIX (v18.0)
+===================================================================== */
+* {
+  box-sizing: border-box !important;
+}
+
+html, body {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}
+
+@media (max-width: 768px) {
+  .storefront-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 8px 10px 85px 10px !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  .catalog-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .side-cart-col {
+    display: none !important;
+  }
+
+  /* 2-Column Clean Grid for Categories */
+  .categories-big-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  /* 2-Column Clean Grid for Products */
+  .products-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .product-card {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 }

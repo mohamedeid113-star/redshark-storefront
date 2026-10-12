@@ -13,7 +13,7 @@
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   
-  <link rel="stylesheet" href="css/storefront.css?v=17.0">
+  <link rel="stylesheet" href="css/storefront.css?v=18.0">
 </head>
 <body>
 
@@ -101,24 +101,36 @@
     <!-- LEFT/CENTER COLUMN: Products & Catalog -->
     <div class="catalog-col">
       <!-- Search Box -->
-      <div class="search-box">
+      <div class="search-box" style="margin-bottom: 10px;">
         <span class="search-icon">🔍</span>
-        <input type="text" id="search-catalog" class="search-input" placeholder="ابحث بالاسم أو الباركود..." oninput="Storefront.onSearch(this.value)">
+        <input type="text" id="search-catalog" class="search-input" placeholder="ابحث عن صنف أو امسح الباركود مباشرة..." oninput="Storefront.onSearch(this.value)">
+      </div>
+
+      <!-- POS Navigation Tabs (Matching Red Shark POS Software) -->
+      <div class="pos-nav-tabs" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding: 2px 0;">
+        <button id="tab-btn-categories" class="pos-tab-btn active" onclick="Storefront.showCategoriesGrid()" style="padding: 7px 16px; border-radius: 20px; font-weight: 800; font-size: 0.88rem; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; background: #dc2626; color: #fff; box-shadow: 0 2px 6px rgba(220,38,38,0.25);">
+          <span>📁</span>
+          <span id="tab-txt-cats">التصنيفات</span>
+        </button>
+        <button id="tab-btn-all" class="pos-tab-btn" onclick="Storefront.showAllProducts()" style="padding: 7px 16px; border-radius: 20px; font-weight: 800; font-size: 0.88rem; border: 1.5px solid var(--border-color); cursor: pointer; display: flex; align-items: center; gap: 6px; background: var(--bg-surface); color: var(--text-main);">
+          <span>🏷️</span>
+          <span id="tab-txt-all">كل الأصناف</span>
+        </button>
       </div>
 
       <!-- Horizontal Categories Slider -->
-      <div class="categories-slider" id="categories-slider"></div>
+      <div class="categories-slider" id="categories-slider" style="margin-bottom: 12px;"></div>
 
       <!-- SECTION A: BIG CATEGORIES GRID (HOME VIEW) -->
       <div id="categories-big-view">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 2px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 2px">
           <div>
-            <h2 style="font-size:1.2rem;font-weight:900" id="title-categories-view">📂 أقسام وتصنيفات المتجر</h2>
-            <p style="font-size:0.82rem;color:var(--text-muted);margin-top:2px" id="sub-categories-view">اختر القسم لتصفح منتجاته أو اضغط عرض جميع الأصناف</p>
+            <h2 style="font-size:1.15rem;font-weight:900;margin:0" id="title-categories-view">أقسام وتصنيفات المتجر</h2>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin:2px 0 0" id="sub-categories-view">اختر القسم لتصفح منتجاته أو اضغط كل الأصناف</p>
           </div>
-          <button class="icon-btn" onclick="Storefront.showAllProducts()" style="background:var(--brand-primary);color:#fff;border:none">
-            <span>🛍️</span>
-            <span id="btn-show-all-text">عرض جميع الأصناف</span>
+          <button class="icon-btn" onclick="Storefront.showAllProducts()" style="background:#dc2626;color:#fff;border:none;border-radius:10px;padding:6px 12px;font-size:0.82rem;font-weight:800;display:flex;align-items:center;gap:4px">
+            <span>🛒</span>
+            <span id="btn-show-all-text">كل الأصناف</span>
           </button>
         </div>
         <div class="categories-big-grid" id="categories-big-grid"></div>
@@ -126,13 +138,13 @@
 
       <!-- SECTION B: CATEGORY PRODUCTS & SEARCH VIEW -->
       <div id="products-view" style="display:none">
-        <div class="cat-back-bar" id="cat-back-bar">
+        <div class="cat-back-bar" id="cat-back-bar" style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-surface); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border-color);">
           <div style="display:flex;align-items:center;gap:10px">
-            <button class="btn-back-categories" onclick="Storefront.showCategoriesGrid()">
+            <button class="btn-back-categories" onclick="Storefront.showCategoriesGrid()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:8px; font-size:0.82rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px;">
               <span>←</span>
-              <span id="btn-back-cats-text">الرجوع لجميع الأقسام</span>
+              <span id="btn-back-cats-text">الرجوع للأقسام</span>
             </button>
-            <span style="font-weight:900;font-size:1.05rem" id="current-view-title">الأصناف</span>
+            <span style="font-weight:900;font-size:1rem;color:var(--text-main)" id="current-view-title">الأصناف</span>
           </div>
           <span style="font-size:0.8rem;color:var(--text-subtle);font-weight:700" id="current-view-count">0 صنف</span>
         </div>
@@ -140,6 +152,7 @@
         <!-- Grouped Categories Container -->
         <div id="grouped-categories-container"></div>
       </div>
+    </div>
     </div>
 
     <!-- RIGHT COLUMN: VISIBLE LIVE SHOPPING CART (DESKTOP) -->
@@ -306,8 +319,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/supabase-client.js?v=17.0"></script>
-  <script src="js/storefront.js?v=17.0"></script>
+  <script src="js/supabase-client.js?v=18.0"></script>
+  <script src="js/storefront.js?v=18.0"></script>
 
   <!-- Automatic Loader Safety Timeout -->
   <script>
