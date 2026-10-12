@@ -1398,8 +1398,19 @@ const Admin = (() => {
     const container = document.getElementById('admin-orders-table');
     if (!container) return;
 
-    if (_orders.length === 0) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">No orders yet</div>';
+    // Filter to genuine online store orders (exclude POS in-store sales)
+    const onlineOrders = _orders.filter(o => {
+      if (o.pos_synced === true) return false;
+      if (o.order_number && (o.order_number.startsWith('INV-') || o.order_number.includes('-INV-'))) return false;
+      try {
+        const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
+        if (n.source === 'pos') return false;
+      } catch(e) {}
+      return true;
+    });
+
+    if (onlineOrders.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">لا توجد طلبات أونلاين بعد (No online orders yet)</div>';
       return;
     }
 
@@ -1417,7 +1428,7 @@ const Admin = (() => {
             </tr>
           </thead>
           <tbody>
-            ${_orders.map(o => `
+            ${onlineOrders.map(o => `
               <tr style="border-bottom:1px solid var(--border-color)">
                 <td style="padding:10px;font-weight:900">${o.order_number}</td>
                 <td style="padding:10px">
