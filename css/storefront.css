@@ -12,15 +12,15 @@
   --bg-card: #ffffff;
   --border-color: #cbd5e1;
   --border-hover: #94a3b8;
-  --border-focus: #059669;
+  --border-focus: #dc2626;
   
   --text-main: #0f172a;
   --text-muted: #475569;
   --text-subtle: #64748b;
   
-  --brand-primary: #059669;
-  --brand-primary-hover: #047857;
-  --brand-light: #ecfdf5;
+  --brand-primary: #dc2626;
+  --brand-primary-hover: #b91c1c;
+  --brand-light: #fef2f2;
   --brand-accent: #2563eb;
   
   --header-bg: #09101d;
