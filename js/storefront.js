@@ -23,13 +23,13 @@ const Storefront = (() => {
   let _carouselTimer = null;
 
   const DEFAULT_CAT_IMAGES = {
-    'fruits': 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=600&q=80',
-    'dairy': 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=600&q=80',
-    'bakery': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
-    'beverages': 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=600&q=80',
-    'meats': 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80',
-    'snacks': 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=600&q=80',
-    'general': 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80'
+    'fruits': 'assets/categories/fruits_vegetables.jpg',
+    'dairy': 'assets/categories/dairy_cheese.jpg',
+    'bakery': 'assets/categories/bakery_pastry.jpg',
+    'beverages': 'assets/categories/beverages_coffee.jpg',
+    'meats': 'assets/categories/meats_poultry.jpg',
+    'snacks': 'assets/categories/snacks_sweets.jpg',
+    'general': 'assets/categories/fruits_vegetables.jpg'
   };
 
     const I18N = {
@@ -191,7 +191,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '14.0';
+    const APP_VERSION = '15.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -200,7 +200,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=14.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=15.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
