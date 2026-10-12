@@ -10,7 +10,9 @@
   <meta name="apple-mobile-web-app-title" content="RedShark Admin">
   <meta name="theme-color" content="#1e293b">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
-  <link rel="apple-touch-icon" href="assets/favicon.png">
+  <link rel="manifest" href="admin-manifest.json">
+  <link rel="apple-touch-icon" href="assets/app-icon-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -503,6 +505,7 @@
       </div>
 
       <div class="header-actions">
+        <button id="btn-install-app-header" class="hdr-btn" onclick="openInstallModal()" style="background:rgba(37,99,235,0.15);color:var(--primary);font-weight:800;border:1px solid rgba(37,99,235,0.3);display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;font-size:0.75rem" title="تثبيت التطبيق على الهاتف"><span>📲</span> <span id="hdr-install-text">تثبيت التطبيق</span></button>
         <button class="hdr-btn" onclick="toggleTheme()" title="تبديل الوضع">🌓</button>
         <button class="hdr-btn" onclick="toggleLang()" title="اللغة">🌐</button>
         <button class="hdr-btn" onclick="refreshAppData()" title="تحديث">🔄</button>
@@ -1430,5 +1433,54 @@
       }
     }
   </script>
+
+  <!-- INSTALL APP MODAL (Permanent Home Screen Setup) -->
+  <div id="modal-install-guide" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:99999;align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)closeInstallModal()">
+    <div style="background:var(--surface);border-radius:20px;max-width:420px;width:100%;padding:22px;box-shadow:0 20px 40px rgba(0,0,0,0.4);border:1px solid var(--border);position:relative;text-align:center">
+      <button onclick="closeInstallModal()" style="position:absolute;top:14px;left:14px;background:none;border:none;font-size:1.2rem;color:var(--text-muted);cursor:pointer">✕</button>
+      
+      <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-gradient);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 6px 16px rgba(37,99,235,0.3)">
+        <span style="font-size:2rem">🦈</span>
+      </div>
+      <h3 style="margin:0 0 6px;font-size:1.15rem;font-weight:900" id="m-inst-title">تثبيت تطبيق المدير على هاتفك</h3>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 16px;line-height:1.4" id="m-inst-sub">
+        ثبّت التطبيق على شاشة هاتفك الرئيسية ليعمل كتطبيق دائم وسريع بدون متصفح في أي وقت!
+      </p>
+
+      <!-- Native Install Trigger for Android / Desktop -->
+      <button id="btn-native-pwa-install" onclick="triggerNativeInstall()" style="display:none;width:100%;background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;border:none;padding:12px;border-radius:12px;font-weight:900;font-size:0.95rem;margin-bottom:14px;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,0.35)">
+        ⚡ تثبيت التطبيق بضغطة واحدة الآن
+      </button>
+
+      <!-- Instructions Tabs (iPhone vs Android) -->
+      <div style="text-align:right;background:var(--surface-subtle);border-radius:14px;padding:14px;border:1px solid var(--border);margin-bottom:14px;font-size:0.82rem;line-height:1.6">
+        <div style="font-weight:900;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <span>🍎</span> <span>لمستخدمي آيفون (iPhone / iPad - Safari):</span>
+        </div>
+        <div style="color:var(--text-muted);padding-right:6px">
+          1. اضغط على زر <strong>المشاركة (Share ⎋)</strong> في أسفل متصفح Safari.<br>
+          2. مرّر للأسفل واختر <strong>"إضافة إلى الشاشة الرئيسية" (Add to Home Screen ➕)</strong>.<br>
+          3. اضغط <strong>"إضافة" (Add)</strong> في الزاوية العلوية.<br>
+          🎉 سيظهر التطبيق فوراً على شاشة هاتفك مثل التطبيقات الرسمية!
+        </div>
+      </div>
+
+      <div style="text-align:right;background:var(--surface-subtle);border-radius:14px;padding:14px;border:1px solid var(--border);font-size:0.82rem;line-height:1.6">
+        <div style="font-weight:900;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <span>🤖</span> <span>لمستخدمي أندرويد (Android - Chrome):</span>
+        </div>
+        <div style="color:var(--text-muted);padding-right:6px">
+          1. اضغط على القائمة <strong>(⋮)</strong> أعلى يمين المتصفح.<br>
+          2. اختر <strong>"تثبيت التطبيق" (Install App)</strong> أو "إضافة إلى الشاشة الرئيسية".<br>
+          🎉 سيتم تثبيت التطبيق على جهازك بشكل دائم!
+        </div>
+      </div>
+
+      <button onclick="closeInstallModal()" style="margin-top:14px;background:none;border:none;color:var(--primary);font-weight:800;cursor:pointer;font-size:0.85rem">
+        فهمت، إغلاق
+      </button>
+    </div>
+  </div>
+
 </body>
 </html>

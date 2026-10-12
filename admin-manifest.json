@@ -1,0 +1,25 @@
+{
+  "name": "Red Shark Admin — تطبيق المدير",
+  "short_name": "RedShark Admin",
+  "description": "Executive mobile companion app for live store sales, cash drawers, and barcode stock management.",
+  "start_url": "/app?shop=shop101&source=standalone",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1120",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

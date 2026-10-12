@@ -1826,6 +1826,8 @@ function filterReportsInvoices() {
     const origin = window.location.origin || '';
     const appUrl = origin + '/app?shop=' + encodeURIComponent(_tenant.slug || 'shop101');
     
+    const qrImg = document.getElementById('modal-app-qr-img');
+    if (qrImg) qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(appUrl);
     const linkEl = document.getElementById('btn-open-mobile-app-link');
     if (linkEl) linkEl.href = appUrl;
 
