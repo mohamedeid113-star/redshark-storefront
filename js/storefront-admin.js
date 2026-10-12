@@ -29,6 +29,33 @@ const Admin = (() => {
       tabCategories: 'الأقسام والتصنيفات',
       tabCatalog: 'أصناف المتجر والمخزون',
       tabOrders: 'الطلبات الواردة',
+      tabReports: '📊 تقارير المبيعات والأرباح',
+      mobileAppBtn: 'تطبيق الهاتف',
+      posSyncBtn: 'مزامنة مع الكاشير',
+      logoutBtn: 'خروج',
+      h2Reports: '📊 تقارير المبيعات والأرباح والمخزون',
+      pReportsDesc: 'متابعة حية وشاملة لإيرادات المتجر، الأرباح التقديرية، أفضل الأصناف مبيعاً، وحالة المخزون',
+      dateFilterToday: '📅 مبيعات اليوم (Today)',
+      dateFilterWeek: '📅 آخر 7 أيام (Last 7 Days)',
+      dateFilterMonth: '📅 مبيعات هذا الشهر (This Month)',
+      dateFilterAll: '📅 جميع المبيعات (All Time)',
+      lblKpiSales: '💰 إجمالي المبيعات المحققة',
+      lblKpiOrders: '📦 عدد الفواتير والطلبات',
+      lblKpiAvg: '🎯 متوسط قيمة الفاتورة',
+      lblKpiAvgSub: 'لكل زبون',
+      lblKpiLowStock: '⚠️ تنبيهات المخزون المنخفض',
+      lblKpiLowStockSub: 'صنف شارف على النفاد',
+      lblTopProducts: 'الأصناف الأكثر طلباً ومبيعاً',
+      lblStockHealth: 'الأصناف التي تحتاج إعادة طلب (مخزون منخفض)',
+      thItem: 'الصنف',
+      thSoldQty: 'الكمية المباعة',
+      thTotal: 'الإجمالي',
+      thStockLeft: 'المخزون المتبقي',
+      thPrice: 'السعر',
+      completedOrdersSub: 'طلب مكتمل ومسلّم',
+      noSalesRecords: 'لا توجد مبيعات مسجلة في هذه الفترة',
+      healthyStockMsg: '✅ جميع الأصناف متوفرة بمخزون كافٍ وممتاز',
+      currencyLbp: 'ل.ل',
       h2Settings: '⚙️ الإعدادات العامة للمتجر',
       btnSaveSettings: 'حفظ الإعدادات',
       lblShopName: 'اسم المتجر',
@@ -140,6 +167,33 @@ const Admin = (() => {
       tabCategories: 'Categories Manager',
       tabCatalog: 'Catalog & Inventory',
       tabOrders: 'Incoming Orders',
+      tabReports: '📊 Sales & Profit Reports',
+      mobileAppBtn: 'Mobile App',
+      posSyncBtn: 'POS Sync',
+      logoutBtn: 'Logout',
+      h2Reports: '📊 Sales, Profit & Inventory Analytics',
+      pReportsDesc: 'Live overview of store revenue, profit, top-selling items, and stock health',
+      dateFilterToday: '📅 Today Sales',
+      dateFilterWeek: '📅 Last 7 Days',
+      dateFilterMonth: '📅 This Month',
+      dateFilterAll: '📅 All Time',
+      lblKpiSales: '💰 Total Sales Revenue',
+      lblKpiOrders: '📦 Completed Orders',
+      lblKpiAvg: '🎯 Average Basket Value',
+      lblKpiAvgSub: 'per customer',
+      lblKpiLowStock: '⚠️ Low Stock Alerts',
+      lblKpiLowStockSub: 'items need restock',
+      lblTopProducts: 'Top Selling Products',
+      lblStockHealth: 'Low Stock & Depleted Items',
+      thItem: 'Product',
+      thSoldQty: 'Sold Qty',
+      thTotal: 'Total',
+      thStockLeft: 'Stock Left',
+      thPrice: 'Price',
+      completedOrdersSub: 'completed orders',
+      noSalesRecords: 'No sales records in this period',
+      healthyStockMsg: '✅ All items have healthy stock',
+      currencyLbp: 'LBP',
       h2Settings: '⚙️ General Store Settings',
       btnSaveSettings: 'Save Settings',
       lblShopName: 'Shop Name',
@@ -412,6 +466,39 @@ const Admin = (() => {
     setText('tab-title-categories', t('tabCategories'));
     setText('tab-title-catalog', t('tabCatalog'));
     setText('tab-title-orders', t('tabOrders'));
+    setText('tab-title-reports', t('tabReports'));
+
+    // Header buttons
+    setText('admin-mobile-app-text', t('mobileAppBtn'));
+    setText('admin-pos-sync-text', t('posSyncBtn'));
+    setText('admin-logout-text', t('logoutBtn'));
+
+    // Tab Reports
+    setText('h2-reports', t('h2Reports'));
+    setText('p-reports-desc', t('pReportsDesc'));
+    setText('lbl-kpi-sales', t('lblKpiSales'));
+    setText('lbl-kpi-orders', t('lblKpiOrders'));
+    setText('lbl-kpi-avg', t('lblKpiAvg'));
+    setText('lbl-kpi-avg-sub', t('lblKpiAvgSub'));
+    setText('lbl-kpi-lowstock', t('lblKpiLowStock'));
+    setText('lbl-kpi-lowstock-sub', t('lblKpiLowStockSub'));
+    setText('lbl-top-products', t('lblTopProducts'));
+    setText('lbl-stock-health', t('lblStockHealth'));
+
+    setText('th-top-item', t('thItem'));
+    setText('th-top-qty', t('thSoldQty'));
+    setText('th-top-rev', t('thTotal'));
+    setText('th-low-item', t('thItem'));
+    setText('th-low-qty', t('thStockLeft'));
+    setText('th-low-price', t('thPrice'));
+
+    const df = document.getElementById('reports-date-filter');
+    if (df && df.options.length >= 4) {
+      df.options[0].text = t('dateFilterToday');
+      df.options[1].text = t('dateFilterWeek');
+      df.options[2].text = t('dateFilterMonth');
+      df.options[3].text = t('dateFilterAll');
+    }
 
     // Tab 1: Settings
     setText('h2-settings', t('h2Settings'));
@@ -510,6 +597,7 @@ const Admin = (() => {
     renderSlidesList();
     renderCategoriesTable();
     renderCatalog();
+    if (document.getElementById('tab-reports') && document.getElementById('tab-reports').style.display !== 'none') { loadReports(); }
   }
 
   function toggleLang() {
@@ -1382,11 +1470,17 @@ const Admin = (() => {
     document.getElementById('tab-banner').style.display = tab === 'banner' ? 'block' : 'none';
     document.getElementById('tab-categories').style.display = tab === 'categories' ? 'block' : 'none';
     document.getElementById('tab-catalog').style.display = tab === 'catalog' ? 'block' : 'none';
+    const repTab = document.getElementById('tab-reports');
+    if (repTab) repTab.style.display = tab === 'reports' ? 'block' : 'none';
     document.getElementById('tab-orders').style.display = tab === 'orders' ? 'block' : 'none';
 
     document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.getElementById('tab-btn-' + tab);
     if (activeBtn) activeBtn.classList.add('active');
+
+    if (tab === 'reports') {
+      loadReports();
+    }
   }
 
   
@@ -1483,156 +1577,178 @@ const Admin = (() => {
     }
   }
 
-  
   // ── Reports & Analytics Dashboard ───────────────────────────────
-  async function loadReports() {
-    const isAR = _currentLang === 'ar';
-    const dateFilter = document.getElementById('reports-date-filter')?.value || 'month';
-    const topBody = document.getElementById('reports-top-products-body');
-    const lowStockBody = document.getElementById('reports-low-stock-body');
+// Implementation of loadReports, openMobileAppModal, closeMobileAppModal
 
-    if (topBody) topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ معالجة البيانات والتقارير...' : 'Calculating reports...') + '</td></tr>';
-    if (lowStockBody) lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ فحص المخزون...' : 'Checking inventory...') + '</td></tr>';
+async function loadReports() {
+  if (!_tenant) return;
+  const isAR = _lang === 'ar';
+  const dateFilter = document.getElementById('reports-date-filter')?.value || 'month';
+  const topBody = document.getElementById('reports-top-products-body');
+  const lowStockBody = document.getElementById('reports-low-stock-body');
 
+  if (topBody) topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ معالجة البيانات والتقارير...' : 'Calculating reports...') + '</td></tr>';
+  if (lowStockBody) lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ فحص المخزون...' : 'Checking inventory...') + '</td></tr>';
+
+  try {
+    // 1. Fetch Orders from Supabase for this tenant
+    let orders = [];
     try {
-      // 1. Fetch Orders from Supabase for this tenant
-      let orders = [];
-      try {
-        const oRes = await fetch(SUPABASE_URL + '/rest/v1/orders?tenant_slug=eq.' + encodeURIComponent(_activeSlug) + '&select=*&order=created_at.desc', {
-          headers: getHeaders()
-        });
-        if (oRes.ok) orders = await oRes.json();
-      } catch(e) {}
-
-      // 2. Filter orders by selected date range
-      const now = new Date();
-      const filteredOrders = orders.filter(o => {
-        if (!o.created_at) return true;
-        const d = new Date(o.created_at);
-        if (dateFilter === 'today') {
-          return d.toDateString() === now.toDateString();
-        } else if (dateFilter === 'week') {
-          return (now - d) <= (7 * 24 * 60 * 60 * 1000);
-        } else if (dateFilter === 'month') {
-          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      const url = StorefrontAPI.getUrl() + '/rest/v1/orders?shop_id=eq.' + encodeURIComponent(_tenant.id) + '&order=created_at.desc&limit=200';
+      const res = await fetch(url, {
+        headers: {
+          "apikey": StorefrontAPI.getKey(),
+          "Authorization": "Bearer " + StorefrontAPI.getKey()
         }
-        return true;
       });
+      if (res.ok) orders = await res.json();
+    } catch(e) {
+      console.warn('Orders fetch error in loadReports:', e);
+    }
 
-      // Calculate totals
-      let totalSales = 0;
-      let completedCount = 0;
-      const productCounts = {};
+    // 2. Filter orders by selected date range
+    const now = new Date();
+    const filteredOrders = orders.filter(o => {
+      if (!o.created_at) return true;
+      const d = new Date(o.created_at);
+      if (dateFilter === 'today') {
+        return d.toDateString() === now.toDateString();
+      } else if (dateFilter === 'week') {
+        return (now - d) <= (7 * 24 * 60 * 60 * 1000);
+      } else if (dateFilter === 'month') {
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }
+      return true;
+    });
 
-      filteredOrders.forEach(o => {
-        const amount = parseFloat(o.total_amount || o.grand_total || o.total || 0);
-        totalSales += amount;
-        if (o.status === 'completed' || o.status === 'delivered') completedCount++;
+    // 3. Compute totals
+    let totalSales = 0;
+    let completedCount = 0;
+    const productCounts = {};
 
-        let items = [];
-        try {
-          items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
-        } catch(e) {}
-
-        items.forEach(it => {
-          const name = it.name || it.item_name || 'Product';
-          const qty = parseFloat(it.qty || it.quantity || 1);
-          const price = parseFloat(it.price || 0);
-          if (!productCounts[name]) productCounts[name] = { qty: 0, revenue: 0 };
-          productCounts[name].qty += qty;
-          productCounts[name].revenue += (qty * price);
-        });
-      });
-
-      const avgOrder = filteredOrders.length > 0 ? (totalSales / filteredOrders.length) : 0;
-      const rate = parseFloat(_tenantConfig.lbp_rate || 89500);
-
-      // Update KPI cards
-      const elSales = document.getElementById('kpi-total-sales');
-      if (elSales) elSales.textContent = '$' + totalSales.toFixed(2);
-      const elSalesLbp = document.getElementById('kpi-total-sales-lbp');
-      if (elSalesLbp) elSalesLbp.textContent = Math.round(totalSales * rate).toLocaleString() + ' ' + (isAR ? 'ل.ل' : 'LBP');
-
-      const elOrders = document.getElementById('kpi-total-orders');
-      if (elOrders) elOrders.textContent = filteredOrders.length;
-      const elCompleted = document.getElementById('kpi-completed-orders');
-      if (elCompleted) elCompleted.textContent = completedCount + (isAR ? ' طلب مكتمل ومسلّم' : ' completed orders');
-
-      const elAvg = document.getElementById('kpi-avg-order');
-      if (elAvg) elAvg.textContent = '$' + avgOrder.toFixed(2);
-
-      // Render Top Selling Items
-      const sortedProducts = Object.keys(productCounts).map(k => ({ name: k, ...productCounts[k] }))
-        .sort((a,b) => b.qty - a.qty);
-
-      if (topBody) {
-        if (sortedProducts.length === 0) {
-          topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text-muted)">' + (isAR ? 'لا توجد بيانات مبيعات في هذه الفترة' : 'No sales records in this period') + '</td></tr>';
-        } else {
-          topBody.innerHTML = sortedProducts.slice(0, 8).map(p => `
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="padding:8px;font-weight:700">${p.name}</td>
-              <td style="padding:8px;text-align:center"><span style="background:rgba(59,130,246,0.1);color:#2563eb;padding:2px 8px;border-radius:12px;font-weight:800">${p.qty}</span></td>
-              <td style="padding:8px;text-align:end;font-weight:800;color:#059669">$${p.revenue.toFixed(2)}</td>
-            </tr>
-          `).join('');
-        }
+    filteredOrders.forEach(o => {
+      const amount = parseFloat(o.total || 0);
+      totalSales += amount;
+      if (o.order_status === 'completed' || o.order_status === 'out_for_delivery') {
+        completedCount++;
       }
 
-      // Check Low Stock from Catalog
-      let lowStockItems = [];
+      let items = [];
       try {
-        const pRes = await fetch(SUPABASE_URL + '/rest/v1/products?tenant_slug=eq.' + encodeURIComponent(_activeSlug) + '&select=*&stock=lte.5&order=stock.asc&limit=10', {
-          headers: getHeaders()
-        });
-        if (pRes.ok) lowStockItems = await pRes.json();
+        items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
       } catch(e) {}
 
-      const elLowCount = document.getElementById('kpi-low-stock');
-      if (elLowCount) elLowCount.textContent = lowStockItems.length;
+      items.forEach(it => {
+        const name = it.name || it.item_name || 'Product';
+        const qty = parseFloat(it.qty || it.quantity || 1);
+        const price = parseFloat(it.price || 0);
+        if (!productCounts[name]) productCounts[name] = { qty: 0, revenue: 0 };
+        productCounts[name].qty += qty;
+        productCounts[name].revenue += (qty * price);
+      });
+    });
 
-      if (lowStockBody) {
-        if (lowStockItems.length === 0) {
-          lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:16px;color:#059669;font-weight:700">✅ ' + (isAR ? 'جميع الأصناف متوفرة بمخزون جيد' : 'All items have healthy stock') + '</td></tr>';
-        } else {
-          lowStockBody.innerHTML = lowStockItems.map(it => `
-            <tr style="border-bottom:1px solid #e2e8f0">
-              <td style="padding:8px;font-weight:700">${it.name || it.item_name}</td>
-              <td style="padding:8px;text-align:center"><span style="background:rgba(239,68,68,0.1);color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:800">${it.stock || 0}</span></td>
-              <td style="padding:8px;text-align:end;font-weight:700">$${parseFloat(it.price || 0).toFixed(2)}</td>
-            </tr>
-          `).join('');
-        }
+    const avgOrder = filteredOrders.length > 0 ? (totalSales / filteredOrders.length) : 0;
+    const rate = parseFloat(_tenant.currency_lbp_rate || 89500);
+
+    // Update KPI cards
+    const elSales = document.getElementById('kpi-total-sales');
+    if (elSales) elSales.textContent = '$' + totalSales.toFixed(2);
+    const elSalesLbp = document.getElementById('kpi-total-sales-lbp');
+    if (elSalesLbp) elSalesLbp.textContent = Math.round(totalSales * rate).toLocaleString() + ' ' + (isAR ? 'ل.ل' : 'LBP');
+
+    const elOrders = document.getElementById('kpi-total-orders');
+    if (elOrders) elOrders.textContent = filteredOrders.length;
+    const elCompleted = document.getElementById('kpi-completed-orders');
+    if (elCompleted) elCompleted.textContent = completedCount + ' ' + (isAR ? 'طلب مكتمل' : 'completed');
+
+    const elAvg = document.getElementById('kpi-avg-order');
+    if (elAvg) elAvg.textContent = '$' + avgOrder.toFixed(2);
+
+    // Render Top Selling Items
+    const sortedProducts = Object.keys(productCounts).map(k => Object.assign({ name: k }, productCounts[k]))
+      .sort((a,b) => b.qty - a.qty);
+
+    if (topBody) {
+      if (sortedProducts.length === 0) {
+        topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'لا توجد مبيعات مسجلة في هذه الفترة' : 'No sales records in this period') + '</td></tr>';
+      } else {
+        topBody.innerHTML = sortedProducts.slice(0, 10).map(p => 
+          '<tr style="border-bottom:1px solid #e2e8f0">' +
+            '<td style="padding:10px 8px;font-weight:700">' + p.name + '</td>' +
+            '<td style="padding:10px 8px;text-align:center"><span style="background:rgba(59,130,246,0.1);color:#2563eb;padding:3px 10px;border-radius:12px;font-weight:800">' + p.qty + '</span></td>' +
+            '<td style="padding:10px 8px;text-align:end;font-weight:800;color:#059669">$' + p.revenue.toFixed(2) + '</td>' +
+          '</tr>'
+        ).join('');
       }
-
-    } catch(err) {
-      console.error('[Admin] Reports load error:', err);
     }
-  }
 
-  // ── Mobile Admin App Modal Handlers ─────────────────────────────
-  function openMobileAppModal() {
-    const modal = document.getElementById('modal-mobile-app');
-    if (modal) {
-      modal.style.display = 'flex';
-      const origin = window.location.origin || '';
-      const appUrl = origin + '/app.html?shop=' + encodeURIComponent(_activeSlug);
-      
-      const linkEl = document.getElementById('btn-open-mobile-app-link');
-      if (linkEl) linkEl.href = appUrl;
-
-      const textEl = document.getElementById('app-direct-url-text');
-      if (textEl) textEl.textContent = appUrl;
-
-      const storeNameEl = document.getElementById('modal-app-store-name');
-      if (storeNameEl) storeNameEl.textContent = (_tenantConfig.name || _activeSlug) + ' — تطبيق المدير الذكي';
+    // 4. Check Low Stock from Catalog
+    if (!_products || _products.length === 0) {
+      try {
+        _products = await StorefrontAPI.fetchProducts(_tenant.id);
+      } catch(e) {}
     }
-  }
 
-  function closeMobileAppModal() {
-    const modal = document.getElementById('modal-mobile-app');
-    if (modal) modal.style.display = 'none';
+    const lowStockItems = (_products || []).filter(p => {
+      const stk = parseFloat(p.stock !== undefined ? p.stock : 999);
+      return stk <= 5;
+    }).sort((a, b) => (parseFloat(a.stock || 0) - parseFloat(b.stock || 0)));
+
+    const elLowCount = document.getElementById('kpi-low-stock');
+    if (elLowCount) elLowCount.textContent = lowStockItems.length;
+
+    if (lowStockBody) {
+      if (lowStockItems.length === 0) {
+        lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:#059669;font-weight:700">✅ ' + (isAR ? 'جميع الأصناف متوفرة بمخزون كافٍ وممتاز' : 'All items have healthy stock') + '</td></tr>';
+      } else {
+        lowStockBody.innerHTML = lowStockItems.slice(0, 10).map(it => {
+          const stk = parseFloat(it.stock || 0);
+          const isZero = stk <= 0;
+          const badgeBg = isZero ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)';
+          const badgeColor = isZero ? '#dc2626' : '#d97706';
+          const label = isZero ? (isAR ? 'نفد (0)' : 'Out (0)') : stk;
+          const pName = isAR ? (it.name_ar || it.name || it.item_name) : (it.name_en || it.name || it.item_name);
+
+          return '<tr style="border-bottom:1px solid #e2e8f0">' +
+            '<td style="padding:10px 8px;font-weight:700">' + pName + '</td>' +
+            '<td style="padding:10px 8px;text-align:center"><span style="background:' + badgeBg + ';color:' + badgeColor + ';padding:3px 10px;border-radius:12px;font-weight:800">' + label + '</span></td>' +
+            '<td style="padding:10px 8px;text-align:end;font-weight:700">$' + parseFloat(it.price || 0).toFixed(2) + '</td>' +
+          '</tr>';
+        }).join('');
+      }
+    }
+  } catch(err) {
+    console.error('Error calculating reports:', err);
+    if (topBody) topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:#dc2626">Failed to load reports: ' + err.message + '</td></tr>';
+    if (lowStockBody) lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:#dc2626">Failed to load inventory</td></tr>';
   }
+}
+
+// Mobile Admin App Modal Handlers
+function openMobileAppModal() {
+  const modal = document.getElementById('modal-mobile-app');
+  if (modal && _tenant) {
+    modal.style.display = 'flex';
+    const origin = window.location.origin || '';
+    const appUrl = origin + '/app?shop=' + encodeURIComponent(_tenant.slug || 'shop101');
+    
+    const linkEl = document.getElementById('btn-open-mobile-app-link');
+    if (linkEl) linkEl.href = appUrl;
+
+    const textEl = document.getElementById('app-direct-url-text');
+    if (textEl) textEl.textContent = appUrl;
+
+    const storeNameEl = document.getElementById('modal-app-store-name');
+    if (storeNameEl) storeNameEl.textContent = (_tenant.shop_name || _tenant.slug) + (_lang === 'ar' ? ' — تطبيق المدير الذكي' : ' — Mobile Admin App');
+  }
+}
+
+function closeMobileAppModal() {
+  const modal = document.getElementById('modal-mobile-app');
+  if (modal) modal.style.display = 'none';
+}
+
 
   return {
     openStorefront,
