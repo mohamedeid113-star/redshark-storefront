@@ -2196,3 +2196,30 @@ html, body {
     min-width: 0 !important;
   }
 }
+
+
+/* =====================================================================
+   RED SHARK CRIMSON BANNER CAROUSEL THEME
+===================================================================== */
+.carousel-slide {
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 45%, #991b1b 100%) !important;
+}
+
+.slide-badge {
+  background: rgba(220, 38, 38, 0.45) !important;
+  border: 1px solid rgba(254, 202, 202, 0.4) !important;
+  color: #fff !important;
+}
+
+.carousel-btn {
+  background: rgba(0, 0, 0, 0.45) !important;
+  color: #fff !important;
+}
+
+.carousel-btn:hover {
+  background: #dc2626 !important;
+}
+
+.carousel-dots .dot.active {
+  background: #dc2626 !important;
+}

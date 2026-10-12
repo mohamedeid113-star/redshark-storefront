@@ -191,7 +191,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '18.0';
+    const APP_VERSION = '19.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -200,7 +200,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=18.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=19.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -311,8 +311,12 @@ const Storefront = (() => {
     const descText = document.getElementById('header-desc-text');
 
     if (brandName) brandName.textContent = _tenant.shop_name;
-    if (brandLogo && _tenant.logo_url) {
-      brandLogo.innerHTML = `<img src="${_tenant.logo_url}" alt="${_tenant.shop_name}">`;
+    if (brandLogo) {
+      if (_tenant.logo_url) {
+        brandLogo.innerHTML = `<img src="${_tenant.logo_url}" alt="${_tenant.shop_name}" style="width:100%;height:100%;object-fit:contain;border-radius:10px;">`;
+      } else {
+        brandLogo.innerHTML = `<img src="assets/red_shark_icon.png" alt="Red Shark" style="width:100%;height:100%;object-fit:contain;border-radius:10px;">`;
+      }
     }
     if (openStatus) openStatus.textContent = t('openNow');
 
@@ -1274,7 +1278,113 @@ const Storefront = (() => {
     }
   }
 
+  
+  // ── ORDER TRACKING FEATURE ──
+  function openTrackOrderModal(orderId) {
+    const modal = document.getElementById('modal-track-order');
+    const input = document.getElementById('track-order-input');
+    const res = document.getElementById('track-order-result');
+    if (res) res.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('open');
+      if (orderId && input) {
+        input.value = orderId;
+        trackOrderQuery();
+      }
+    }
+  }
+
+  function closeTrackOrderModal() {
+    const modal = document.getElementById('modal-track-order');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('open');
+    }
+  }
+
+  async function trackOrderQuery() {
+    const input = document.getElementById('track-order-input');
+    const resEl = document.getElementById('track-order-result');
+    if (!input || !resEl) return;
+    const query = input.value.trim();
+    if (!query) {
+      alert(_currentLang === 'ar' ? 'الرجاء إدخال رقم الطلب أو رقم الهاتف' : 'Please enter an order ID or phone number');
+      return;
+    }
+
+    resEl.style.display = 'block';
+    resEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">جاري البحث عن الطلب...</div>';
+
+    try {
+      const url = `${StorefrontAPI.getUrl()}/rest/v1/orders?shop_id=eq.${_tenant.id}&or=(order_number.eq.${encodeURIComponent(query)},customer_phone.eq.${encodeURIComponent(query)},id.eq.${encodeURIComponent(query)})&order=created_at.desc&limit=3`;
+      const res = await fetch(url, { headers: { ...StorefrontAPI.getKey() ? { 'apikey': StorefrontAPI.getKey(), 'Authorization': 'Bearer ' + StorefrontAPI.getKey() } : {} } });
+      const orders = await res.json();
+
+      if (!orders || orders.length === 0) {
+        resEl.innerHTML = `
+          <div style="text-align:center;padding:20px;">
+            <div style="font-size:2rem;margin-bottom:6px">🔍</div>
+            <div style="font-weight:800;color:var(--text-main);">لم يتم العثور على أي طلب برقم (${query})</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">تأكد من رقم الطلب أو تواصل معنا عبر واتساب للمساعدة</div>
+          </div>
+        `;
+        return;
+      }
+
+      const statusMap = {
+        'pending': { step: 1, label: '📥 تم استلام الطلب', color: '#f59e0b', desc: 'تم استلام طلبك وجاري مراجعته في الكاشير' },
+        'confirmed': { step: 2, label: '👨‍🍳 جاري التجهيز', color: '#3b82f6', desc: 'يقوم فريق المتجر بتجهيز محتويات طلبك الآن' },
+        'preparing': { step: 2, label: '👨‍🍳 جاري التجهيز', color: '#3b82f6', desc: 'يقوم فريق المتجر بتجهيز محتويات طلبك الآن' },
+        'delivering': { step: 3, label: '🛵 مع الدليفري', color: '#8b5cf6', desc: 'الطلب في طريقه إليك مع مندوب التوصيل' },
+        'completed': { step: 4, label: '✅ تم التسليم بنجاح', color: '#10b981', desc: 'تم تسليم الطلب للعميل، شكراً لتسوقكم معنا!' },
+        'cancelled': { step: 0, label: '❌ ملغي', color: '#ef4444', desc: 'تم إلغاء هذا الطلب' }
+      };
+
+      resEl.innerHTML = orders.map(ord => {
+        const st = statusMap[ord.status] || statusMap['pending'];
+        const total = (parseFloat(ord.total_amount) || 0).toFixed(2);
+        const orderDate = new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        return `
+          <div style="padding:14px; background:var(--bg-surface); border-radius:12px; margin-bottom:10px; border:1px solid var(--border-color);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div>
+                <strong style="font-size:1rem; color:var(--text-main);">#${ord.order_number || ord.id.slice(0,8)}</strong>
+                <div style="font-size:0.75rem; color:var(--text-muted);">${orderDate} • ${ord.customer_name || 'عميل'}</div>
+              </div>
+              <span style="background:${st.color}15; color:${st.color}; border:1px solid ${st.color}35; font-size:0.8rem; font-weight:800; padding:4px 10px; border-radius:20px;">
+                ${st.label}
+              </span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div style="display:flex; gap:4px; margin:12px 0 8px 0;">
+              <div style="flex:1; height:6px; border-radius:4px; background:${st.step >= 1 ? '#dc2626' : '#e2e8f0'};"></div>
+              <div style="flex:1; height:6px; border-radius:4px; background:${st.step >= 2 ? '#dc2626' : '#e2e8f0'};"></div>
+              <div style="flex:1; height:6px; border-radius:4px; background:${st.step >= 3 ? '#dc2626' : '#e2e8f0'};"></div>
+              <div style="flex:1; height:6px; border-radius:4px; background:${st.step >= 4 ? '#10b981' : '#e2e8f0'};"></div>
+            </div>
+
+            <p style="font-size:0.82rem; color:var(--text-main); margin:6px 0; font-weight:700;">${st.desc}</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; margin-top:8px; border-top:1px dashed var(--border-color); padding-top:8px;">
+              <span>الإجمالي: <strong style="color:#dc2626;">${total}</strong></span>
+              <a href="https://wa.me/${(_tenant.whatsapp_phone || _tenant.owner_phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent('مرحباً، أستفسر عن طلبي رقم #' + (ord.order_number || ord.id))}" target="_blank" style="color:#25d366; font-weight:800; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                <span>💬 متابعة بالواتساب</span>
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch(err) {
+      resEl.innerHTML = '<div style="color:#ef4444;text-align:center;padding:12px;">حدث خطأ أثناء تتبع الطلب، يرجى المحاولة لاحقاً</div>';
+    }
+  }
+
   return {
+    openTrackOrderModal,
+    closeTrackOrderModal,
+    trackOrderQuery,
     openAppDownloadModal,
     closeAppDownloadModal,
     installPWA,

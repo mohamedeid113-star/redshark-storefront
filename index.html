@@ -13,7 +13,7 @@
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   
-  <link rel="stylesheet" href="css/storefront.css?v=18.0">
+  <link rel="stylesheet" href="css/storefront.css?v=19.0">
 </head>
 <body>
 
@@ -32,13 +32,17 @@
         <div class="brand-logo" id="header-brand-logo">🦈</div>
         <div class="brand-info">
           <h1 id="header-brand-name">Red Shark Store</h1>
-          <span id="app-version-badge" style="font-size:0.7rem;font-weight:900;padding:2px 8px;border-radius:10px;background:#dc2626;color:#fff;margin-inline-start:6px">v18.0</span>
+          <span id="app-version-badge" style="font-size:0.7rem;font-weight:900;padding:2px 8px;border-radius:10px;background:#dc2626;color:#fff;margin-inline-start:6px">v19.0</span>
         </div>
       </a>
 
       <div class="header-actions">
         
         <!-- Single Clean Download App Button -->
+        <button class="icon-btn header-track-btn" onclick="Storefront.openTrackOrderModal()" id="btn-track-order-header" title="تتبع طلبك" style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);color:#dc2626;font-weight:800;font-size:0.82rem;padding:6px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;">
+          <span>📦</span>
+          <span class="track-btn-label">تتبع طلبك</span>
+        </button>
         <button class="icon-btn header-app-btn" onclick="Storefront.openAppDownloadModal()" id="btn-download-app-header" title="Download Android APK / Install App">
           <span>📲</span>
           <span class="app-btn-label">App</span>
@@ -319,9 +323,33 @@
     </div>
   </div>
 
+  
+  <!-- ORDER TRACKING MODAL -->
+  <div id="modal-track-order" class="modal-backdrop" onclick="if(event.target===this) Storefront.closeTrackOrderModal()">
+    <div class="modal-sheet" style="max-width:520px; text-align:center;">
+      <div style="font-size:3rem; margin-bottom:8px">📦</div>
+      <h3 style="font-size:1.3rem; font-weight:900; margin-bottom:6px">تتبع حالة طلبك المباشر</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:18px">أدخل رقم الطلب أو رقم هاتفك لمعرفة المرحلة الحالية للطلب</p>
+
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <input type="text" id="track-order-input" class="field-input" placeholder="مثال: ORD-1002 أو 70123456" style="flex:1; font-weight:700;">
+        <button type="button" class="btn-checkout-primary" onclick="Storefront.trackOrderQuery()" style="padding:10px 18px; width:auto; border-radius:10px; font-weight:800; background:#dc2626; color:#fff; border:none; cursor:pointer;">
+          بحث
+        </button>
+      </div>
+
+      <!-- Results Container -->
+      <div id="track-order-result" style="display:none; text-align:start; background:var(--bg-primary); border-radius:14px; padding:16px; border:1px solid var(--border-color); margin-bottom:14px;"></div>
+
+      <button type="button" class="icon-btn" onclick="Storefront.closeTrackOrderModal()" style="width:100%; padding:10px; border-radius:10px; font-weight:700;">
+        إغلاق
+      </button>
+    </div>
+  </div>
+
   <!-- Scripts -->
-  <script src="js/supabase-client.js?v=18.0"></script>
-  <script src="js/storefront.js?v=18.0"></script>
+  <script src="js/supabase-client.js?v=19.0"></script>
+  <script src="js/storefront.js?v=19.0"></script>
 
   <!-- Automatic Loader Safety Timeout -->
   <script>
