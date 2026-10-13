@@ -638,7 +638,7 @@ const Storefront = (() => {
     });
 
     const uncategorizedProds = filtered.filter(p => !p.category_id || !catGroups.has(p.category_id));
-    if (uncategorizedProds.length > 0 && _selectedCategory === 'all') {
+    if (uncategorizedProds.length > 0 && (_selectedCategory === 'all' || _searchQuery.trim() !== '')) {
       catGroups.set('uncat', {
         name: t('uncategorized') || (_currentLang === 'ar' ? 'أصناف عامة' : 'General Items'),
         products: uncategorizedProds
@@ -1091,6 +1091,7 @@ const Storefront = (() => {
   // Live Search Filter (automatically reveals products view if user types)
   function onSearch(query) {
     _searchQuery = query;
+    _selectedCategory = 'all';
     const bigView = document.getElementById('categories-big-view');
     const prodsView = document.getElementById('products-view');
     if (query.trim() !== '') {
