@@ -1,0 +1,8 @@
+{
+  "name": "Red Shark POS",
+  "version": "1.2.33",
+  "build": 49,
+  "releaseDate": "2026-10-13",
+  "releaseNotes": "Unified Cloud Sync & Storefront, Store Cloud Security PIN protection, Global Font Scale resizing, Multi-Branch real-time reporting.",
+  "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
+}
