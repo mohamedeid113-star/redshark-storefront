@@ -17,7 +17,16 @@ const StorefrontAPI = (() => {
 
   function getHeaders() {
     const key = getKey();
-    return {
+    async function fetchUpdatedProducts(shopId, sinceIso) {
+    try {
+      const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&updated_at=gt.${encodeURIComponent(sinceIso)}&select=*`;
+      const res = await fetch(url, { headers: getHeaders() });
+      if (res.ok) return await res.json();
+    } catch(e) {}
+    return [];
+  }
+
+  return {
       "apikey": key,
       "Authorization": `Bearer ${key}`,
       "Content-Type": "application/json",
@@ -61,7 +70,7 @@ const StorefrontAPI = (() => {
   // 3. Fetch Products for Shop
   async function fetchFirstBatchProducts(shopId) {
     try {
-      const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&is_published=eq.true&order=created_at.desc`;
+      const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&is_published=eq.true&order=updated_at.desc.nullslast,created_at.desc`;
       const res = await fetch(url, {
         headers: {
           ...getHeaders(),
@@ -88,7 +97,7 @@ const StorefrontAPI = (() => {
 
       while (hasMore) {
         const to = from + pageSize - 1;
-        const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&is_published=eq.true&order=created_at.desc`;
+        const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&is_published=eq.true&order=updated_at.desc.nullslast,created_at.desc`;
         const res = await fetch(url, {
           headers: {
             ...getHeaders(),
@@ -161,6 +170,7 @@ const StorefrontAPI = (() => {
     fetchTenant,
     fetchCategories,
     fetchFirstBatchProducts,
+    fetchUpdatedProducts,
     fetchProducts,
     submitOrder,
     getUrl,

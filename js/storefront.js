@@ -263,6 +263,27 @@ const Storefront = (() => {
       renderCategoriesSlider();
       renderBigCategoriesGrid();
       updateLiveCart();
+      // Real-time catalog price & info polling every 15 seconds
+      let _lastStorefrontCheck = new Date().toISOString();
+      setInterval(async () => {
+        try {
+          if (!document.hidden && StorefrontAPI.fetchUpdatedProducts && _tenant && _tenant.id) {
+            const updated = await StorefrontAPI.fetchUpdatedProducts(_tenant.id, _lastStorefrontCheck);
+            if (Array.isArray(updated) && updated.length > 0) {
+              _lastStorefrontCheck = new Date().toISOString();
+              const updateMap = new Map(updated.map(p => [p.id, p]));
+              _products = _products.map(p => updateMap.get(p.id) || p);
+              for (const u of updated) {
+                if (!_products.some(p => p.id === u.id)) _products.push(u);
+              }
+              renderBigCategoriesGrid();
+              if (_viewMode === 'products') renderGroupedProducts();
+              console.log('[Storefront] Real-time updated products:', updated.length);
+            }
+          }
+        } catch(e) {}
+      }, 15000);
+
 
       // Show Categories Grid on first open as requested
       showCategoriesGrid();
@@ -270,7 +291,7 @@ const Storefront = (() => {
 
       // Concurrently fetch remainder of catalog if any
       StorefrontAPI.fetchProducts(_tenant.id).then(allProds => {
-        if (allProds && allProds.length > _products.length) {
+        if (allProds && allProds.length > 0) {
           _products = allProds;
           renderBigCategoriesGrid();
           if (_viewMode === 'products') renderGroupedProducts();
