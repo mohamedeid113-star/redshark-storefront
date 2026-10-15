@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Red Shark Storefront — Supabase Cloud API Client
  * Lightweight, zero-dependency REST & Realtime client for Supabase
  */
@@ -17,18 +17,9 @@ const StorefrontAPI = (() => {
 
   function getHeaders() {
     const key = getKey();
-    async function fetchUpdatedProducts(shopId, sinceIso) {
-    try {
-      const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&updated_at=gt.${encodeURIComponent(sinceIso)}&select=*`;
-      const res = await fetch(url, { headers: getHeaders() });
-      if (res.ok) return await res.json();
-    } catch(e) {}
-    return [];
-  }
-
-  return {
+    return {
       "apikey": key,
-      "Authorization": `Bearer ${key}`,
+      "Authorization": "Bearer " + key,
       "Content-Type": "application/json",
       "Prefer": "return=representation"
     };
@@ -37,14 +28,14 @@ const StorefrontAPI = (() => {
   // 1. Fetch Tenant details by Slug
   async function fetchTenant(slug) {
     try {
-      const url = `${getUrl()}/rest/v1/tenants?slug=eq.${encodeURIComponent(slug)}&select=*`;
+      const url = getUrl() + "/rest/v1/tenants?slug=eq." + encodeURIComponent(slug) + "&select=*";
       const res = await fetch(url, { headers: getHeaders() });
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) return data[0];
       }
       // Fallback check against 'shops' if tenants returns nothing
-      const shopRes = await fetch(`${getUrl()}/rest/v1/shops?slug=eq.${encodeURIComponent(slug)}&select=*`, { headers: getHeaders() });
+      const shopRes = await fetch(getUrl() + "/rest/v1/shops?slug=eq." + encodeURIComponent(slug) + "&select=*", { headers: getHeaders() });
       if (shopRes.ok) {
         const shops = await shopRes.json();
         if (shops && shops.length > 0) return shops[0];
@@ -58,7 +49,7 @@ const StorefrontAPI = (() => {
   // 2. Fetch Categories for Shop
   async function fetchCategories(shopId) {
     try {
-      const url = `${getUrl()}/rest/v1/categories?shop_id=eq.${shopId}&is_active=eq.true&order=display_order.asc`;
+      const url = getUrl() + "/rest/v1/categories?shop_id=eq." + shopId + "&is_active=eq.true&order=display_order.asc";
       const res = await fetch(url, { headers: getHeaders() });
       if (res.ok) return await res.json();
     } catch (err) {
@@ -70,7 +61,7 @@ const StorefrontAPI = (() => {
   // 3. Fetch Products for Shop
   async function fetchFirstBatchProducts(shopId) {
     try {
-      const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&is_published=eq.true&order=updated_at.desc.nullslast,created_at.desc`;
+      const url = getUrl() + "/rest/v1/products?shop_id=eq." + shopId + "&is_published=eq.true&order=updated_at.desc.nullslast,created_at.desc";
       const res = await fetch(url, {
         headers: {
           ...getHeaders(),
@@ -88,6 +79,15 @@ const StorefrontAPI = (() => {
     return [];
   }
 
+  async function fetchUpdatedProducts(shopId, sinceIso) {
+    try {
+      const url = getUrl() + "/rest/v1/products?shop_id=eq." + shopId + "&updated_at=gt." + encodeURIComponent(sinceIso) + "&select=*";
+      const res = await fetch(url, { headers: getHeaders() });
+      if (res.ok) return await res.json();
+    } catch(e) {}
+    return [];
+  }
+
   async function fetchProducts(shopId) {
     try {
       let allProducts = [];
@@ -97,12 +97,12 @@ const StorefrontAPI = (() => {
 
       while (hasMore) {
         const to = from + pageSize - 1;
-        const url = `${getUrl()}/rest/v1/products?shop_id=eq.${shopId}&is_published=eq.true&order=updated_at.desc.nullslast,created_at.desc`;
+        const url = getUrl() + "/rest/v1/products?shop_id=eq." + shopId + "&is_published=eq.true&order=updated_at.desc.nullslast,created_at.desc";
         const res = await fetch(url, {
           headers: {
             ...getHeaders(),
             'Range-Unit': 'items',
-            'Range': `${from}-${to}`
+            'Range': from + "-" + to
           }
         });
         if (!res.ok) break;
@@ -125,7 +125,7 @@ const StorefrontAPI = (() => {
   // 4. Submit New Online Order
   async function submitOrder(orderData) {
     try {
-      const url = `${getUrl()}/rest/v1/orders`;
+      const url = getUrl() + "/rest/v1/orders";
       const res = await fetch(url, {
         method: 'POST',
         headers: getHeaders(),
@@ -135,7 +135,6 @@ const StorefrontAPI = (() => {
         const result = await res.json();
         const createdOrder = result[0] || result;
 
-        // Also insert into order_items table for relational integrity
         if (createdOrder && createdOrder.id && Array.isArray(orderData.items) && orderData.items.length > 0) {
           try {
             const lineItems = orderData.items.map(it => ({
@@ -146,7 +145,7 @@ const StorefrontAPI = (() => {
               unit_price: it.unit_price || it.price || 0,
               total_price: (it.unit_price || it.price || 0) * (it.quantity || 1)
             }));
-            await fetch(`${getUrl()}/rest/v1/order_items`, {
+            await fetch(getUrl() + "/rest/v1/order_items", {
               method: 'POST',
               headers: getHeaders(),
               body: JSON.stringify(lineItems)
