@@ -17,7 +17,7 @@
       --bg-base: #07090e;
       --bg-surface: #0e131f;
       --bg-surface-elevated: #151d2f;
-      --bg-surface-glass: rgba(14, 19, 31, 0.75);
+      --bg-surface-glass: rgba(14, 19, 31, 0.85);
       --border-subtle: rgba(255, 255, 255, 0.08);
       --border-strong: rgba(255, 255, 255, 0.16);
       
@@ -423,7 +423,7 @@
       color: #fff;
     }
 
-    /* ─── Branches Presence Badge (The Star Feature!) ──────────────────────── */
+    /* ─── Branches Presence Badge ─────────────────────────────────────────── */
     .branch-pill {
       display: inline-flex;
       align-items: center;
@@ -438,7 +438,6 @@
       text-align: start;
     }
 
-    /* Online state */
     .branch-pill.online {
       background: rgba(16, 185, 129, 0.12);
       border-color: rgba(16, 185, 129, 0.35);
@@ -449,7 +448,6 @@
       transform: translateY(-1px);
     }
 
-    /* Offline state */
     .branch-pill.offline {
       background: rgba(245, 158, 11, 0.12);
       border-color: rgba(245, 158, 11, 0.3);
@@ -460,7 +458,6 @@
       transform: translateY(-1px);
     }
 
-    /* Empty state */
     .branch-pill.empty {
       background: rgba(255, 255, 255, 0.03);
       border-color: rgba(255, 255, 255, 0.08);
@@ -468,7 +465,6 @@
       cursor: default;
     }
 
-    /* Pulse dot animations */
     .live-dot {
       width: 9px;
       height: 9px;
@@ -577,7 +573,7 @@
     .pro-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(3, 7, 18, 0.82);
+      background: rgba(3, 7, 18, 0.88);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       z-index: 1000;
@@ -1163,7 +1159,7 @@
         }
       };
 
-      function t(key) {
+      function tr(key) {
         return I18N[_lang]?.[key] || I18N['en']?.[key] || key;
       }
 
@@ -1173,9 +1169,8 @@
         document.documentElement.lang = _lang;
         document.documentElement.dir = _lang === 'ar' ? 'rtl' : 'ltr';
 
-        // Update static elements
-        document.title = t('appTitle');
-        const setTxt = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = t(key); };
+        document.title = tr('appTitle');
+        const setTxt = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = tr(key); };
         
         setTxt('t-master-tag', 'masterTag');
         setTxt('t-subheading', 'subheading');
@@ -1198,7 +1193,7 @@
         setTxt('t-stat-online-desc', 'statOnlineDesc');
 
         const searchInput = document.getElementById('shop-search-input');
-        if (searchInput) searchInput.placeholder = t('searchPlaceholder');
+        if (searchInput) searchInput.placeholder = tr('searchPlaceholder');
 
         setTxt('t-filter-all', 'filterAll');
         setTxt('t-filter-branches', 'filterBranches');
@@ -1223,7 +1218,6 @@
         setTxt('t-cancel-btn', 'cancelBtn');
         setTxt('t-modal-close-branches', 'closeBtn');
 
-        // Re-render table with new translations
         filterShops(_currentSearch);
       }
 
@@ -1236,30 +1230,39 @@
       function verifyMasterAuth() {
         const input = document.getElementById('master-key-input');
         const err = document.getElementById('auth-error-msg');
-        if (input.value === MASTER_HASH) {
+        const entered = (input?.value || '').trim();
+
+        if (entered === MASTER_HASH) {
           sessionStorage.setItem('rs_master_auth', 'true');
-          document.getElementById('master-auth-modal').style.display = 'none';
+          const modal = document.getElementById('master-auth-modal');
+          if (modal) {
+            modal.style.display = 'none';
+            modal.style.visibility = 'hidden';
+          }
+          if (err) err.style.display = 'none';
           loadShops();
         } else {
-          err.style.display = 'block';
-          input.value = '';
-          input.focus();
+          if (err) err.style.display = 'block';
+          if (input) {
+            input.value = '';
+            input.focus();
+          }
         }
       }
 
       // ─── BRANCHES EXTRACTION & ONLINE DETECTION ────────────────────────────
-      // Heartbeat threshold: 300 seconds (5 minutes)
-      const HEARTBEAT_THRESHOLD_MS = 300 * 1000;
+      const HEARTBEAT_THRESHOLD_MS = 300 * 1000; // 5 minutes
 
-      function getShopBranches(t) {
-        if (!t.banner_url) return [];
+      function getShopBranches(tenantObj) {
+        if (!tenantObj || !tenantObj.banner_url) return [];
         let b = {};
         try {
-          b = typeof t.banner_url === 'string' ? JSON.parse(t.banner_url) : t.banner_url;
+          b = typeof tenantObj.banner_url === 'string' ? JSON.parse(tenantObj.banner_url) : tenantObj.banner_url;
         } catch (e) {
           return [];
         }
         const rawBranches = b.connected_branches || b.pos_branches || b.branches || [];
+        if (!Array.isArray(rawBranches)) return [];
         const now = Date.now();
 
         return rawBranches.map(item => {
@@ -1269,9 +1272,9 @@
 
           let timeAgoText = '';
           if (lastSeenMs === 0) {
-            timeAgoText = t('neverSeen');
+            timeAgoText = tr('neverSeen');
           } else if (diffMs < 60000) {
-            timeAgoText = t('lastSeenJustNow');
+            timeAgoText = tr('lastSeenJustNow');
           } else {
             const minutes = Math.floor(diffMs / 60000);
             if (minutes < 60) {
@@ -1295,10 +1298,10 @@
         });
       }
 
-      function getShopPassword(t) {
-        if (!t.banner_url) return '1234';
+      function getShopPassword(tenantObj) {
+        if (!tenantObj || !tenantObj.banner_url) return '1234';
         try {
-          const obj = typeof t.banner_url === 'string' ? JSON.parse(t.banner_url) : t.banner_url;
+          const obj = typeof tenantObj.banner_url === 'string' ? JSON.parse(tenantObj.banner_url) : tenantObj.banner_url;
           return obj.admin_password || '1234';
         } catch(e) {
           return '1234';
@@ -1330,16 +1333,21 @@
         let totalBranches = 0;
         let onlineBranches = 0;
 
-        _allTenants.forEach(t => {
-          const branches = getShopBranches(t);
+        _allTenants.forEach(tenantItem => {
+          const branches = getShopBranches(tenantItem);
           totalBranches += branches.length;
           onlineBranches += branches.filter(b => b.isOnline).length;
         });
 
-        document.getElementById('stat-total-shops').textContent = _allTenants.length;
-        document.getElementById('stat-active-shops').textContent = _allTenants.filter(t => t.is_active !== false).length;
-        document.getElementById('stat-total-branches').textContent = totalBranches;
-        document.getElementById('stat-online-nodes').textContent = onlineBranches;
+        const elTotal = document.getElementById('stat-total-shops');
+        const elActive = document.getElementById('stat-active-shops');
+        const elBranches = document.getElementById('stat-total-branches');
+        const elOnline = document.getElementById('stat-online-nodes');
+
+        if (elTotal) elTotal.textContent = _allTenants.length;
+        if (elActive) elActive.textContent = _allTenants.filter(t => t.is_active !== false).length;
+        if (elBranches) elBranches.textContent = totalBranches;
+        if (elOnline) elOnline.textContent = onlineBranches;
       }
 
       // ─── FILTER & RENDER SHOPS ────────────────────────────────────────────
@@ -1355,18 +1363,16 @@
       function filterShops(query) {
         _currentSearch = (query || '').toLowerCase().trim();
         
-        let filtered = _allTenants.filter(t => {
-          // Text Search
+        let filtered = _allTenants.filter(tenantItem => {
           const matchesQuery = !_currentSearch || 
-            (t.shop_name && t.shop_name.toLowerCase().includes(_currentSearch)) ||
-            (t.slug && t.slug.toLowerCase().includes(_currentSearch)) ||
-            (t.owner_phone && t.owner_phone.includes(_currentSearch)) ||
-            (t.whatsapp_phone && t.whatsapp_phone.includes(_currentSearch));
+            (tenantItem.shop_name && tenantItem.shop_name.toLowerCase().includes(_currentSearch)) ||
+            (tenantItem.slug && tenantItem.slug.toLowerCase().includes(_currentSearch)) ||
+            (tenantItem.owner_phone && tenantItem.owner_phone.includes(_currentSearch)) ||
+            (tenantItem.whatsapp_phone && tenantItem.whatsapp_phone.includes(_currentSearch));
 
           if (!matchesQuery) return false;
 
-          // Chip Filters
-          const branches = getShopBranches(t);
+          const branches = getShopBranches(tenantItem);
           if (_currentFilter === 'branches') {
             return branches.length > 0;
           }
@@ -1374,7 +1380,7 @@
             return branches.some(b => b.isOnline);
           }
           if (_currentFilter === 'active') {
-            return t.is_active !== false;
+            return tenantItem.is_active !== false;
           }
 
           return true;
@@ -1392,7 +1398,7 @@
             <tr>
               <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
                 <i class="fa-regular fa-folder-open" style="font-size:2rem;margin-bottom:10px;display:block"></i>
-                <div>${t('noShopsFound')}</div>
+                <div>${tr('noShopsFound')}</div>
               </td>
             </tr>
           `;
@@ -1406,23 +1412,22 @@
           const hasBranches = branches.length > 0;
           const hasOnline = onlineCount > 0;
 
-          // Branch presence badge
           let branchBadgeHtml = '';
           if (!hasBranches) {
             branchBadgeHtml = `
               <span class="branch-pill empty">
                 <span class="live-dot gray"></span>
-                <span>${t('noBranchesConnected')}</span>
+                <span>${tr('noBranchesConnected')}</span>
               </span>
             `;
           } else {
             const statusClass = hasOnline ? 'online' : 'offline';
             const dotClass = hasOnline ? 'green' : 'amber';
-            const labelText = branches.length === 1 ? `1 ${t('branchSingle')}` : `${branches.length} ${t('branchPlural')}`;
-            const onlineText = hasOnline ? `(${onlineCount} ${t('online')})` : `(${t('offline')})`;
+            const labelText = branches.length === 1 ? `1 ${tr('branchSingle')}` : `${branches.length} ${tr('branchPlural')}`;
+            const onlineText = hasOnline ? `(${onlineCount} ${tr('online')})` : `(${tr('offline')})`;
 
             branchBadgeHtml = `
-              <button type="button" class="branch-pill ${statusClass}" onclick="SuperAdmin.openBranchesModal('${tData.id}')" title="${t('btnInspectBranches')}">
+              <button type="button" class="branch-pill ${statusClass}" onclick="SuperAdmin.openBranchesModal('${tData.id}')" title="${tr('btnInspectBranches')}">
                 <span class="live-dot ${dotClass}"></span>
                 <span style="font-weight:800">${labelText}</span>
                 <span style="font-size:0.75rem;opacity:0.85">${onlineText}</span>
@@ -1456,7 +1461,7 @@
                   <button type="button" class="pwd-action-btn" onclick="SuperAdmin.togglePwdDisplay('${tData.id}', '${pwd}')" title="Show / Hide">
                     <i class="fa-regular fa-eye" id="pwd-icon-${tData.id}"></i>
                   </button>
-                  <button type="button" class="pwd-action-btn" onclick="navigator.clipboard.writeText('${pwd}');alert('${t('copiedPwd')}')" title="Copy">
+                  <button type="button" class="pwd-action-btn" onclick="navigator.clipboard.writeText('${pwd}');alert('${tr('copiedPwd')}')" title="Copy">
                     <i class="fa-regular fa-copy"></i>
                   </button>
                 </div>
@@ -1476,23 +1481,23 @@
                 <div class="actions-cluster">
                   <a href="index.html?shop=${tData.slug}" target="_blank" class="btn-action-pro btn-store" title="Open Storefront">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                    <span>${t('btnStore')}</span>
+                    <span>${tr('btnStore')}</span>
                   </a>
                   <a href="admin.html?shop=${tData.slug}" target="_blank" class="btn-action-pro btn-admin" title="Open Admin Panel">
                     <i class="fa-solid fa-gauge-high"></i>
-                    <span>${t('btnAdmin')}</span>
+                    <span>${tr('btnAdmin')}</span>
                   </a>
                   <button type="button" class="btn-action-pro btn-edit" onclick="SuperAdmin.openEditShopModal('${tData.id}')" title="Edit Settings">
                     <i class="fa-solid fa-pen-to-square"></i>
-                    <span>${t('btnEdit')}</span>
+                    <span>${tr('btnEdit')}</span>
                   </button>
                   <button type="button" class="btn-action-pro btn-reset" onclick="SuperAdmin.resetShopData('${tData.id}', '${tData.slug}')" title="Reset Products, Categories, Orders">
                     <i class="fa-solid fa-arrows-rotate"></i>
-                    <span>${t('btnReset')}</span>
+                    <span>${tr('btnReset')}</span>
                   </button>
                   <button type="button" class="btn-action-pro btn-danger" onclick="SuperAdmin.deleteShopTotally('${tData.id}', '${tData.slug}')" title="Permanently Delete Shop">
                     <i class="fa-solid fa-trash-can"></i>
-                    <span>${t('btnDelete')}</span>
+                    <span>${tr('btnDelete')}</span>
                   </button>
                 </div>
               </td>
@@ -1540,7 +1545,7 @@
           listEl.innerHTML = `
             <div style="text-align:center;padding:30px;color:var(--text-muted)">
               <i class="fa-solid fa-network-wired" style="font-size:2rem;margin-bottom:10px;display:block"></i>
-              ${t('noBranchesConnected')}
+              ${tr('noBranchesConnected')}
             </div>
           `;
         } else {
@@ -1557,7 +1562,7 @@
                     <span class="live-dot ${b.isOnline ? 'green' : 'amber'}"></span>
                     <span>${b.name}</span>
                     <span style="font-size:0.72rem;background:${isServer ? 'rgba(99, 102, 241, 0.15)' : 'rgba(6, 182, 212, 0.15)'};color:${isServer ? '#a5b4fc' : '#38bdf8'};border:1px solid ${isServer ? 'rgba(99, 102, 241, 0.3)' : 'rgba(6, 182, 212, 0.3)'};padding:2px 8px;border-radius:6px;font-weight:700">
-                      ${isServer ? t('serverRole') : t('branchRole')}
+                      ${isServer ? tr('serverRole') : tr('branchRole')}
                     </span>
                   </h4>
                   <p>
@@ -1566,7 +1571,7 @@
                   </p>
                   <p style="margin-top:6px;font-size:0.75rem">
                     <span style="background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};padding:2px 8px;border-radius:6px;font-weight:800">
-                      ${b.isOnline ? t('online') : t('offline')}
+                      ${b.isOnline ? tr('online') : tr('offline')}
                     </span>
                     <span style="color:var(--text-muted)">
                       <i class="fa-regular fa-clock"></i> ${b.timeAgoText}
@@ -1591,7 +1596,6 @@
         document.getElementById('modal-branches').style.display = 'none';
       }
 
-      // Remove specific dead/stale branch node from tenant banner_url
       async function removeBranchNode(shopId, nodeId) {
         if (!confirm(_lang === 'ar' ? `هل أنت متأكد من إزالة الجهاز (${nodeId}) من السحاب؟` : `Are you sure you want to remove node (${nodeId}) from cloud?`)) {
           return;
@@ -1623,7 +1627,7 @@
           });
 
           if (!resp.ok) throw new Error(await resp.text());
-          alert(t('nodeRemovedSuccess'));
+          alert(tr('nodeRemovedSuccess'));
           await loadShops();
           openBranchesModal(shopId);
         } catch (e) {
@@ -1634,8 +1638,8 @@
       // ─── SHOP CREATION & EDIT MODAL ─────────────────────────────────────────
       function openNewShopModal() {
         document.getElementById('edit-shop-id').value = '';
-        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-store" style="color:var(--brand-red)"></i> <span>${t('modalShopTitleNew')}</span>`;
-        document.getElementById('btn-save-shop-text').textContent = t('btnSaveShopNew');
+        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-store" style="color:var(--brand-red)"></i> <span>${tr('modalShopTitleNew')}</span>`;
+        document.getElementById('btn-save-shop-text').textContent = tr('btnSaveShopNew');
         
         document.getElementById('shop-name-input').value = '';
         document.getElementById('shop-slug-input').value = '';
@@ -1653,12 +1657,12 @@
         if (!tData) return;
 
         document.getElementById('edit-shop-id').value = tData.id;
-        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-pen-to-square" style="color:var(--brand-indigo)"></i> <span>${t('modalShopTitleEdit')}${tData.shop_name}</span>`;
-        document.getElementById('btn-save-shop-text').textContent = t('btnSaveShopEdit');
+        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-pen-to-square" style="color:var(--brand-indigo)"></i> <span>${tr('modalShopTitleEdit')}${tData.shop_name}</span>`;
+        document.getElementById('btn-save-shop-text').textContent = tr('btnSaveShopEdit');
 
         document.getElementById('shop-name-input').value = tData.shop_name || '';
         document.getElementById('shop-slug-input').value = tData.slug || '';
-        document.getElementById('shop-slug-input').disabled = true; // Protect slug integrity
+        document.getElementById('shop-slug-input').disabled = true;
         document.getElementById('shop-pwd-input').value = getShopPassword(tData);
         document.getElementById('shop-phone-input').value = tData.whatsapp_phone || tData.owner_phone || '';
         document.getElementById('shop-delivery-input').value = tData.delivery_fee || 2;
@@ -1687,7 +1691,6 @@
 
         try {
           if (!id) {
-            // New Shop Creation
             if (!slug) {
               alert(_lang === 'ar' ? 'يرجى إدخال المعرف الرابطي Slug' : 'Please enter slug identifier');
               return;
@@ -1740,7 +1743,6 @@
             if (!resp.ok) throw new Error(await resp.text());
             alert(_lang === 'ar' ? 'تم إنشاء المتجر وتفعيله بنجاح!' : 'Shop created and activated successfully!');
           } else {
-            // Edit existing shop
             const existing = _allTenants.find(t => t.id === id);
             let bannerObj = {};
             try {
@@ -1789,7 +1791,6 @@
         const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
 
         try {
-          // 1. Delete order_items
           const ordersRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
           if (ordersRes.ok) {
             const orders = await ordersRes.json();
@@ -1805,14 +1806,10 @@
             }
           }
 
-          // 2. Delete orders
           await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
-          // 3. Delete products
           await fetch(`${SUPABASE_URL}/rest/v1/products?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
-          // 4. Delete categories
           await fetch(`${SUPABASE_URL}/rest/v1/categories?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
 
-          // 5. Clean banner_url sync sequence & retain branches
           const existing = _allTenants.find(t => t.id === shopId);
           let bannerObj = {};
           try {
@@ -1860,7 +1857,6 @@
         const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
 
         try {
-          // Delete order_items
           const ordersRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
           if (ordersRes.ok) {
             const orders = await ordersRes.json();
@@ -1873,12 +1869,10 @@
             }
           }
 
-          // Delete orders, products, categories
           await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
           await fetch(`${SUPABASE_URL}/rest/v1/products?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
           await fetch(`${SUPABASE_URL}/rest/v1/categories?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
 
-          // Delete tenant completely
           const tenantDel = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${shopId}`, {
             method: 'DELETE',
             headers
@@ -1904,12 +1898,20 @@
       function init() {
         applyLanguage(_lang);
 
+        const modal = document.getElementById('master-auth-modal');
+        const input = document.getElementById('master-key-input');
+
         if (sessionStorage.getItem('rs_master_auth') === 'true') {
-          document.getElementById('master-auth-modal').style.display = 'none';
+          if (modal) {
+            modal.style.display = 'none';
+            modal.style.visibility = 'hidden';
+          }
           loadShops();
         } else {
-          document.getElementById('master-auth-modal').style.display = 'flex';
-          const input = document.getElementById('master-key-input');
+          if (modal) {
+            modal.style.display = 'flex';
+            modal.style.visibility = 'visible';
+          }
           if (input) {
             input.focus();
             input.addEventListener('keydown', (e) => {
