@@ -3,82 +3,517 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Master Portal — إدارة المتاجر المركزية | Red Shark</title>
+  <title>RedShark POS & Cloud — SuperAdmin Master Portal</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="css/storefront.css">
+
   <style>
-    .super-header {
-      background: linear-gradient(135deg, #09101d 0%, #0f172a 100%);
-      color: #fff;
-      padding: 16px 24px;
-      border-bottom: 1px solid #1e293b;
+    :root {
+      --bg-base: #07090e;
+      --bg-surface: #0e131f;
+      --bg-surface-elevated: #151d2f;
+      --bg-surface-glass: rgba(14, 19, 31, 0.75);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      
+      --brand-red: #ef4444;
+      --brand-emerald: #10b981;
+      --brand-cyan: #06b6d4;
+      --brand-indigo: #6366f1;
+      --brand-amber: #f59e0b;
+      
+      --text-main: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --font-ar: 'Cairo', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-en: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-ar);
+      min-height: 100vh;
+      line-height: 1.5;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
+        radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05), transparent 40%);
+    }
+
+    html[dir="ltr"] body {
+      font-family: var(--font-en);
+    }
+
+    /* ─── Top Navbar ───────────────────────────────────────────────────────── */
+    .master-nav {
       position: sticky;
       top: 0;
       z-index: 100;
-    }
-    .super-badge {
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 3px 10px;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 800;
-    }
-    .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 20px;
-      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: var(--bg-surface-glass);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 14px 28px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 16px;
     }
-    .stat-icon {
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+    }
+
+    .brand-titles h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-titles p {
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .master-tag {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Modern Lang Switcher */
+    .lang-toggle-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .lang-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-strong);
+    }
+
+    .btn-create-shop {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      transition: all 0.2s;
+    }
+    .btn-create-shop:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45);
+    }
+
+    /* ─── Main Content Container ───────────────────────────────────────────── */
+    .super-container {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 24px 28px 60px;
+    }
+
+    /* ─── Metric Cards ─────────────────────────────────────────────────────── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 20px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--card-glow, #6366f1), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .metric-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-strong);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+    .metric-card:hover::before {
+      opacity: 1;
+    }
+
+    .metric-info h3 {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .metric-info .metric-num {
+      font-size: 2rem;
+      font-weight: 900;
+      font-family: var(--font-en);
+      color: #fff;
+      line-height: 1;
+    }
+    .metric-info p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .metric-icon-box {
       width: 52px;
       height: 52px;
       border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.6rem;
-      background: rgba(5, 150, 105, 0.1);
-      color: var(--brand-primary);
+      font-size: 1.4rem;
     }
+
+    /* ─── Control Bar (Search & Quick Filters) ──────────────────────────────── */
+    .controls-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .search-box-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 280px;
+      max-width: 480px;
+    }
+    .search-box-wrapper i {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    html[dir="rtl"] .search-box-wrapper i {
+      right: 14px;
+    }
+    html[dir="ltr"] .search-box-wrapper i {
+      left: 14px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    html[dir="rtl"] .search-input {
+      padding-right: 42px;
+    }
+    html[dir="ltr"] .search-input {
+      padding-left: 42px;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--brand-indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .filter-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .filter-chip:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+    }
+    .filter-chip.active {
+      background: rgba(99, 102, 241, 0.18);
+      color: #a5b4fc;
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    /* ─── Table Container & Styling ────────────────────────────────────────── */
+    .table-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
     .shops-table {
       width: 100%;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: start;
+    }
+
+    .shops-table th {
+      background: #111827;
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+
+    .shops-table td {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
       font-size: 0.88rem;
     }
-    .shops-table th {
-      padding: 12px 14px;
-      background: #f1f5f9;
-      color: #334155;
-      font-weight: 800;
-      text-align: start;
-      border-bottom: 2px solid var(--border-color);
+
+    .shops-table tr:last-child td {
+      border-bottom: none;
     }
-    .shops-table td {
-      padding: 14px;
-      border-bottom: 1px solid var(--border-color);
-      vertical-align: middle;
+
+    .shops-table tbody tr {
+      transition: background 0.15s;
     }
-    .shops-table tr:hover {
-      background: #f8fafc;
+    .shops-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
     }
-    .pwd-pill {
-      font-family: monospace;
-      background: #f1f5f9;
-      padding: 3px 8px;
-      border-radius: 6px;
+
+    /* Slug Pill */
+    .slug-badge {
+      font-family: var(--font-mono);
       font-size: 0.82rem;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
-    }
-    .btn-action-sm {
-      padding: 6px 12px;
+      font-weight: 600;
+      background: rgba(6, 182, 212, 0.1);
+      color: #38bdf8;
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      padding: 4px 10px;
       border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Password Box */
+    .pwd-cell-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+    .pwd-text {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #e2e8f0;
+      min-width: 50px;
+    }
+    .pwd-action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
       font-size: 0.8rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .pwd-action-btn:hover {
+      color: #fff;
+    }
+
+    /* ─── Branches Presence Badge (The Star Feature!) ──────────────────────── */
+    .branch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      text-align: start;
+    }
+
+    /* Online state */
+    .branch-pill.online {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #34d399;
+    }
+    .branch-pill.online:hover {
+      background: rgba(16, 185, 129, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Offline state */
+    .branch-pill.offline {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: #fbbf24;
+    }
+    .branch-pill.offline:hover {
+      background: rgba(245, 158, 11, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Empty state */
+    .branch-pill.empty {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      cursor: default;
+    }
+
+    /* Pulse dot animations */
+    .live-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .live-dot.green {
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+    .live-dot.green::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      border: 2px solid #10b981;
+      opacity: 0.7;
+      animation: pulse-ring 1.8s infinite;
+    }
+    .live-dot.amber {
+      background: #f59e0b;
+    }
+    .live-dot.gray {
+      background: #64748b;
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* Action Buttons Group */
+    .actions-cluster {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-action-pro {
+      padding: 6px 11px;
+      border-radius: 8px;
+      font-size: 0.78rem;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
@@ -86,237 +521,778 @@
       gap: 5px;
       text-decoration: none;
       transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .btn-action-pro:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-store {
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.25);
+    }
+    .btn-store:hover {
+      background: rgba(56, 189, 248, 0.22);
+    }
+
+    .btn-admin {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.25);
+    }
+    .btn-admin:hover {
+      background: rgba(245, 158, 11, 0.22);
+    }
+
+    .btn-edit {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+      border-color: var(--border-subtle);
+    }
+    .btn-edit:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .btn-reset {
+      background: rgba(249, 115, 22, 0.12);
+      color: #fb923c;
+      border-color: rgba(249, 115, 22, 0.25);
+    }
+    .btn-reset:hover {
+      background: rgba(249, 115, 22, 0.22);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    /* ─── Modern Glass Modals ──────────────────────────────────────────────── */
+    .pro-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .pro-modal-box {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 620px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+      animation: modal-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+
+    @keyframes modal-enter {
+      from { opacity: 0; transform: scale(0.96) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-head {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .modal-head h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-close-modal {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    .btn-close-modal:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-body {
+      padding: 24px;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    .form-group-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-group-full {
+      grid-column: 1 / -1;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .pro-input {
+      width: 100%;
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .pro-input:focus {
+      outline: none;
+      border-color: var(--brand-indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+    .pro-input:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Branch Detail Node Card */
+    .branch-node-card {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      transition: border-color 0.2s;
+    }
+    .branch-node-card:hover {
+      border-color: var(--border-strong);
+    }
+
+    .node-meta h4 {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .node-meta p {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Master Auth Overlay */
+    .auth-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: 24px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+      position: relative;
     }
   </style>
 </head>
-<body style="background:var(--bg-primary);min-height:100vh">
+<body>
 
-  <!-- MASTER AUTH OVERLAY -->
-  <div id="master-auth-modal" class="pin-security-overlay" style="display:flex">
-    <div class="pin-security-card" style="max-width:440px">
-      <div style="font-size:3.5rem;margin-bottom:12px">🛡️</div>
-      <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:6px">Red Shark Master Portal</h2>
-      <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px">
-        لوحة التحكم المركزية لإدارة المتاجر وحسابات العملاء. يرجى إدخال المفتاح الرئيسي للمتابعة.
+  <!-- MASTER AUTH MODAL -->
+  <div id="master-auth-modal" class="pro-modal-overlay" style="display:flex">
+    <div class="auth-card">
+      <div style="width:68px;height:68px;margin:0 auto 18px;border-radius:20px;background:linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);display:flex;align-items:center;justify-content:center;font-size:1.9rem;color:#fff;box-shadow:0 8px 24px rgba(239, 68, 68, 0.4)">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h2 id="auth-title" style="font-size:1.4rem;font-weight:900;margin-bottom:8px">RedShark Master Portal</h2>
+      <p id="auth-subtitle" style="color:var(--text-secondary);font-size:0.86rem;margin-bottom:24px">
+        منظومة إدارة المتاجر المركزية وشبكة الفروع المتصلة عبر السحاب.
       </p>
 
-      <div style="margin-bottom:18px;text-align:start">
-        <label class="field-label">مفتاح المدير العام (Master Key)</label>
-        <input type="password" id="master-key-input" class="field-input" placeholder="••••••••••••" style="font-size:1.1rem;padding:12px" onkeydown="if(event.key==='Enter') SuperAdmin.login()">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">المفتاح الافتراضي المبدئي: <strong style="color:var(--brand-primary)">redshark2026</strong></div>
+      <div style="margin-bottom:20px;position:relative">
+        <input type="password" id="master-key-input" class="pro-input" placeholder="••••••••••••" style="text-align:center;font-size:1.2rem;letter-spacing:0.2em;font-family:var(--font-mono);padding:12px">
       </div>
 
-      <button class="btn-checkout-primary" onclick="SuperAdmin.login()" style="width:100%;padding:12px">
-        <span>🔓 دخول لوحة الماستر</span>
-      </button>
-
-      <div style="margin-top:16px;font-size:0.8rem">
-        <a href="admin.html" style="color:var(--text-muted);text-decoration:none">← الانتقال إلى لوحة تحكم المتجر العادي</a>
+      <div style="display:flex;gap:10px">
+        <button type="button" class="lang-toggle-btn" onclick="SuperAdmin.toggleLanguage()" style="flex:1;justify-content:center">
+          <i class="fa-solid fa-globe"></i>
+          <span id="auth-lang-label">English</span>
+        </button>
+        <button type="button" id="auth-submit-btn" class="btn-create-shop" onclick="SuperAdmin.verifyMasterAuth()" style="flex:2;justify-content:center;padding:12px">
+          <i class="fa-solid fa-lock-open"></i>
+          <span id="auth-btn-text">دخول لوحة التحكم</span>
+        </button>
+      </div>
+      <div id="auth-error-msg" style="color:var(--brand-red);font-size:0.82rem;font-weight:700;margin-top:14px;display:none">
+        رمز الدخول الرئيسي غير صحيح
       </div>
     </div>
   </div>
 
-  <!-- TOP HEADER -->
-  <header class="super-header">
-    <div class="header-container" style="display:flex;justify-content:space-between;align-items:center">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:1.8rem">🦈</div>
-        <div>
-          <div style="font-size:1.1rem;font-weight:900;display:flex;align-items:center;gap:8px">
-            <span>Red Shark Super Admin</span>
-            <span class="super-badge">Master Control</span>
-          </div>
-          <div style="font-size:0.75rem;color:#94a3b8">إدارة متاجر وسلاسل العملاء وتراخيص المتجر السحابي</div>
-        </div>
+  <!-- TOP NAVBAR -->
+  <header class="master-nav">
+    <div class="brand-group">
+      <div class="brand-logo-badge">
+        <i class="fa-solid fa-network-wired"></i>
       </div>
+      <div class="brand-titles">
+        <h1>
+          RedShark Master Portal
+          <span class="master-tag" id="t-master-tag">SuperAdmin</span>
+        </h1>
+        <p id="t-subheading">مركز القيادة ومراقبة شبكة السحاب والفروع المتصلة</p>
+      </div>
+    </div>
 
-      <div style="display:flex;gap:10px;align-items:center">
-        <button class="icon-btn" onclick="SuperAdmin.openNewShopModal()" style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
-          <span>➕</span>
-          <span>إضافة متجر جديد</span>
-        </button>
-        <button class="icon-btn" onclick="SuperAdmin.logout()" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3)">
-          <span>🚪</span>
-          <span>خروج</span>
-        </button>
-      </div>
+    <div class="nav-actions">
+      <!-- Language Switcher Button -->
+      <button class="lang-toggle-btn" onclick="SuperAdmin.toggleLanguage()" title="Switch Language / تبديل اللغة">
+        <i class="fa-solid fa-globe" style="color:var(--brand-cyan)"></i>
+        <span id="lang-btn-text">English</span>
+      </button>
+
+      <!-- Refresh Button -->
+      <button class="lang-toggle-btn" onclick="SuperAdmin.loadShops()" title="Refresh Data / تحديث">
+        <i class="fa-solid fa-arrows-rotate"></i>
+        <span id="t-refresh-btn">تحديث</span>
+      </button>
+
+      <!-- New Shop Button -->
+      <button class="btn-create-shop" onclick="SuperAdmin.openNewShopModal()">
+        <i class="fa-solid fa-plus"></i>
+        <span id="t-new-shop-btn">إنشاء متجر جديد</span>
+      </button>
     </div>
   </header>
 
   <!-- MAIN CONTAINER -->
-  <main class="admin-container" style="max-width:1200px;margin:24px auto;padding:0 16px">
+  <main class="super-container">
 
-    <!-- STATS ROW -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;margin-bottom:24px">
-      <div class="stat-card">
-        <div class="stat-icon">🏪</div>
-        <div>
-          <div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">إجمالي المتاجر المسجلة</div>
-          <div id="stat-total-shops" style="font-size:1.6rem;font-weight:900;color:var(--text-main)">0</div>
+    <!-- METRICS GRID -->
+    <div class="metrics-grid">
+      <!-- Card 1: Total Shops -->
+      <div class="metric-card" style="--card-glow:#6366f1">
+        <div class="metric-info">
+          <h3 id="t-stat-total-title">إجمالي المتاجر</h3>
+          <div class="metric-num" id="stat-total-shops">0</div>
+          <p id="t-stat-total-desc">المتاجر المسجلة في السحاب</p>
+        </div>
+        <div class="metric-icon-box" style="background:rgba(99, 102, 241, 0.15);color:#818cf8">
+          <i class="fa-solid fa-store"></i>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(16,185,129,0.1);color:#10b981">🟢</div>
-        <div>
-          <div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">المتاجر النشطة أونلاين</div>
-          <div id="stat-active-shops" style="font-size:1.6rem;font-weight:900;color:#10b981">0</div>
+
+      <!-- Card 2: Active Shops -->
+      <div class="metric-card" style="--card-glow:#10b981">
+        <div class="metric-info">
+          <h3 id="t-stat-active-title">المتاجر النشطة</h3>
+          <div class="metric-num" id="stat-active-shops">0</div>
+          <p id="t-stat-active-desc">متاجر تعمل ومتاحة للبيع</p>
+        </div>
+        <div class="metric-icon-box" style="background:rgba(16, 185, 129, 0.15);color:#34d399">
+          <i class="fa-solid fa-circle-check"></i>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(37,99,235,0.1);color:#2563eb">☁️</div>
-        <div>
-          <div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">الخادم السحابي</div>
-          <div style="font-size:0.95rem;font-weight:800;color:#2563eb;margin-top:4px">Connected (Supabase)</div>
+
+      <!-- Card 3: Connected Branches -->
+      <div class="metric-card" style="--card-glow:#06b6d4">
+        <div class="metric-info">
+          <h3 id="t-stat-branches-title">إجمالي الفروع والأجهزة</h3>
+          <div class="metric-num" id="stat-total-branches">0</div>
+          <p id="t-stat-branches-desc">نقاط POS وفروع سحابية مرتبطة</p>
+        </div>
+        <div class="metric-icon-box" style="background:rgba(6, 182, 212, 0.15);color:#38bdf8">
+          <i class="fa-solid fa-code-branch"></i>
+        </div>
+      </div>
+
+      <!-- Card 4: Online Now Nodes -->
+      <div class="metric-card" style="--card-glow:#10b981">
+        <div class="metric-info">
+          <h3 id="t-stat-online-title">الأجهزة المتصلة حالياً</h3>
+          <div class="metric-num" id="stat-online-nodes" style="color:#34d399">0</div>
+          <p id="t-stat-online-desc">إرسال نبضات Heartbeat الآن 🟢</p>
+        </div>
+        <div class="metric-icon-box" style="background:rgba(16, 185, 129, 0.2);color:#34d399">
+          <i class="fa-solid fa-satellite-dish"></i>
         </div>
       </div>
     </div>
 
-    <!-- SHOPS LIST CARD -->
-    <div class="admin-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
-        <div>
-          <h2 style="font-size:1.25rem;font-weight:900">قائمة المتاجر والعملاء</h2>
-          <p style="font-size:0.82rem;color:var(--text-muted)">يمكنك تعديل اسم المتجر، تعيين كلمة المرور لكل عميل، ومشاركة روابط المتاجر</p>
-        </div>
-        <div style="display:flex;gap:10px">
-          <input type="text" id="search-shops-input" class="field-input" placeholder="🔍 ابحث بالاسم أو Slug..." oninput="SuperAdmin.filterShops(this.value)" style="width:240px">
-          <button class="icon-btn" onclick="SuperAdmin.loadShops()">🔄 تحديث</button>
-        </div>
+    <!-- CONTROLS PANEL (SEARCH & FILTERS) -->
+    <div class="controls-panel">
+      <div class="search-box-wrapper">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="shop-search-input" class="search-input" placeholder="بحث بالاسم، الـ Slug، أو رقم الهاتف..." oninput="SuperAdmin.filterShops(this.value)">
       </div>
 
-      <div style="overflow-x:auto">
-        <table class="shops-table">
-          <thead>
-            <tr>
-              <th>المتجر (Shop Name)</th>
-              <th>معرف المتجر (Slug)</th>
-              <th>كلمة مرور المدير (Password)</th>
-              <th>واتساب الطلبات</th>
-              <th>الحالة</th>
-              <th style="text-align:center">روابط وإجراءات المتجر</th>
-            </tr>
-          </thead>
-          <tbody id="shops-table-body">
-            <tr>
-              <td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted)">جاري تحميل المتاجر...</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="filter-chips">
+        <button class="filter-chip active" id="chip-all" onclick="SuperAdmin.setFilter('all')">
+          <i class="fa-solid fa-layer-group"></i>
+          <span id="t-filter-all">الكل</span>
+        </button>
+        <button class="filter-chip" id="chip-branches" onclick="SuperAdmin.setFilter('branches')">
+          <i class="fa-solid fa-network-wired"></i>
+          <span id="t-filter-branches">لديها فروع</span>
+        </button>
+        <button class="filter-chip" id="chip-online" onclick="SuperAdmin.setFilter('online')">
+          <span class="live-dot green" style="width:7px;height:7px"></span>
+          <span id="t-filter-online">فروع متصلة (Online)</span>
+        </button>
+        <button class="filter-chip" id="chip-active" onclick="SuperAdmin.setFilter('active')">
+          <i class="fa-solid fa-check"></i>
+          <span id="t-filter-active">نشط فقط</span>
+        </button>
       </div>
+    </div>
+
+    <!-- SHOPS TABLE -->
+    <div class="table-container">
+      <table class="shops-table">
+        <thead>
+          <tr>
+            <th id="th-shop">المتجر والمجال</th>
+            <th id="th-slug">معرّف الرابط (Slug)</th>
+            <th id="th-branches">الفروع المتصلة (Branches Status)</th>
+            <th id="th-password">كلمة مرور الإدارة</th>
+            <th id="th-phone">الهاتف</th>
+            <th id="th-status">الحالة</th>
+            <th id="th-actions" style="text-align:center">الإجراءات السريعة</th>
+          </tr>
+        </thead>
+        <tbody id="shops-table-body">
+          <tr>
+            <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:8px"></i>
+              <div>جاري تحميل بيانات المتاجر والفروع من السحاب...</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
   </main>
 
-  <!-- ADD / EDIT SHOP MODAL -->
-  <div id="modal-shop" class="modal-backdrop" onclick="if(event.target===this) SuperAdmin.closeShopModal()">
-    <div class="modal-sheet" style="max-height:unset;max-width:520px">
-      <div class="modal-header">
-        <h3 style="font-size:1.15rem;font-weight:900" id="modal-shop-title">➕ إضافة متجر جديد</h3>
-        <button class="icon-btn" onclick="SuperAdmin.closeShopModal()" style="background:none;border:none">✕</button>
+  <!-- ─── BRANCHES INSPECTOR MODAL ─────────────────────────────────────────── -->
+  <div id="modal-branches" class="pro-modal-overlay">
+    <div class="pro-modal-box" style="max-width:680px">
+      <div class="modal-head">
+        <h3>
+          <i class="fa-solid fa-network-wired" style="color:var(--brand-cyan)"></i>
+          <span id="branch-modal-title">تفاصيل الفروع والأجهزة المتصلة</span>
+        </h3>
+        <button type="button" class="btn-close-modal" onclick="SuperAdmin.closeBranchesModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
+      <div class="modal-body">
+        <div id="branch-modal-shop-info" style="margin-bottom:18px;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:12px;font-size:0.88rem">
+          <!-- Filled dynamically -->
+        </div>
+
+        <div id="branch-cards-list">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="lang-toggle-btn" onclick="SuperAdmin.closeBranchesModal()" id="t-modal-close-branches">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── CREATE / EDIT SHOP MODAL ─────────────────────────────────────────── -->
+  <div id="modal-shop" class="pro-modal-overlay">
+    <div class="pro-modal-box">
+      <div class="modal-head">
+        <h3 id="modal-shop-title">
+          <i class="fa-solid fa-store" style="color:var(--brand-red)"></i>
+          <span>إنشاء متجر جديد</span>
+        </h3>
+        <button type="button" class="btn-close-modal" onclick="SuperAdmin.closeShopModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
       <div class="modal-body">
         <input type="hidden" id="edit-shop-id">
 
-        <div class="form-group">
-          <label class="field-label">اسم المتجر (Shop Name) *</label>
-          <input type="text" id="shop-name-input" class="field-input" placeholder="مثال: سوبرماركت البركة">
-        </div>
-
-        <div class="form-group">
-          <label class="field-label">معرف المتجر في الرابط (Shop Slug) *</label>
-          <input type="text" id="shop-slug-input" class="field-input" placeholder="مثال: albaraka أو shop102" style="direction:ltr;font-family:monospace">
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">أحرف إنجليزية وأرقام وشرطات فقط بدون مسافات.</div>
-        </div>
-
-        <div class="form-group">
-          <label class="field-label">كلمة مرور لوحة التحكم لهذا المتجر (Password / PIN) *</label>
-          <input type="text" id="shop-pwd-input" class="field-input" placeholder="مثال: 1234 أو secret2026" style="direction:ltr;font-family:monospace;font-weight:800">
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">هذه كلمة المرور التي سيدخل بها صاحب هذا المحل فقط إلى admin.html.</div>
-        </div>
-
-        <div class="form-group">
-          <label class="field-label">رقم الواتساب للطلبات (WhatsApp Phone)</label>
-          <input type="text" id="shop-phone-input" class="field-input" placeholder="+96170123456" style="direction:ltr">
-        </div>
-
-        <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:12px">
-          <div class="form-group">
-            <label class="field-label">أجور التوصيل ($)</label>
-            <input type="number" id="shop-delivery-input" class="field-input" value="2" step="0.5">
+        <div class="form-group-grid">
+          <div class="form-group-full">
+            <label class="input-label" id="lbl-shop-name">اسم المتجر / الشركة *</label>
+            <input type="text" id="shop-name-input" class="pro-input" placeholder="مثال: Bob Market Katelbi">
           </div>
-          <div class="form-group">
-            <label class="field-label">سعر صرف الليرة (LBP)</label>
-            <input type="number" id="shop-lbp-input" class="field-input" value="89500" step="500">
+
+          <div class="form-group-full">
+            <label class="input-label" id="lbl-shop-slug">المعرّف الرابطي (Slug) *</label>
+            <input type="text" id="shop-slug-input" class="pro-input" placeholder="مثال: bobmarket" style="font-family:var(--font-mono)">
+            <p id="lbl-shop-slug-hint" style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">سيكون الرابط: shop.redshark-ai.com/?shop=slug (لا يمكن تغييره بعد الإنشاء)</p>
+          </div>
+
+          <div>
+            <label class="input-label" id="lbl-shop-pwd">كلمة مرور الإدارة *</label>
+            <input type="text" id="shop-pwd-input" class="pro-input" value="1234" style="font-family:var(--font-mono)">
+          </div>
+
+          <div>
+            <label class="input-label" id="lbl-shop-phone">رقم الواتساب / الهاتف</label>
+            <input type="text" id="shop-phone-input" class="pro-input" placeholder="مثال: 96170123456">
+          </div>
+
+          <div>
+            <label class="input-label" id="lbl-shop-delivery">أجرة التوصيل الافتراضية ($)</label>
+            <input type="number" step="0.5" id="shop-delivery-input" class="pro-input" value="2">
+          </div>
+
+          <div>
+            <label class="input-label" id="lbl-shop-lbp">سعر صرف الدولار (LBP)</label>
+            <input type="number" id="shop-lbp-input" class="pro-input" value="89500">
           </div>
         </div>
+      </div>
 
-        <button class="btn-checkout-primary" onclick="SuperAdmin.saveShop()" style="width:100%;padding:12px;margin-top:10px">
-          <span>💾</span>
-          <span id="btn-save-shop-text">حفظ وتفعيل المتجر فوراً</span>
+      <div class="modal-footer">
+        <button type="button" class="lang-toggle-btn" onclick="SuperAdmin.closeShopModal()" id="t-cancel-btn">إلغاء</button>
+        <button type="button" class="btn-create-shop" onclick="SuperAdmin.saveShop()">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span id="btn-save-shop-text">حفظ المتجر</span>
         </button>
       </div>
     </div>
   </div>
 
-  <script src="js/supabase-client.js"></script>
+  <script src="js/storefront_api.js"></script>
+
   <script>
+    // ══════════════════════════════════════════════════════════════════════════════
+    // BILINGUAL & MULTI-BRANCH SUPERADMIN CONTROLLER
+    // ══════════════════════════════════════════════════════════════════════════════
     const SuperAdmin = (() => {
-      const MASTER_KEY_STORAGE = 'rs_superadmin_auth';
-      const DEFAULT_MASTER_KEY = 'redshark2026';
+      const MASTER_HASH = 'redshark2026';
+      const SUPABASE_URL = 'https://mcebwpiswvwqcdwjpagy.supabase.co';
+      const SUPABASE_KEY = StorefrontAPI?.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg';
 
       let _allTenants = [];
+      let _currentFilter = 'all';
+      let _currentSearch = '';
+      let _lang = localStorage.getItem('rs_superadmin_lang') || 'ar';
 
-      function init() {
-        const auth = sessionStorage.getItem(MASTER_KEY_STORAGE);
-        if (auth === 'true') {
+      // ─── TRANSLATION DICTIONARY ──────────────────────────────────────────
+      const I18N = {
+        ar: {
+          appTitle: 'RedShark POS & Cloud — بوابة الإدارة المركزية',
+          masterTag: 'SuperAdmin',
+          subheading: 'مركز القيادة ومراقبة شبكة السحاب والفروع المتصلة',
+          authTitle: 'RedShark Master Portal',
+          authSubtitle: 'منظومة إدارة المتاجر المركزية وشبكة الفروع المتصلة عبر السحاب.',
+          authBtn: 'دخول لوحة التحكم',
+          authErr: 'رمز الدخول الرئيسي غير صحيح!',
+          langToggleLabel: 'English',
+          refreshBtn: 'تحديث',
+          newShopBtn: 'إنشاء متجر جديد',
+          
+          statTotalTitle: 'إجمالي المتاجر',
+          statTotalDesc: 'المتاجر المسجلة في السحاب',
+          statActiveTitle: 'المتاجر النشطة',
+          statActiveDesc: 'متاجر تعمل ومتاحة للبيع',
+          statBranchesTitle: 'إجمالي الفروع والأجهزة',
+          statBranchesDesc: 'نقاط POS وفروع سحابية مرتبطة',
+          statOnlineTitle: 'الأجهزة المتصلة حالياً',
+          statOnlineDesc: 'إرسال نبضات Heartbeat الآن 🟢',
+
+          searchPlaceholder: 'بحث بالاسم، الـ Slug، أو رقم الهاتف...',
+          filterAll: 'الكل',
+          filterBranches: 'لديها فروع',
+          filterOnline: 'متصلة (Online)',
+          filterActive: 'نشط فقط',
+
+          thShop: 'المتجر والمجال',
+          thSlug: 'معرّف الرابط (Slug)',
+          thBranches: 'الفروع المتصلة (Branches)',
+          thPassword: 'كلمة مرور الإدارة',
+          thPhone: 'الهاتف',
+          thStatus: 'الحالة',
+          thActions: 'الإجراءات السريعة',
+
+          noShopsFound: 'لم يتم العثور على متاجر مطابقة',
+          noBranchesConnected: 'لا توجد فروع مسجلة',
+          branchSingle: 'فرع',
+          branchPlural: 'فروع',
+          online: 'متصل',
+          offline: 'غير متصل',
+          lastSeenJustNow: 'متصل الآن (منذ لحظات)',
+          lastSeenAgo: 'نشط منذ',
+          neverSeen: 'لم يسجل نشاطاً مؤخراً',
+
+          serverRole: 'الجهاز الرئيسي (Server POS)',
+          branchRole: 'نقطة بيع فرعية (Remote Branch)',
+
+          btnStore: 'المتجر',
+          btnAdmin: 'الإدارة',
+          btnEdit: 'تعديل',
+          btnReset: 'تصفير البيانات',
+          btnDelete: 'حذف نهائي',
+          btnInspectBranches: 'فحص الفروع',
+
+          modalShopTitleNew: 'إنشاء متجر سحابي جديد',
+          modalShopTitleEdit: 'تعديل بيانات المتجر: ',
+          btnSaveShopNew: 'حفظ وإنشاء المتجر',
+          btnSaveShopEdit: 'حفظ التعديلات',
+          cancelBtn: 'إلغاء',
+          closeBtn: 'إغلاق',
+
+          lblShopName: 'اسم المتجر / الشركة *',
+          lblShopSlug: 'المعرّف الرابطي (Slug) *',
+          lblShopSlugHint: 'سيكون الرابط: shop.redshark-ai.com/?shop=slug (لا يمكن تغييره بعد الإنشاء)',
+          lblShopPwd: 'كلمة مرور الإدارة *',
+          lblShopPhone: 'رقم الواتساب / الهاتف',
+          lblShopDelivery: 'أجرة التوصيل الافتراضية ($)',
+          lblShopLbp: 'سعر صرف الدولار (LBP)',
+
+          copiedPwd: 'تم نسخ كلمة المرور إلى الحافظة!',
+          nodeRemovedSuccess: 'تم حذف الفرع من السحاب بنجاح!'
+        },
+        en: {
+          appTitle: 'RedShark POS & Cloud — SuperAdmin Master Portal',
+          masterTag: 'SuperAdmin',
+          subheading: 'Master Command Center & Cloud Branch Network Monitor',
+          authTitle: 'RedShark Master Portal',
+          authSubtitle: 'Central cloud shop management & live connected branch presence monitor.',
+          authBtn: 'Authorize & Enter',
+          authErr: 'Invalid master authorization key!',
+          langToggleLabel: 'العربية',
+          refreshBtn: 'Refresh',
+          newShopBtn: 'Create New Shop',
+
+          statTotalTitle: 'Total Shops',
+          statTotalDesc: 'Registered cloud storefronts',
+          statActiveTitle: 'Active Shops',
+          statActiveDesc: 'Live storefronts available for commerce',
+          statBranchesTitle: 'Branches & POS Nodes',
+          statBranchesDesc: 'Synced terminals & remote locations',
+          statOnlineTitle: 'Live Online Nodes',
+          statOnlineDesc: 'Active heartbeats received now 🟢',
+
+          searchPlaceholder: 'Search by shop name, slug, or phone...',
+          filterAll: 'All',
+          filterBranches: 'Has Branches',
+          filterOnline: 'Live Online Only',
+          filterActive: 'Active Only',
+
+          thShop: 'Store & Currency',
+          thSlug: 'Slug Identifier',
+          thBranches: 'Connected Branches & Status',
+          thPassword: 'Admin Password',
+          thPhone: 'Contact Phone',
+          thStatus: 'Status',
+          thActions: 'Quick Actions',
+
+          noShopsFound: 'No matching shops found',
+          noBranchesConnected: 'No branches connected',
+          branchSingle: 'branch',
+          branchPlural: 'branches',
+          online: 'Online',
+          offline: 'Offline',
+          lastSeenJustNow: 'Online (Just now)',
+          lastSeenAgo: 'Active',
+          neverSeen: 'No recent activity',
+
+          serverRole: 'Master POS Terminal (Server)',
+          branchRole: 'Remote Branch Terminal',
+
+          btnStore: 'Store',
+          btnAdmin: 'Admin',
+          btnEdit: 'Edit',
+          btnReset: 'Reset Data',
+          btnDelete: 'Delete Shop',
+          btnInspectBranches: 'Inspect Branches',
+
+          modalShopTitleNew: 'Create New Cloud Shop',
+          modalShopTitleEdit: 'Edit Shop Settings: ',
+          btnSaveShopNew: 'Create & Provision Shop',
+          btnSaveShopEdit: 'Save Changes',
+          cancelBtn: 'Cancel',
+          closeBtn: 'Close',
+
+          lblShopName: 'Shop / Business Name *',
+          lblShopSlug: 'Slug URL Identifier *',
+          lblShopSlugHint: 'Accessible via: shop.redshark-ai.com/?shop=slug (Permanent)',
+          lblShopPwd: 'Admin Password *',
+          lblShopPhone: 'WhatsApp / Contact Phone',
+          lblShopDelivery: 'Default Delivery Fee ($)',
+          lblShopLbp: 'USD / LBP Exchange Rate',
+
+          copiedPwd: 'Password copied to clipboard!',
+          nodeRemovedSuccess: 'Branch node successfully removed from cloud!'
+        }
+      };
+
+      function t(key) {
+        return I18N[_lang]?.[key] || I18N['en']?.[key] || key;
+      }
+
+      function applyLanguage(lang) {
+        _lang = lang || _lang;
+        localStorage.setItem('rs_superadmin_lang', _lang);
+        document.documentElement.lang = _lang;
+        document.documentElement.dir = _lang === 'ar' ? 'rtl' : 'ltr';
+
+        // Update static elements
+        document.title = t('appTitle');
+        const setTxt = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = t(key); };
+        
+        setTxt('t-master-tag', 'masterTag');
+        setTxt('t-subheading', 'subheading');
+        setTxt('auth-title', 'authTitle');
+        setTxt('auth-subtitle', 'authSubtitle');
+        setTxt('auth-btn-text', 'authBtn');
+        setTxt('auth-error-msg', 'authErr');
+        setTxt('auth-lang-label', 'langToggleLabel');
+        setTxt('lang-btn-text', 'langToggleLabel');
+        setTxt('t-refresh-btn', 'refreshBtn');
+        setTxt('t-new-shop-btn', 'newShopBtn');
+
+        setTxt('t-stat-total-title', 'statTotalTitle');
+        setTxt('t-stat-total-desc', 'statTotalDesc');
+        setTxt('t-stat-active-title', 'statActiveTitle');
+        setTxt('t-stat-active-desc', 'statActiveDesc');
+        setTxt('t-stat-branches-title', 'statBranchesTitle');
+        setTxt('t-stat-branches-desc', 'statBranchesDesc');
+        setTxt('t-stat-online-title', 'statOnlineTitle');
+        setTxt('t-stat-online-desc', 'statOnlineDesc');
+
+        const searchInput = document.getElementById('shop-search-input');
+        if (searchInput) searchInput.placeholder = t('searchPlaceholder');
+
+        setTxt('t-filter-all', 'filterAll');
+        setTxt('t-filter-branches', 'filterBranches');
+        setTxt('t-filter-online', 'filterOnline');
+        setTxt('t-filter-active', 'filterActive');
+
+        setTxt('th-shop', 'thShop');
+        setTxt('th-slug', 'thSlug');
+        setTxt('th-branches', 'thBranches');
+        setTxt('th-password', 'thPassword');
+        setTxt('th-phone', 'thPhone');
+        setTxt('th-status', 'thStatus');
+        setTxt('th-actions', 'thActions');
+
+        setTxt('lbl-shop-name', 'lblShopName');
+        setTxt('lbl-shop-slug', 'lblShopSlug');
+        setTxt('lbl-shop-slug-hint', 'lblShopSlugHint');
+        setTxt('lbl-shop-pwd', 'lblShopPwd');
+        setTxt('lbl-shop-phone', 'lblShopPhone');
+        setTxt('lbl-shop-delivery', 'lblShopDelivery');
+        setTxt('lbl-shop-lbp', 'lblShopLbp');
+        setTxt('t-cancel-btn', 'cancelBtn');
+        setTxt('t-modal-close-branches', 'closeBtn');
+
+        // Re-render table with new translations
+        filterShops(_currentSearch);
+      }
+
+      function toggleLanguage() {
+        const nextLang = _lang === 'ar' ? 'en' : 'ar';
+        applyLanguage(nextLang);
+      }
+
+      // ─── MASTER PIN AUTH ──────────────────────────────────────────────────
+      function verifyMasterAuth() {
+        const input = document.getElementById('master-key-input');
+        const err = document.getElementById('auth-error-msg');
+        if (input.value === MASTER_HASH) {
+          sessionStorage.setItem('rs_master_auth', 'true');
           document.getElementById('master-auth-modal').style.display = 'none';
           loadShops();
         } else {
-          document.getElementById('master-auth-modal').style.display = 'flex';
+          err.style.display = 'block';
+          input.value = '';
+          input.focus();
         }
       }
 
-      function login() {
-        const input = document.getElementById('master-key-input')?.value.trim();
-        if (input === DEFAULT_MASTER_KEY || input === localStorage.getItem('rs_custom_master_key')) {
-          sessionStorage.setItem(MASTER_KEY_STORAGE, 'true');
-          document.getElementById('master-auth-modal').style.display = 'none';
-          loadShops();
-        } else {
-          alert('❌ مفتاح المدير العام غير صحيح!');
-          document.getElementById('master-key-input').value = '';
-          document.getElementById('master-key-input').focus();
-        }
-      }
+      // ─── BRANCHES EXTRACTION & ONLINE DETECTION ────────────────────────────
+      // Heartbeat threshold: 300 seconds (5 minutes)
+      const HEARTBEAT_THRESHOLD_MS = 300 * 1000;
 
-      function logout() {
-        sessionStorage.removeItem(MASTER_KEY_STORAGE);
-        window.location.reload();
-      }
-
-      async function loadShops() {
+      function getShopBranches(t) {
+        if (!t.banner_url) return [];
+        let b = {};
         try {
-          const resp = await fetch('https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants?select=*&order=created_at.desc', {
-            headers: {
-              'apikey': StorefrontAPI.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg',
-              'Authorization': 'Bearer ' + (StorefrontAPI.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg')
-            }
-          });
-
-          if (!resp.ok) throw new Error('Failed to fetch tenants: ' + resp.status);
-          _allTenants = await resp.json();
-
-          renderShops(_allTenants);
-          updateStats();
+          b = typeof t.banner_url === 'string' ? JSON.parse(t.banner_url) : t.banner_url;
         } catch (e) {
-          console.error(e);
-          alert('⚠️ خطأ في تحميل المتاجر: ' + e.message);
+          return [];
         }
-      }
+        const rawBranches = b.connected_branches || b.pos_branches || b.branches || [];
+        const now = Date.now();
 
-      function updateStats() {
-        document.getElementById('stat-total-shops').textContent = _allTenants.length;
-        document.getElementById('stat-active-shops').textContent = _allTenants.filter(t => t.is_active !== false).length;
+        return rawBranches.map(item => {
+          const lastSeenMs = item.lastSeen ? new Date(item.lastSeen).getTime() : 0;
+          const diffMs = now - lastSeenMs;
+          const isOnline = lastSeenMs > 0 && diffMs <= HEARTBEAT_THRESHOLD_MS && item.isOnline !== false;
+
+          let timeAgoText = '';
+          if (lastSeenMs === 0) {
+            timeAgoText = t('neverSeen');
+          } else if (diffMs < 60000) {
+            timeAgoText = t('lastSeenJustNow');
+          } else {
+            const minutes = Math.floor(diffMs / 60000);
+            if (minutes < 60) {
+              timeAgoText = `${minutes} ${_lang === 'ar' ? 'دقيقة' : 'mins ago'}`;
+            } else {
+              const hours = Math.floor(minutes / 60);
+              timeAgoText = `${hours} ${_lang === 'ar' ? 'ساعة' : 'hours ago'}`;
+            }
+          }
+
+          return {
+            nodeId: item.nodeId || item.id || 'pos-node',
+            name: item.name || item.nodeName || item.nodeId || 'Terminal',
+            branchId: item.branchId || item.branch || 'main',
+            role: item.role || 'branch',
+            lastSeen: item.lastSeen,
+            lastSeenMs,
+            isOnline,
+            timeAgoText
+          };
+        });
       }
 
       function getShopPassword(t) {
@@ -329,57 +1305,194 @@
         }
       }
 
+      // ─── DATA LOADING & STATS ─────────────────────────────────────────────
+      async function loadShops() {
+        try {
+          const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants?select=*&order=created_at.desc`, {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY
+            }
+          });
+
+          if (!resp.ok) throw new Error('Failed to load tenants: ' + resp.status);
+          _allTenants = await resp.json();
+
+          updateStats();
+          filterShops(_currentSearch);
+        } catch (e) {
+          console.error(e);
+          alert((_lang === 'ar' ? 'حدث خطأ في تحميل البيانات: ' : 'Failed to load shops: ') + e.message);
+        }
+      }
+
+      function updateStats() {
+        let totalBranches = 0;
+        let onlineBranches = 0;
+
+        _allTenants.forEach(t => {
+          const branches = getShopBranches(t);
+          totalBranches += branches.length;
+          onlineBranches += branches.filter(b => b.isOnline).length;
+        });
+
+        document.getElementById('stat-total-shops').textContent = _allTenants.length;
+        document.getElementById('stat-active-shops').textContent = _allTenants.filter(t => t.is_active !== false).length;
+        document.getElementById('stat-total-branches').textContent = totalBranches;
+        document.getElementById('stat-online-nodes').textContent = onlineBranches;
+      }
+
+      // ─── FILTER & RENDER SHOPS ────────────────────────────────────────────
+      function setFilter(type) {
+        _currentFilter = type;
+        ['all', 'branches', 'online', 'active'].forEach(f => {
+          const btn = document.getElementById('chip-' + f);
+          if (btn) btn.classList.toggle('active', f === type);
+        });
+        filterShops(_currentSearch);
+      }
+
+      function filterShops(query) {
+        _currentSearch = (query || '').toLowerCase().trim();
+        
+        let filtered = _allTenants.filter(t => {
+          // Text Search
+          const matchesQuery = !_currentSearch || 
+            (t.shop_name && t.shop_name.toLowerCase().includes(_currentSearch)) ||
+            (t.slug && t.slug.toLowerCase().includes(_currentSearch)) ||
+            (t.owner_phone && t.owner_phone.includes(_currentSearch)) ||
+            (t.whatsapp_phone && t.whatsapp_phone.includes(_currentSearch));
+
+          if (!matchesQuery) return false;
+
+          // Chip Filters
+          const branches = getShopBranches(t);
+          if (_currentFilter === 'branches') {
+            return branches.length > 0;
+          }
+          if (_currentFilter === 'online') {
+            return branches.some(b => b.isOnline);
+          }
+          if (_currentFilter === 'active') {
+            return t.is_active !== false;
+          }
+
+          return true;
+        });
+
+        renderShops(filtered);
+      }
+
       function renderShops(list) {
         const tbody = document.getElementById('shops-table-body');
         if (!tbody) return;
 
         if (list.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted)">لا توجد متاجر مطابقة</td></tr>';
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+                <i class="fa-regular fa-folder-open" style="font-size:2rem;margin-bottom:10px;display:block"></i>
+                <div>${t('noShopsFound')}</div>
+              </td>
+            </tr>
+          `;
           return;
         }
 
-        tbody.innerHTML = list.map(t => {
-          const pwd = getShopPassword(t);
+        tbody.innerHTML = list.map(tData => {
+          const pwd = getShopPassword(tData);
+          const branches = getShopBranches(tData);
+          const onlineCount = branches.filter(b => b.isOnline).length;
+          const hasBranches = branches.length > 0;
+          const hasOnline = onlineCount > 0;
+
+          // Branch presence badge
+          let branchBadgeHtml = '';
+          if (!hasBranches) {
+            branchBadgeHtml = `
+              <span class="branch-pill empty">
+                <span class="live-dot gray"></span>
+                <span>${t('noBranchesConnected')}</span>
+              </span>
+            `;
+          } else {
+            const statusClass = hasOnline ? 'online' : 'offline';
+            const dotClass = hasOnline ? 'green' : 'amber';
+            const labelText = branches.length === 1 ? `1 ${t('branchSingle')}` : `${branches.length} ${t('branchPlural')}`;
+            const onlineText = hasOnline ? `(${onlineCount} ${t('online')})` : `(${t('offline')})`;
+
+            branchBadgeHtml = `
+              <button type="button" class="branch-pill ${statusClass}" onclick="SuperAdmin.openBranchesModal('${tData.id}')" title="${t('btnInspectBranches')}">
+                <span class="live-dot ${dotClass}"></span>
+                <span style="font-weight:800">${labelText}</span>
+                <span style="font-size:0.75rem;opacity:0.85">${onlineText}</span>
+                <i class="fa-solid fa-chevron-right" style="font-size:0.65rem;margin-inline-start:4px"></i>
+              </button>
+            `;
+          }
+
           return `
             <tr>
               <td>
-                <div style="font-weight:900;color:var(--text-main);font-size:0.95rem">${t.shop_name || 'بدون اسم'}</div>
-                <div style="font-size:0.75rem;color:var(--text-muted)">${t.business_type || 'retail'} • ${t.currency || 'USD'}</div>
-              </td>
-              <td>
-                <span class="pwd-pill" style="color:var(--brand-primary);font-weight:800">${t.slug}</span>
-              </td>
-              <td>
-                <div style="display:flex;align-items:center;gap:6px">
-                  <span class="pwd-pill" id="pwd-val-${t.id}">••••••••</span>
-                  <button type="button" class="icon-btn" onclick="SuperAdmin.togglePwdDisplay('${t.id}', '${pwd}')" style="padding:2px 6px;font-size:0.75rem" title="إظهار/إخفاء">👁️</button>
-                  <button type="button" class="icon-btn" onclick="navigator.clipboard.writeText('${pwd}');alert('تم نسخ كلمة المرور!')" style="padding:2px 6px;font-size:0.75rem" title="نسخ">📋</button>
+                <div style="font-weight:800;color:#fff;font-size:0.96rem">${tData.shop_name || 'Untitled Shop'}</div>
+                <div style="font-size:0.76rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-top:2px">
+                  <span>${tData.business_type || 'retail'}</span>
+                  <span>•</span>
+                  <span>${tData.currency || 'USD'}</span>
                 </div>
               </td>
               <td>
-                <span style="font-size:0.85rem;color:var(--text-muted)">${t.whatsapp_phone || t.owner_phone || '—'}</span>
-              </td>
-              <td>
-                <span style="background:${t.is_active !== false ? '#d1fae5' : '#fee2e2'};color:${t.is_active !== false ? '#065f46' : '#dc2626'};padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:800">
-                  ${t.is_active !== false ? 'نشط 🟢' : 'معطل ⚠️'}
+                <span class="slug-badge">
+                  <i class="fa-solid fa-link" style="font-size:0.7rem"></i>
+                  ${tData.slug}
                 </span>
               </td>
-              <td style="text-align:center">
-                <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
-                  <a href="index.html?shop=${t.slug}" target="_blank" class="btn-action-sm" style="background:#e0f2fe;color:#0369a1" title="معاينة المتجر أونلاين">
-                    <span>🏪 المتجر</span>
-                  </a>
-                  <a href="admin.html?shop=${t.slug}" target="_blank" class="btn-action-sm" style="background:#fef3c7;color:#b45309" title="دخول لوحة تحكم المتجر">
-                    <span>⚙️ الإدارة</span>
-                  </a>
-                  <button class="btn-action-sm" onclick="SuperAdmin.openEditShopModal('${t.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1" title="تعديل بيانات المتجر">
-                    <span>✏️ تعديل</span>
+              <td>
+                ${branchBadgeHtml}
+              </td>
+              <td>
+                <div class="pwd-cell-box">
+                  <span class="pwd-text" id="pwd-val-${tData.id}">••••••••</span>
+                  <button type="button" class="pwd-action-btn" onclick="SuperAdmin.togglePwdDisplay('${tData.id}', '${pwd}')" title="Show / Hide">
+                    <i class="fa-regular fa-eye" id="pwd-icon-${tData.id}"></i>
                   </button>
-                  <button class="btn-action-sm" onclick="SuperAdmin.resetShopData('${t.id}', '${t.slug}')" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa" title="تصفير ومسح كافة الأصناف والطلبات من السحابة">
-                    <span>🔄 تصفير البيانات</span>
+                  <button type="button" class="pwd-action-btn" onclick="navigator.clipboard.writeText('${pwd}');alert('${t('copiedPwd')}')" title="Copy">
+                    <i class="fa-regular fa-copy"></i>
                   </button>
-                  <button class="btn-action-sm" onclick="SuperAdmin.deleteShopTotally('${t.id}', '${t.slug}')" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca" title="حذف المتجر بالكامل ونهائياً من السحابة">
-                    <span>🗑️ حذف المتجر</span>
+                </div>
+              </td>
+              <td>
+                <span style="font-size:0.84rem;color:var(--text-secondary);font-family:var(--font-mono)">
+                  ${tData.whatsapp_phone || tData.owner_phone || '-'}
+                </span>
+              </td>
+              <td>
+                <span style="background:${tData.is_active !== false ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'};color:${tData.is_active !== false ? '#34d399' : '#f87171'};border:1px solid ${tData.is_active !== false ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'};padding:3px 10px;border-radius:9999px;font-size:0.74rem;font-weight:800;display:inline-flex;align-items:center;gap:5px">
+                  <span style="width:6px;height:6px;border-radius:50%;background:${tData.is_active !== false ? '#10b981' : '#ef4444'}"></span>
+                  ${tData.is_active !== false ? (_lang === 'ar' ? 'متجر نشط' : 'Active') : (_lang === 'ar' ? 'معطّل' : 'Inactive')}
+                </span>
+              </td>
+              <td>
+                <div class="actions-cluster">
+                  <a href="index.html?shop=${tData.slug}" target="_blank" class="btn-action-pro btn-store" title="Open Storefront">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>${t('btnStore')}</span>
+                  </a>
+                  <a href="admin.html?shop=${tData.slug}" target="_blank" class="btn-action-pro btn-admin" title="Open Admin Panel">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>${t('btnAdmin')}</span>
+                  </a>
+                  <button type="button" class="btn-action-pro btn-edit" onclick="SuperAdmin.openEditShopModal('${tData.id}')" title="Edit Settings">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>${t('btnEdit')}</span>
+                  </button>
+                  <button type="button" class="btn-action-pro btn-reset" onclick="SuperAdmin.resetShopData('${tData.id}', '${tData.slug}')" title="Reset Products, Categories, Orders">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>${t('btnReset')}</span>
+                  </button>
+                  <button type="button" class="btn-action-pro btn-danger" onclick="SuperAdmin.deleteShopTotally('${tData.id}', '${tData.slug}')" title="Permanently Delete Shop">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>${t('btnDelete')}</span>
                   </button>
                 </div>
               </td>
@@ -389,56 +1502,168 @@
       }
 
       function togglePwdDisplay(id, realPwd) {
-        const el = document.getElementById('pwd-val-' + id);
-        if (!el) return;
-        if (el.textContent === '••••••••') {
-          el.textContent = realPwd;
+        const textEl = document.getElementById('pwd-val-' + id);
+        const iconEl = document.getElementById('pwd-icon-' + id);
+        if (!textEl) return;
+        if (textEl.textContent === '••••••••') {
+          textEl.textContent = realPwd;
+          if (iconEl) iconEl.className = 'fa-regular fa-eye-slash';
         } else {
-          el.textContent = '••••••••';
+          textEl.textContent = '••••••••';
+          if (iconEl) iconEl.className = 'fa-regular fa-eye';
         }
       }
 
-      function filterShops(query) {
-        const q = (query || '').toLowerCase().trim();
-        if (!q) {
-          renderShops(_allTenants);
+      // ─── BRANCH INSPECTOR MODAL ─────────────────────────────────────────────
+      function openBranchesModal(shopId) {
+        const shop = _allTenants.find(x => x.id === shopId);
+        if (!shop) return;
+
+        const branches = getShopBranches(shop);
+        const modal = document.getElementById('modal-branches');
+        const infoEl = document.getElementById('branch-modal-shop-info');
+        const listEl = document.getElementById('branch-cards-list');
+
+        infoEl.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <span style="font-weight:900;font-size:1.05rem;color:#fff">${shop.shop_name}</span>
+              <span class="slug-badge" style="margin-inline-start:8px">${shop.slug}</span>
+            </div>
+            <div style="font-size:0.8rem;color:var(--text-secondary)">
+              ${_lang === 'ar' ? 'إجمالي الأجهزة:' : 'Total Terminals:'} <strong style="color:#fff">${branches.length}</strong>
+            </div>
+          </div>
+        `;
+
+        if (branches.length === 0) {
+          listEl.innerHTML = `
+            <div style="text-align:center;padding:30px;color:var(--text-muted)">
+              <i class="fa-solid fa-network-wired" style="font-size:2rem;margin-bottom:10px;display:block"></i>
+              ${t('noBranchesConnected')}
+            </div>
+          `;
+        } else {
+          listEl.innerHTML = branches.map(b => {
+            const isServer = b.role === 'server' || b.branchId === 'main';
+            const statusColor = b.isOnline ? '#34d399' : '#f87171';
+            const statusBg = b.isOnline ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+            const statusBorder = b.isOnline ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+
+            return `
+              <div class="branch-node-card">
+                <div class="node-meta">
+                  <h4>
+                    <span class="live-dot ${b.isOnline ? 'green' : 'amber'}"></span>
+                    <span>${b.name}</span>
+                    <span style="font-size:0.72rem;background:${isServer ? 'rgba(99, 102, 241, 0.15)' : 'rgba(6, 182, 212, 0.15)'};color:${isServer ? '#a5b4fc' : '#38bdf8'};border:1px solid ${isServer ? 'rgba(99, 102, 241, 0.3)' : 'rgba(6, 182, 212, 0.3)'};padding:2px 8px;border-radius:6px;font-weight:700">
+                      ${isServer ? t('serverRole') : t('branchRole')}
+                    </span>
+                  </h4>
+                  <p>
+                    <span><i class="fa-solid fa-microchip"></i> Node ID: <code style="font-family:var(--font-mono);color:#e2e8f0">${b.nodeId}</code></span>
+                    <span><i class="fa-solid fa-code-branch"></i> Branch: ${b.branchId}</span>
+                  </p>
+                  <p style="margin-top:6px;font-size:0.75rem">
+                    <span style="background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};padding:2px 8px;border-radius:6px;font-weight:800">
+                      ${b.isOnline ? t('online') : t('offline')}
+                    </span>
+                    <span style="color:var(--text-muted)">
+                      <i class="fa-regular fa-clock"></i> ${b.timeAgoText}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <button type="button" class="btn-action-pro btn-danger" onclick="SuperAdmin.removeBranchNode('${shop.id}', '${b.nodeId}')" title="Remove stale node from cloud">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>${_lang === 'ar' ? 'حذف الجهاز' : 'Remove'}</span>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        modal.style.display = 'flex';
+      }
+
+      function closeBranchesModal() {
+        document.getElementById('modal-branches').style.display = 'none';
+      }
+
+      // Remove specific dead/stale branch node from tenant banner_url
+      async function removeBranchNode(shopId, nodeId) {
+        if (!confirm(_lang === 'ar' ? `هل أنت متأكد من إزالة الجهاز (${nodeId}) من السحاب؟` : `Are you sure you want to remove node (${nodeId}) from cloud?`)) {
           return;
         }
-        const filtered = _allTenants.filter(t => 
-          (t.shop_name && t.shop_name.toLowerCase().includes(q)) ||
-          (t.slug && t.slug.toLowerCase().includes(q)) ||
-          (t.owner_phone && t.owner_phone.includes(q))
-        );
-        renderShops(filtered);
+
+        try {
+          const shop = _allTenants.find(x => x.id === shopId);
+          if (!shop) return;
+          let b = {};
+          try {
+            b = typeof shop.banner_url === 'string' ? JSON.parse(shop.banner_url) : (shop.banner_url || {});
+          } catch(e){}
+
+          if (Array.isArray(b.connected_branches)) {
+            b.connected_branches = b.connected_branches.filter(item => item.nodeId !== nodeId);
+          }
+          if (Array.isArray(b.pos_branches)) {
+            b.pos_branches = b.pos_branches.filter(item => item.nodeId !== nodeId);
+          }
+
+          const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${shopId}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ banner_url: JSON.stringify(b) })
+          });
+
+          if (!resp.ok) throw new Error(await resp.text());
+          alert(t('nodeRemovedSuccess'));
+          await loadShops();
+          openBranchesModal(shopId);
+        } catch (e) {
+          alert('Error removing node: ' + e.message);
+        }
       }
 
+      // ─── SHOP CREATION & EDIT MODAL ─────────────────────────────────────────
       function openNewShopModal() {
         document.getElementById('edit-shop-id').value = '';
-        document.getElementById('modal-shop-title').textContent = '➕ إضافة متجر جديد';
-        document.getElementById('btn-save-shop-text').textContent = 'حفظ وتفعيل المتجر فوراً';
+        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-store" style="color:var(--brand-red)"></i> <span>${t('modalShopTitleNew')}</span>`;
+        document.getElementById('btn-save-shop-text').textContent = t('btnSaveShopNew');
+        
         document.getElementById('shop-name-input').value = '';
         document.getElementById('shop-slug-input').value = '';
+        document.getElementById('shop-slug-input').disabled = false;
         document.getElementById('shop-pwd-input').value = '1234';
         document.getElementById('shop-phone-input').value = '';
         document.getElementById('shop-delivery-input').value = '2';
         document.getElementById('shop-lbp-input').value = '89500';
-        document.getElementById('shop-slug-input').disabled = false;
+
         document.getElementById('modal-shop').style.display = 'flex';
       }
 
       function openEditShopModal(id) {
-        const t = _allTenants.find(x => x.id === id);
-        if (!t) return;
-        document.getElementById('edit-shop-id').value = t.id;
-        document.getElementById('modal-shop-title').textContent = '✏️ تعديل بيانات وكلمة مرور: ' + t.shop_name;
-        document.getElementById('btn-save-shop-text').textContent = 'حفظ التعديلات';
-        document.getElementById('shop-name-input').value = t.shop_name || '';
-        document.getElementById('shop-slug-input').value = t.slug || '';
-        document.getElementById('shop-slug-input').disabled = true; // Protect slug renaming to maintain URL integrity
-        document.getElementById('shop-pwd-input').value = getShopPassword(t);
-        document.getElementById('shop-phone-input').value = t.whatsapp_phone || t.owner_phone || '';
-        document.getElementById('shop-delivery-input').value = t.delivery_fee || 2;
-        document.getElementById('shop-lbp-input').value = t.currency_lbp_rate || 89500;
+        const tData = _allTenants.find(x => x.id === id);
+        if (!tData) return;
+
+        document.getElementById('edit-shop-id').value = tData.id;
+        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-pen-to-square" style="color:var(--brand-indigo)"></i> <span>${t('modalShopTitleEdit')}${tData.shop_name}</span>`;
+        document.getElementById('btn-save-shop-text').textContent = t('btnSaveShopEdit');
+
+        document.getElementById('shop-name-input').value = tData.shop_name || '';
+        document.getElementById('shop-slug-input').value = tData.slug || '';
+        document.getElementById('shop-slug-input').disabled = true; // Protect slug integrity
+        document.getElementById('shop-pwd-input').value = getShopPassword(tData);
+        document.getElementById('shop-phone-input').value = tData.whatsapp_phone || tData.owner_phone || '';
+        document.getElementById('shop-delivery-input').value = tData.delivery_fee || 2;
+        document.getElementById('shop-lbp-input').value = tData.currency_lbp_rate || 89500;
+
         document.getElementById('modal-shop').style.display = 'flex';
       }
 
@@ -449,39 +1674,42 @@
       async function saveShop() {
         const id = document.getElementById('edit-shop-id').value;
         const name = document.getElementById('shop-name-input').value.trim();
-        const slug = document.getElementById('shop-slug-input').value.trim().toLowerCase().replace(/\s+/g, '-');
-        const pwd = document.getElementById('shop-pwd-input').value.trim();
+        const slug = document.getElementById('shop-slug-input').value.trim().toLowerCase();
+        const pwd = document.getElementById('shop-pwd-input').value.trim() || '1234';
         const phone = document.getElementById('shop-phone-input').value.trim();
         const delivery = parseFloat(document.getElementById('shop-delivery-input').value) || 2;
-        const lbp = parseFloat(document.getElementById('shop-lbp-input').value) || 89500;
+        const lbp = parseInt(document.getElementById('shop-lbp-input').value, 10) || 89500;
 
-        if (!name || !slug || !pwd) {
-          alert('يرجى ملء اسم المتجر، والـ Slug، وكلمة المرور.');
+        if (!name) {
+          alert(_lang === 'ar' ? 'يرجى إدخال اسم المتجر' : 'Please enter shop name');
           return;
         }
 
-        const apiKey = StorefrontAPI.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg';
-
         try {
           if (!id) {
-            // Check if slug exists
+            // New Shop Creation
+            if (!slug) {
+              alert(_lang === 'ar' ? 'يرجى إدخال المعرف الرابطي Slug' : 'Please enter slug identifier');
+              return;
+            }
             if (_allTenants.some(t => t.slug === slug)) {
-              alert('⚠️ هذا الـ Slug مستخدم بالفعل! اختر اسماً مميزاً آخر.');
+              alert(_lang === 'ar' ? 'هذا المعرّف (Slug) مستخدم بالفعل! اختر اسماً آخر.' : 'This slug is already taken! Choose another.');
               return;
             }
 
-            const bannerObj = {
+            const initialBanner = {
               admin_password: pwd,
               active: true,
               slides: [
                 {
                   active: true,
-                  title: 'مرحباً بكم في متجرنا الإلكتروني!',
-                  subtitle: 'تسوق أفضل المنتجات بأفضل الأسعار مع توصيل سريع ومباشر',
-                  badge: '🔥 عروض افتتاح المتجر',
+                  title: 'أهلاً بكم في متجرنا الإلكتروني!',
+                  subtitle: 'أفضل العروض والمنتجات بأفضل الأسعار وأسرع خدمة توصيل',
+                  badge: 'متجر رسمي معتمد',
                   image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80'
                 }
-              ]
+              ],
+              connected_branches: []
             };
 
             const payload = {
@@ -495,14 +1723,14 @@
               is_active: true,
               link_pos_stock: true,
               allow_out_of_stock: false,
-              banner_url: JSON.stringify(bannerObj)
+              banner_url: JSON.stringify(initialBanner)
             };
 
-            const resp = await fetch('https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants', {
+            const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants`, {
               method: 'POST',
               headers: {
-                'apikey': apiKey,
-                'Authorization': 'Bearer ' + apiKey,
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
                 'Content-Type': 'application/json',
                 'Prefer': 'return=representation'
               },
@@ -510,13 +1738,13 @@
             });
 
             if (!resp.ok) throw new Error(await resp.text());
-            alert('🎉 تم إنشاء المتجر الجديد بنجاح!');
+            alert(_lang === 'ar' ? 'تم إنشاء المتجر وتفعيله بنجاح!' : 'Shop created and activated successfully!');
           } else {
-            // Update existing shop
+            // Edit existing shop
             const existing = _allTenants.find(t => t.id === id);
             let bannerObj = {};
             try {
-              bannerObj = typeof existing.banner_url === 'string' ? JSON.parse(existing.banner_url) : (existing.banner_url || {});
+              bannerObj = typeof existing?.banner_url === 'string' ? JSON.parse(existing.banner_url) : (existing?.banner_url || {});
             } catch(e){}
             bannerObj.admin_password = pwd;
 
@@ -528,11 +1756,11 @@
               banner_url: JSON.stringify(bannerObj)
             };
 
-            const resp = await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants?id=eq.${id}`, {
+            const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${id}`, {
               method: 'PATCH',
               headers: {
-                'apikey': apiKey,
-                'Authorization': 'Bearer ' + apiKey,
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
                 'Content-Type': 'application/json',
                 'Prefer': 'return=representation'
               },
@@ -540,35 +1768,36 @@
             });
 
             if (!resp.ok) throw new Error(await resp.text());
-            alert('✅ تم تحديث بيانات وكلمة مرور المتجر بنجاح!');
+            alert(_lang === 'ar' ? 'تم تحديث بيانات المتجر بنجاح!' : 'Shop updated successfully!');
           }
 
           closeShopModal();
           await loadShops();
         } catch(e) {
-          alert('❌ فشل الحفظ: ' + e.message);
+          alert((_lang === 'ar' ? 'حدث خطأ: ' : 'Error: ') + e.message);
         }
       }
 
-      
+      // ─── RESET CLOUD DATA ───────────────────────────────────────────────────
       async function resetShopData(shopId, slug) {
-        if (!confirm(`⚠️ هل أنت متأكد من تصفير ومسح جميع بيانات المتجر (${slug}) من السحابة؟\n\nسيتم حذف:\n- جميع الأصناف والأسعار (Products)\n- جميع الأقسام (Categories)\n- جميع طلبات الأونلاين (Orders)\n- سجلات الزبائن والفروع بالسحابة\n\n(ملاحظة: سيبقى المتجر نفسه مسجلاً بنفس المعرف وكلمة المرور لتتمكن من إعادة ربطه من جديد)`)) {
-          return;
-        }
+        const msg = _lang === 'ar'
+          ? `هل أنت متأكد تماماً من تصفير ومسح كافة بيانات المتجر (${slug}) من السحاب؟\n\nسيتم حذف:\n- كافة المنتجات (Products)\n- كافة الأقسام (Categories)\n- كافة طلبات الزبائن (Orders)\n- تصفير تسلسل المزامنة السحابية`
+          : `Are you sure you want to reset and wipe cloud data for (${slug})?\n\nThis will delete:\n- All Products\n- All Categories\n- All Customer Orders\n- Reset Cloud Sync Sequence`;
 
-        const apiKey = StorefrontAPI?.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg';
-        const headers = { 'apikey': apiKey, 'Authorization': 'Bearer ' + apiKey };
+        if (!confirm(msg)) return;
+
+        const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
 
         try {
           // 1. Delete order_items
-          const ordersRes = await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
+          const ordersRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
           if (ordersRes.ok) {
             const orders = await ordersRes.json();
             if (orders && orders.length > 0) {
               const oIds = orders.map(o => o.id);
               for (let i = 0; i < oIds.length; i += 50) {
                 const chunk = oIds.slice(i, i + 50);
-                await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/order_items?order_id=in.(${chunk.join(',')})`, {
+                await fetch(`${SUPABASE_URL}/rest/v1/order_items?order_id=in.(${chunk.join(',')})`, {
                   method: 'DELETE',
                   headers
                 });
@@ -577,24 +1806,13 @@
           }
 
           // 2. Delete orders
-          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/orders?shop_id=eq.${shopId}`, {
-            method: 'DELETE',
-            headers
-          });
-
+          await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
           // 3. Delete products
-          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/products?shop_id=eq.${shopId}`, {
-            method: 'DELETE',
-            headers
-          });
-
+          await fetch(`${SUPABASE_URL}/rest/v1/products?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
           // 4. Delete categories
-          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/categories?shop_id=eq.${shopId}`, {
-            method: 'DELETE',
-            headers
-          });
+          await fetch(`${SUPABASE_URL}/rest/v1/categories?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
 
-          // 5. Reset banner_url to clean state
+          // 5. Clean banner_url sync sequence & retain branches
           const existing = _allTenants.find(t => t.id === shopId);
           let bannerObj = {};
           try {
@@ -609,90 +1827,109 @@
             last_change_type: 'reset',
             last_change_desc: 'Shop cloud data reset',
             last_change_time: new Date().toISOString(),
-            pos_customers: [],
-            pos_customer_txns: [],
-            pos_branches: []
+            connected_branches: bannerObj.connected_branches || []
           };
 
-          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants?id=eq.${shopId}`, {
+          await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${shopId}`, {
             method: 'PATCH',
             headers: { ...headers, 'Content-Type': 'application/json' },
             body: JSON.stringify({ banner_url: JSON.stringify(cleanBanner) })
           });
 
-          alert(`✅ تم تصفير ومسح جميع بيانات المتجر (${slug}) من السحابة بنجاح!`);
+          alert(_lang === 'ar' ? `تم مسح وتصفير كافة بيانات المتجر (${slug}) بنجاح!` : `Cloud data for (${slug}) reset successfully!`);
           await loadShops();
         } catch(err) {
-          alert('❌ فشل تصفير بيانات المتجر: ' + err.message);
+          alert('Reset Error: ' + err.message);
         }
       }
 
+      // ─── PERMANENTLY DELETE SHOP ─────────────────────────────────────────────
       async function deleteShopTotally(shopId, slug) {
-        const confirmSlug = prompt(`🚨 تحذير نهائي: هل تريد حذف المتجر (${slug}) بالكامل من السحابة نهائياً؟\n\nسيتم حذف المتجر والمعرف والبيانات وكل شيء نهائياً ولا يمكن التراجع.\n\nلتأكيد الحذف، اكتب المعرف التالي:\n${slug}`);
+        const promptMsg = _lang === 'ar'
+          ? `تحذير أمني خطير: هل ترغب بحذف المتجر (${slug}) نهائياً من قاعدة البيانات السحابية؟\n\nسيتم مسح المتجر وكافة حساباته وطلباته وفروعه بشكل دائم.\n\nللتأكيد، اكتب اسم الـ Slug بالضبط:\n${slug}`
+          : `CRITICAL WARNING: Are you sure you want to permanently delete shop (${slug})?\n\nThis will destroy the shop record, all products, categories, orders, and branch connections.\n\nTo confirm, type the exact slug below:\n${slug}`;
+
+        const confirmSlug = prompt(promptMsg);
         if (!confirmSlug || confirmSlug.trim().toLowerCase() !== slug.toLowerCase()) {
-          if (confirmSlug !== null) alert('لم يتم الحذف: المعرف المدخل غير مطابق.');
+          if (confirmSlug !== null) {
+            alert(_lang === 'ar' ? 'تم إلغاء الحذف: الاسم المدخل غير مطابق.' : 'Deletion aborted: Slug did not match.');
+          }
           return;
         }
 
-        const apiKey = StorefrontAPI?.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg';
-        const headers = { 'apikey': apiKey, 'Authorization': 'Bearer ' + apiKey };
+        const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
 
         try {
-          // 1. Delete order_items
-          const ordersRes = await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
+          // Delete order_items
+          const ordersRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
           if (ordersRes.ok) {
             const orders = await ordersRes.json();
             if (orders && orders.length > 0) {
               const oIds = orders.map(o => o.id);
               for (let i = 0; i < oIds.length; i += 50) {
                 const chunk = oIds.slice(i, i + 50);
-                await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/order_items?order_id=in.(${chunk.join(',')})`, {
-                  method: 'DELETE',
-                  headers
-                });
+                await fetch(`${SUPABASE_URL}/rest/v1/order_items?order_id=in.(${chunk.join(',')})`, { method: 'DELETE', headers });
               }
             }
           }
 
-          // 2. Delete orders
-          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/orders?shop_id=eq.${shopId}`, {
+          // Delete orders, products, categories
+          await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
+          await fetch(`${SUPABASE_URL}/rest/v1/products?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
+          await fetch(`${SUPABASE_URL}/rest/v1/categories?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
+
+          // Delete tenant completely
+          const tenantDel = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${shopId}`, {
             method: 'DELETE',
             headers
           });
 
-          // 3. Delete products
-          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/products?shop_id=eq.${shopId}`, {
-            method: 'DELETE',
-            headers
-          });
+          if (!tenantDel.ok) throw new Error(await tenantDel.text());
 
-          // 4. Delete categories
-          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/categories?shop_id=eq.${shopId}`, {
-            method: 'DELETE',
-            headers
-          });
-
-          // 5. Delete tenant itself
-          const delRes = await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants?id=eq.${shopId}`, {
-            method: 'DELETE',
-            headers
-          });
-          if (!delRes.ok) throw new Error(await delRes.text());
-
-          alert(`🗑️ تم حذف المتجر (${slug}) بالكامل ونهائياً من السحابة بنجاح!`);
+          alert(_lang === 'ar' ? `تم حذف المتجر (${slug}) نهائياً من السحاب!` : `Shop (${slug}) deleted permanently from cloud!`);
           await loadShops();
         } catch(err) {
-          alert('❌ فشل حذف المتجر: ' + err.message);
+          alert('Delete Error: ' + err.message);
+        }
+      }
+
+      // Auto-refresh heartbeats every 30 seconds
+      setInterval(() => {
+        if (sessionStorage.getItem('rs_master_auth') === 'true') {
+          loadShops();
+        }
+      }, 30000);
+
+      // ─── INITIALIZATION ────────────────────────────────────────────────────
+      function init() {
+        applyLanguage(_lang);
+
+        if (sessionStorage.getItem('rs_master_auth') === 'true') {
+          document.getElementById('master-auth-modal').style.display = 'none';
+          loadShops();
+        } else {
+          document.getElementById('master-auth-modal').style.display = 'flex';
+          const input = document.getElementById('master-key-input');
+          if (input) {
+            input.focus();
+            input.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') verifyMasterAuth();
+            });
+          }
         }
       }
 
       return {
         init,
-        login,
-        logout,
+        toggleLanguage,
+        verifyMasterAuth,
         loadShops,
         filterShops,
+        setFilter,
         togglePwdDisplay,
+        openBranchesModal,
+        closeBranchesModal,
+        removeBranchNode,
         openNewShopModal,
         openEditShopModal,
         closeShopModal,
@@ -702,8 +1939,7 @@
       };
     })();
 
-    window.SuperAdmin = SuperAdmin;
-    document.addEventListener('DOMContentLoaded', () => SuperAdmin.init());
+    document.addEventListener('DOMContentLoaded', SuperAdmin.init);
   </script>
 </body>
 </html>
