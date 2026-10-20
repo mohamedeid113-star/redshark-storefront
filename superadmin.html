@@ -372,8 +372,14 @@
                   <a href="admin.html?shop=${t.slug}" target="_blank" class="btn-action-sm" style="background:#fef3c7;color:#b45309" title="دخول لوحة تحكم المتجر">
                     <span>⚙️ الإدارة</span>
                   </a>
-                  <button class="btn-action-sm" onclick="SuperAdmin.openEditShopModal('${t.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1">
+                  <button class="btn-action-sm" onclick="SuperAdmin.openEditShopModal('${t.id}')" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1" title="تعديل بيانات المتجر">
                     <span>✏️ تعديل</span>
+                  </button>
+                  <button class="btn-action-sm" onclick="SuperAdmin.resetShopData('${t.id}', '${t.slug}')" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa" title="تصفير ومسح كافة الأصناف والطلبات من السحابة">
+                    <span>🔄 تصفير البيانات</span>
+                  </button>
+                  <button class="btn-action-sm" onclick="SuperAdmin.deleteShopTotally('${t.id}', '${t.slug}')" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca" title="حذف المتجر بالكامل ونهائياً من السحابة">
+                    <span>🗑️ حذف المتجر</span>
                   </button>
                 </div>
               </td>
@@ -544,6 +550,142 @@
         }
       }
 
+      
+      async function resetShopData(shopId, slug) {
+        if (!confirm(`⚠️ هل أنت متأكد من تصفير ومسح جميع بيانات المتجر (${slug}) من السحابة؟\n\nسيتم حذف:\n- جميع الأصناف والأسعار (Products)\n- جميع الأقسام (Categories)\n- جميع طلبات الأونلاين (Orders)\n- سجلات الزبائن والفروع بالسحابة\n\n(ملاحظة: سيبقى المتجر نفسه مسجلاً بنفس المعرف وكلمة المرور لتتمكن من إعادة ربطه من جديد)`)) {
+          return;
+        }
+
+        const apiKey = StorefrontAPI?.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg';
+        const headers = { 'apikey': apiKey, 'Authorization': 'Bearer ' + apiKey };
+
+        try {
+          // 1. Delete order_items
+          const ordersRes = await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
+          if (ordersRes.ok) {
+            const orders = await ordersRes.json();
+            if (orders && orders.length > 0) {
+              const oIds = orders.map(o => o.id);
+              for (let i = 0; i < oIds.length; i += 50) {
+                const chunk = oIds.slice(i, i + 50);
+                await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/order_items?order_id=in.(${chunk.join(',')})`, {
+                  method: 'DELETE',
+                  headers
+                });
+              }
+            }
+          }
+
+          // 2. Delete orders
+          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/orders?shop_id=eq.${shopId}`, {
+            method: 'DELETE',
+            headers
+          });
+
+          // 3. Delete products
+          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/products?shop_id=eq.${shopId}`, {
+            method: 'DELETE',
+            headers
+          });
+
+          // 4. Delete categories
+          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/categories?shop_id=eq.${shopId}`, {
+            method: 'DELETE',
+            headers
+          });
+
+          // 5. Reset banner_url to clean state
+          const existing = _allTenants.find(t => t.id === shopId);
+          let bannerObj = {};
+          try {
+            bannerObj = typeof existing?.banner_url === 'string' ? JSON.parse(existing.banner_url) : (existing?.banner_url || {});
+          } catch(e) {}
+
+          const cleanBanner = {
+            admin_password: bannerObj.admin_password || '1234',
+            active: true,
+            slides: [],
+            cloud_sync_seq: Date.now(),
+            last_change_type: 'reset',
+            last_change_desc: 'Shop cloud data reset',
+            last_change_time: new Date().toISOString(),
+            pos_customers: [],
+            pos_customer_txns: [],
+            pos_branches: []
+          };
+
+          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants?id=eq.${shopId}`, {
+            method: 'PATCH',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ banner_url: JSON.stringify(cleanBanner) })
+          });
+
+          alert(`✅ تم تصفير ومسح جميع بيانات المتجر (${slug}) من السحابة بنجاح!`);
+          await loadShops();
+        } catch(err) {
+          alert('❌ فشل تصفير بيانات المتجر: ' + err.message);
+        }
+      }
+
+      async function deleteShopTotally(shopId, slug) {
+        const confirmSlug = prompt(`🚨 تحذير نهائي: هل تريد حذف المتجر (${slug}) بالكامل من السحابة نهائياً؟\n\nسيتم حذف المتجر والمعرف والبيانات وكل شيء نهائياً ولا يمكن التراجع.\n\nلتأكيد الحذف، اكتب المعرف التالي:\n${slug}`);
+        if (!confirmSlug || confirmSlug.trim().toLowerCase() !== slug.toLowerCase()) {
+          if (confirmSlug !== null) alert('لم يتم الحذف: المعرف المدخل غير مطابق.');
+          return;
+        }
+
+        const apiKey = StorefrontAPI?.DEFAULT_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg';
+        const headers = { 'apikey': apiKey, 'Authorization': 'Bearer ' + apiKey };
+
+        try {
+          // 1. Delete order_items
+          const ordersRes = await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
+          if (ordersRes.ok) {
+            const orders = await ordersRes.json();
+            if (orders && orders.length > 0) {
+              const oIds = orders.map(o => o.id);
+              for (let i = 0; i < oIds.length; i += 50) {
+                const chunk = oIds.slice(i, i + 50);
+                await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/order_items?order_id=in.(${chunk.join(',')})`, {
+                  method: 'DELETE',
+                  headers
+                });
+              }
+            }
+          }
+
+          // 2. Delete orders
+          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/orders?shop_id=eq.${shopId}`, {
+            method: 'DELETE',
+            headers
+          });
+
+          // 3. Delete products
+          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/products?shop_id=eq.${shopId}`, {
+            method: 'DELETE',
+            headers
+          });
+
+          // 4. Delete categories
+          await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/categories?shop_id=eq.${shopId}`, {
+            method: 'DELETE',
+            headers
+          });
+
+          // 5. Delete tenant itself
+          const delRes = await fetch(`https://mcebwpiswvwqcdwjpagy.supabase.co/rest/v1/tenants?id=eq.${shopId}`, {
+            method: 'DELETE',
+            headers
+          });
+          if (!delRes.ok) throw new Error(await delRes.text());
+
+          alert(`🗑️ تم حذف المتجر (${slug}) بالكامل ونهائياً من السحابة بنجاح!`);
+          await loadShops();
+        } catch(err) {
+          alert('❌ فشل حذف المتجر: ' + err.message);
+        }
+      }
+
       return {
         init,
         login,
@@ -554,7 +696,9 @@
         openNewShopModal,
         openEditShopModal,
         closeShopModal,
-        saveShop
+        saveShop,
+        resetShopData,
+        deleteShopTotally
       };
     })();
 
