@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
-  "version": "1.2.36",
-  "build": 52,
+  "version": "1.2.37",
+  "build": 53,
   "releaseDate": "2026-10-20",
   "releaseNotes": "Automatic Customer Balance & Debt Sync across branches, Auto Boot & Online-Recovery Sync, Strict Store Isolation in Mobile Admin App.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
