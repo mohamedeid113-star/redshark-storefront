@@ -19,7 +19,122 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   
   <!-- HTML5 Barcode/QR Scanner -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js">
+    function openShopLoginModal(forceLock = false) {
+      const modal = document.getElementById('modal-shop-login');
+      const closeBtn = document.getElementById('btn-close-shop-modal');
+      const slugInput = document.getElementById('shop-login-slug');
+      const pinInput = document.getElementById('shop-login-pin');
+      const errBox = document.getElementById('shop-login-error');
+      if (errBox) errBox.style.display = 'none';
+      if (slugInput) slugInput.value = _slug || '';
+      if (pinInput) pinInput.value = '';
+      if (closeBtn) closeBtn.style.display = forceLock ? 'none' : 'block';
+      if (modal) modal.style.display = 'flex';
+      setTimeout(() => slugInput?.focus(), 150);
+    }
+
+    function closeShopLoginModal() {
+      const modal = document.getElementById('modal-shop-login');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function submitShopLogin() {
+      const slugInput = document.getElementById('shop-login-slug');
+      const pinInput = document.getElementById('shop-login-pin');
+      const errBox = document.getElementById('shop-login-error');
+      const btn = document.getElementById('btn-submit-shop-login');
+
+      const slug = (slugInput?.value || '').trim().toLowerCase();
+      const pin = (pinInput?.value || '').trim();
+
+      if (!slug) {
+        if (errBox) {
+          errBox.textContent = _currentLang === 'ar' ? 'يرجى إدخال معرّف المتجر (Store Slug)' : 'Please enter Store Slug';
+          errBox.style.display = 'block';
+        }
+        slugInput?.focus();
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = _currentLang === 'ar' ? 'جارٍ التحقق...' : 'Verifying...';
+      }
+      if (errBox) errBox.style.display = 'none';
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(slug)}&select=*`, {
+          headers: getHeaders()
+        });
+        if (!res.ok) throw new Error('Network error');
+        const tenants = await res.json();
+        if (!tenants || tenants.length === 0) {
+          if (errBox) {
+            errBox.textContent = _currentLang === 'ar' ? `المتجر "${slug}" غير مسجل في النظام!` : `Shop "${slug}" not found!`;
+            errBox.style.display = 'block';
+          }
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
+          }
+          return;
+        }
+
+        const t = tenants[0];
+        let bObj = {};
+        try {
+          bObj = typeof t.banner_url === 'string' ? JSON.parse(t.banner_url) : (t.banner_url || {});
+        } catch(e) {}
+
+        const adminPwd = bObj.admin_password || t.admin_pin || '';
+        if (adminPwd && pin && adminPwd.toString() !== pin.toString()) {
+          if (errBox) {
+            errBox.textContent = _currentLang === 'ar' ? 'رمز الحماية / PIN غير صحيح!' : 'Invalid Security PIN!';
+            errBox.style.display = 'block';
+          }
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
+          }
+          return;
+        }
+
+        _slug = slug;
+        _tenant = t;
+        localStorage.setItem('redshark_admin_slug', _slug);
+
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.set('shop', _slug);
+          window.history.replaceState({}, '', u.toString());
+        } catch(e) {}
+
+        document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug;
+        closeShopLoginModal();
+
+        if (Array.isArray(bObj.pos_cashboxes)) {
+          _cashboxes = bObj.pos_cashboxes;
+        } else {
+          _cashboxes = [];
+        }
+        populateBranchSelector();
+
+        await refreshAppData();
+      } catch(e) {
+        if (errBox) {
+          errBox.textContent = _currentLang === 'ar' ? 'حدث خطأ أثناء التحقق: ' + e.message : 'Login check failed: ' + e.message;
+          errBox.style.display = 'block';
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
+        }
+      }
+    }
+
+  </script>
 
   <style>
     :root, [data-theme="light"] {
@@ -505,6 +620,7 @@
       </div>
 
       <div class="header-actions">
+        <button class="hdr-btn" onclick="openShopLoginModal(false)" title="تبديل المتجر / Switch Store" style="font-size:1.1rem">🏪</button>
         <button id="btn-install-app-header" class="hdr-btn" onclick="openInstallModal()" style="background:rgba(37,99,235,0.15);color:var(--primary);font-weight:800;border:1px solid rgba(37,99,235,0.3);display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;font-size:0.75rem" title="تثبيت التطبيق على الهاتف"><span>📲</span> <span id="hdr-install-text">📥 تنزيل التطبيق</span></button>
         <button class="hdr-btn" onclick="toggleTheme()" title="تبديل الوضع">🌓</button>
         <button class="hdr-btn" onclick="toggleLang()" title="اللغة">🌐</button>
@@ -742,7 +858,10 @@
     const SUPABASE_URL = "https://mcebwpiswvwqcdwjpagy.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg";
 
-    let _slug = new URLSearchParams(window.location.search).get('shop') || localStorage.getItem('redshark_admin_slug') || 'shop101';
+    let _slug = new URLSearchParams(window.location.search).get('shop') || localStorage.getItem('redshark_admin_slug') || '';
+    if (_slug) {
+      try { localStorage.setItem('redshark_admin_slug', _slug); } catch(e) {}
+    }
     let _tenant = null;
     let _orders = [];
     let _products = [];
@@ -775,7 +894,6 @@
         _deferredInstallPrompt = e;
         const b = document.getElementById('pwa-install-banner');
         if (b) b.style.display = 'block';
-        // Automatically show install prompt for 1-click download on Android
         setTimeout(() => {
           if (_deferredInstallPrompt && !isStandalone) {
             _deferredInstallPrompt.prompt().catch(() => {});
@@ -783,8 +901,16 @@
         }, 800);
       });
 
-      await loadTenantProfile();
-      await refreshAppData();
+      if (!_slug) {
+        openShopLoginModal(true);
+      } else {
+        await loadTenantProfile();
+        if (_tenant) {
+          await refreshAppData();
+        } else {
+          openShopLoginModal(true);
+        }
+      }
 
       // Background order polling every 15s
       setInterval(loadOnlineOrders, 10000);
@@ -1481,6 +1607,37 @@
 
       <button onclick="closeInstallModal()" style="margin-top:14px;background:none;border:none;color:var(--primary);font-weight:800;cursor:pointer;font-size:0.85rem">
         فهمت، إغلاق
+      </button>
+    </div>
+  </div>
+
+
+  <!-- SHOP LOGIN & SWITCH MODAL -->
+  <div id="modal-shop-login" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(8px);z-index:999999;align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--surface);border-radius:24px;max-width:390px;width:100%;padding:26px 20px;box-shadow:0 24px 48px rgba(0,0,0,0.5);border:1px solid var(--border);position:relative;text-align:center">
+      <button id="btn-close-shop-modal" onclick="closeShopLoginModal()" style="display:none;position:absolute;top:16px;left:16px;background:none;border:none;font-size:1.3rem;color:var(--text-muted);cursor:pointer">✕</button>
+      
+      <div style="width:68px;height:68px;border-radius:20px;background:var(--primary-gradient);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 8px 20px rgba(37,99,235,0.35)">
+        <span style="font-size:2.2rem">🏪</span>
+      </div>
+      
+      <h3 style="margin:0 0 6px;font-size:1.2rem;font-weight:900" id="m-shop-title">تسجيل دخول المشرف</h3>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 18px;line-height:1.4" id="m-shop-sub">أدخل معرّف المتجر الخاص بك لعرض الفواتير والتقارير الخاصة بفرعك فقط</p>
+
+      <div style="text-align:start;margin-bottom:12px">
+        <label style="display:block;font-size:0.75rem;font-weight:800;color:var(--text-muted);margin-bottom:6px">معرّف المتجر (Store Slug) *</label>
+        <input type="text" id="shop-login-slug" placeholder="مثال: bobmarektkatelbi" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface-subtle);color:var(--text);font-family:monospace;font-size:0.95rem;direction:ltr;box-sizing:border-box" onkeydown="if(event.key==='Enter')submitShopLogin()">
+      </div>
+
+      <div style="text-align:start;margin-bottom:18px">
+        <label style="display:block;font-size:0.75rem;font-weight:800;color:var(--text-muted);margin-bottom:6px">رمز الحماية / PIN (اختياري)</label>
+        <input type="password" id="shop-login-pin" placeholder="••••" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface-subtle);color:var(--text);font-family:monospace;font-size:1.1rem;direction:ltr;box-sizing:border-box" onkeydown="if(event.key==='Enter')submitShopLogin()">
+      </div>
+
+      <div id="shop-login-error" style="display:none;color:#ef4444;font-size:0.78rem;font-weight:700;margin-bottom:12px;text-align:center"></div>
+
+      <button id="btn-submit-shop-login" onclick="submitShopLogin()" style="width:100%;padding:13px;background:var(--primary-gradient);color:#fff;border:none;border-radius:14px;font-size:0.95rem;font-weight:900;cursor:pointer;box-shadow:0 6px 16px rgba(37,99,235,0.3)">
+        دخول لوحة الإدارة ⚡
       </button>
     </div>
   </div>

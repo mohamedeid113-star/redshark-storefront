@@ -1,45 +1,59 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة التحكم | Red Shark Storefront Admin</title>
-  
+
   <meta name="theme-color" content="#09101d">
   <link rel="stylesheet" href="css/storefront.css">
 </head>
+
 <body style="background:var(--bg-primary)">
 
   <!-- SECURITY LOGIN OVERLAY -->
   <div id="admin-pin-modal" class="pin-security-overlay" style="display:flex">
-    <div class="pin-security-card" style="max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,0.3);border-radius:18px;border:1px solid #cbd5e1">
+    <div class="pin-security-card"
+      style="max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,0.3);border-radius:18px;border:1px solid #cbd5e1">
       <div style="font-size:3.2rem;margin-bottom:10px">🔐</div>
-      <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:6px" id="pin-modal-title">لوحة تحكم المتجر الإلكتروني</h2>
+      <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:6px" id="pin-modal-title">لوحة تحكم المتجر الإلكتروني
+      </h2>
       <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px" id="pin-modal-desc">
         يرجى إدخال كلمة المرور (أو رمز PIN) الخاص بمتجرك للمتابعة.
       </p>
 
       <div style="text-align:start;margin-bottom:14px">
         <label class="field-label" id="lbl-login-slug" style="font-weight:700">معرف المتجر (Shop Slug) *</label>
-        <input type="text" id="admin-login-slug" class="field-input" placeholder="مثال: shop101" style="font-family:monospace;direction:ltr;padding:10px;font-size:0.95rem;background:#f8fafc">
+        <input type="text" id="admin-login-slug" class="field-input" placeholder="مثال: shop101"
+          style="font-family:monospace;direction:ltr;padding:10px;font-size:0.95rem;background:#f8fafc">
       </div>
 
       <div style="text-align:start;margin-bottom:18px">
         <label class="field-label" id="lbl-login-pwd" style="font-weight:700">كلمة المرور / رمز PIN *</label>
         <div style="position:relative">
-          <input type="password" id="admin-login-pwd" class="field-input" placeholder="••••••••" style="padding:10px;font-size:1.1rem;direction:ltr;font-family:monospace" onkeydown="if(event.key==='Enter') Admin.verifyCredentials()">
-          <button type="button" onclick="Admin.toggleLoginPwdVisibility()" style="position:absolute;inset-inline-end:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem" title="إظهار / إخفاء">👁️</button>
+          <input type="password" id="admin-login-pwd" class="field-input" placeholder="••••••••"
+            style="padding:10px;font-size:1.1rem;direction:ltr;font-family:monospace"
+            onkeydown="if(event.key==='Enter') Admin.verifyCredentials()">
+          <button type="button" onclick="Admin.toggleLoginPwdVisibility()"
+            style="position:absolute;inset-inline-end:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem"
+            title="إظهار / إخفاء">👁️</button>
         </div>
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px" id="pin-default-hint">الرمز الافتراضي لمتجرك: <strong style="color:var(--brand-primary)">1234</strong></div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px" id="pin-default-hint">الرمز الافتراضي
+          لمتجرك: <strong style="color:var(--brand-primary)">1234</strong></div>
       </div>
 
-      <button class="btn-checkout-primary" onclick="Admin.verifyCredentials()" id="btn-login-submit" style="width:100%;padding:13px;font-size:1rem;font-weight:900;border-radius:10px">
+      <button class="btn-checkout-primary" onclick="Admin.verifyCredentials()" id="btn-login-submit"
+        style="width:100%;padding:13px;font-size:1rem;font-weight:900;border-radius:10px">
         <span id="pin-modal-btn">🔓 دخول لوحة التحكم</span>
       </button>
 
-      <div style="margin-top:18px;font-size:0.78rem;color:var(--text-muted);border-top:1px solid #f1f5f9;padding-top:12px">
+      <div
+        style="margin-top:18px;font-size:0.78rem;color:var(--text-muted);border-top:1px solid #f1f5f9;padding-top:12px">
         <span id="lbl-master-link-hint">هل أنت صاحب المنصة الرئيسي؟</span>
-        <a href="superadmin.html" style="color:var(--brand-primary);font-weight:800;text-decoration:none;margin-inline-start:4px" id="link-superadmin">لوحة إدارة المتاجر (Master) ←</a>
+        <a href="superadmin.html"
+          style="color:var(--brand-primary);font-weight:800;text-decoration:none;margin-inline-start:4px"
+          id="link-superadmin">لوحة إدارة المتاجر (Master) ←</a>
       </div>
     </div>
   </div>
@@ -57,23 +71,30 @@
 
       <div class="header-actions">
         <!-- Logged-in Shop Badge & Logout -->
-        <span id="admin-active-shop-pill" style="background:rgba(5,150,105,0.1);color:var(--brand-primary);padding:4px 10px;border-radius:20px;font-weight:800;font-size:0.8rem;border:1px solid rgba(5,150,105,0.2);display:inline-flex;align-items:center;gap:5px">
+        <span id="admin-active-shop-pill"
+          style="background:rgba(5,150,105,0.1);color:var(--brand-primary);padding:4px 10px;border-radius:20px;font-weight:800;font-size:0.8rem;border:1px solid rgba(5,150,105,0.2);display:inline-flex;align-items:center;gap:5px">
           <span>🏪</span><span id="admin-active-shop-text">shop101</span>
         </span>
 
         <!-- Push Sync to POS Button -->
         <!-- Download / Open Mobile Admin App -->
-        <button id="btn-admin-mobile-app" class="icon-btn" onclick="Admin.openMobileAppModal()" style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);color:#fff;border:none;box-shadow:0 2px 8px rgba(59,130,246,0.3);font-weight:700" title="تحميل تطبيق الهاتف للمدير">
+        <button id="btn-admin-mobile-app" class="icon-btn" onclick="Admin.openMobileAppModal()"
+          style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);color:#fff;border:none;box-shadow:0 2px 8px rgba(59,130,246,0.3);font-weight:700"
+          title="تحميل تطبيق الهاتف للمدير">
           <span>📲</span>
           <span id="admin-mobile-app-text">📥 تنزيل تطبيق الهاتف</span>
         </button>
 
-        <button id="btn-admin-pos-sync" class="icon-btn" onclick="Admin.openPosSyncModal()" style="background:linear-gradient(135deg, #10b981, #059669);color:#fff;border:none;box-shadow:0 2px 8px rgba(16,185,129,0.3);font-weight:700" title="مزامنة مع الكاشير">
+        <button id="btn-admin-pos-sync" class="icon-btn" onclick="Admin.openPosSyncModal()"
+          style="background:linear-gradient(135deg, #10b981, #059669);color:#fff;border:none;box-shadow:0 2px 8px rgba(16,185,129,0.3);font-weight:700"
+          title="مزامنة مع الكاشير">
           <span>🔄</span>
           <span id="admin-pos-sync-text">مزامنة مع الكاشير</span>
         </button>
 
-        <button id="btn-admin-logout" class="icon-btn" onclick="Admin.logout()" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)" title="تسجيل الخروج">
+        <button id="btn-admin-logout" class="icon-btn" onclick="Admin.logout()"
+          style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)"
+          title="تسجيل الخروج">
           <span>🚪</span>
           <span id="admin-logout-text">خروج</span>
         </button>
@@ -84,7 +105,8 @@
           <span id="admin-lang-text">English</span>
         </button>
 
-        <a href="javascript:void(0)" onclick="Admin.openStorefront()" class="icon-btn" id="btn-view-store" title="View Storefront">
+        <a href="javascript:void(0)" onclick="Admin.openStorefront()" class="icon-btn" id="btn-view-store"
+          title="View Storefront">
           <span>🏪</span>
           <span id="admin-view-store-text">معاينة المتجر</span>
         </a>
@@ -93,7 +115,7 @@
   </header>
 
   <div class="admin-container">
-    
+
     <!-- Save Alert Banner -->
     <div id="admin-alert" class="save-alert"></div>
 
@@ -129,7 +151,8 @@
     <div id="tab-settings" class="admin-card">
       <div class="admin-header">
         <h2 style="font-size:1.25rem;font-weight:900" id="h2-settings">⚙️ الإعدادات العامة للمتجر</h2>
-        <button id="btn-save-settings" class="btn-checkout-primary" onclick="Admin.saveSettings()" style="padding:8px 20px">
+        <button id="btn-save-settings" class="btn-checkout-primary" onclick="Admin.saveSettings()"
+          style="padding:8px 20px">
           <span>💾</span>
           <span id="btn-save-text">حفظ الإعدادات</span>
         </button>
@@ -181,7 +204,8 @@
           <label class="field-label" id="lbl-logo">شعار المتجر (Store Logo)</label>
           <div class="upload-field-row">
             <input type="text" id="admin-shop-logo" class="field-input" placeholder="https://... أو اضغط رفع صورة">
-            <input type="file" id="file-shop-logo" accept="image/*" style="display:none" onchange="Admin.handleFileUpload(this, 'admin-shop-logo', 'preview-shop-logo')">
+            <input type="file" id="file-shop-logo" accept="image/*" style="display:none"
+              onchange="Admin.handleFileUpload(this, 'admin-shop-logo', 'preview-shop-logo')">
             <button type="button" class="btn-upload-file" onclick="document.getElementById('file-shop-logo').click()">
               <span>📁</span>
               <span id="btn-upload-logo-text">رفع صورة</span>
@@ -192,30 +216,37 @@
 
         <div class="form-group" style="grid-column:1/-1">
           <label class="field-label" id="lbl-desc-ar">وصف المتجر الترويجي</label>
-          <textarea id="admin-desc-ar" class="field-input" rows="2" placeholder="أفضل تشكيلة من المنتجات الغذائية والمواد التموينية..."></textarea>
+          <textarea id="admin-desc-ar" class="field-input" rows="2"
+            placeholder="أفضل تشكيلة من المنتجات الغذائية والمواد التموينية..."></textarea>
         </div>
       </div>
 
-      
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-top:14px">
-          <input type="checkbox" id="admin-show-header-badges" style="width:18px;height:18px">
-          <span id="lbl-show-badges-text">إظهار شريط الشارات في أعلى المتجر (مفتوح للطلبات، رسوم التوصيل، مخزون الكاشير)</span>
-        </label>
-        <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.4;margin-top:4px" id="lbl-show-badges-hint">
-          افتراضياً، يتم إخفاء هذا الشريط لتوفير المساحة وتسهيل تصفح المنتجات على الهواتف. يمكنك تفعيله إذا أردت إبراز الشارات للزبائن.
-        </div>
+
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-top:14px">
+        <input type="checkbox" id="admin-show-header-badges" style="width:18px;height:18px">
+        <span id="lbl-show-badges-text">إظهار شريط الشارات في أعلى المتجر (مفتوح للطلبات، رسوم التوصيل، مخزون
+          الكاشير)</span>
+      </label>
+      <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.4;margin-top:4px" id="lbl-show-badges-hint">
+        افتراضياً، يتم إخفاء هذا الشريط لتوفير المساحة وتسهيل تصفح المنتجات على الهواتف. يمكنك تفعيله إذا أردت إبراز
+        الشارات للزبائن.
+      </div>
 
       <!-- POS LIVE STOCK TOGGLE -->
-      <div style="margin-top:24px;padding:16px;background:var(--bg-secondary);border-radius:var(--radius-md);border:1px solid var(--border-color)">
-        <h3 style="font-size:1.05rem;font-weight:900;margin-bottom:8px" id="lbl-pos-title">⚡ الربط بمخزون الكاشير المباشر (POS Live Stock)</h3>
-        
+      <div
+        style="margin-top:24px;padding:16px;background:var(--bg-secondary);border-radius:var(--radius-md);border:1px solid var(--border-color)">
+        <h3 style="font-size:1.05rem;font-weight:900;margin-bottom:8px" id="lbl-pos-title">⚡ الربط بمخزون الكاشير
+          المباشر (POS Live Stock)</h3>
+
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-bottom:8px">
-          <input type="checkbox" id="admin-link-pos-stock" style="width:18px;height:18px" onchange="Admin.handlePosStockToggle(this.checked)">
+          <input type="checkbox" id="admin-link-pos-stock" style="width:18px;height:18px"
+            onchange="Admin.handlePosStockToggle(this.checked)">
           <span id="lbl-link-pos-text">ربط كميات المتجر الإلكتروني بمخزون نقطة البيع (الكاشير) لحظياً</span>
         </label>
-        
+
         <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.4" id="lbl-link-pos-hint">
-          عند إلغاء هذا الخيار، سيتم سؤالك عما إذا كنت ترغب في مسح أصناف الكاشير من المتجر لإنشاء قائمة أصناف خاصة وحصرية للمتجر مع إمكانية حذف الأصناف يدوياً.
+          عند إلغاء هذا الخيار، سيتم سؤالك عما إذا كنت ترغب في مسح أصناف الكاشير من المتجر لإنشاء قائمة أصناف خاصة
+          وحصرية للمتجر مع إمكانية حذف الأصناف يدوياً.
         </div>
 
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-top:12px">
@@ -235,7 +266,8 @@
           </p>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="icon-btn" onclick="Admin.addNewSlide()" style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
+          <button class="icon-btn" onclick="Admin.addNewSlide()"
+            style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
             <span>➕</span>
             <span id="btn-add-slide-text">إضافة شريحة عرض جديدة</span>
           </button>
@@ -247,14 +279,19 @@
       </div>
 
       <!-- Banner Active Toggle -->
-      <div style="margin-bottom:18px;padding:12px;background:var(--bg-secondary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between">
+      <div
+        style="margin-bottom:18px;padding:12px;background:var(--bg-secondary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between">
         <div>
           <strong id="lbl-banner-active-title">تفعيل بانر العروض الخاصة والتخفيضات أونلاين</strong>
-          <div style="font-size:0.8rem;color:var(--text-muted)" id="lbl-banner-active-desc">إذا تم إيقافه سيختفي شريط العروض من الصفحة الرئيسية للزبائن</div>
+          <div style="font-size:0.8rem;color:var(--text-muted)" id="lbl-banner-active-desc">إذا تم إيقافه سيختفي شريط
+            العروض من الصفحة الرئيسية للزبائن</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <span id="banner-active-badge" style="background:#d1fae5;color:#065f46;padding:4px 12px;border-radius:12px;font-weight:800;font-size:0.85rem">نشط أونلاين 🟢</span>
-          <input type="checkbox" id="admin-carousel-active" checked style="width:24px;height:24px;cursor:pointer" onchange="Admin.updateBannerStatusBadge(this.checked)">
+          <span id="banner-active-badge"
+            style="background:#d1fae5;color:#065f46;padding:4px 12px;border-radius:12px;font-weight:800;font-size:0.85rem">نشط
+            أونلاين 🟢</span>
+          <input type="checkbox" id="admin-carousel-active" checked style="width:24px;height:24px;cursor:pointer"
+            onchange="Admin.updateBannerStatusBadge(this.checked)">
         </div>
       </div>
 
@@ -271,11 +308,13 @@
           </p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="btn-catalog-sync-pos" class="icon-btn" onclick="Admin.openPosSyncModal()" style="background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);font-weight:700">
+          <button id="btn-catalog-sync-pos" class="icon-btn" onclick="Admin.openPosSyncModal()"
+            style="background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);font-weight:700">
             <span>🔄</span>
             <span id="btn-catalog-sync-pos-text">مزامنة مع الكاشير</span>
           </button>
-          <button class="icon-btn" onclick="Admin.openAddCategoryModal()" style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
+          <button class="icon-btn" onclick="Admin.openAddCategoryModal()"
+            style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
             <span>➕</span>
             <span id="btn-add-cat-text">إضافة قسم جديد مع صورة غلاف</span>
           </button>
@@ -295,11 +334,13 @@
           </p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="icon-btn" onclick="Admin.openAddItemModal()" style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
+          <button class="icon-btn" onclick="Admin.openAddItemModal()"
+            style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
             <span>➕</span>
             <span id="btn-add-item-modal-text">إضافة صنف جديد مع صورة</span>
           </button>
-          <button class="icon-btn" onclick="Admin.confirmClearAllProducts()" style="background:var(--danger);color:#fff;border:none;font-weight:800">
+          <button class="icon-btn" onclick="Admin.confirmClearAllProducts()"
+            style="background:var(--danger);color:#fff;border:none;font-weight:800">
             <span>🗑️</span>
             <span id="btn-clear-all-text">مسح جميع الأصناف</span>
           </button>
@@ -310,7 +351,7 @@
     </div>
 
     <!-- TAB 4: ORDERS -->
-    
+
     <!-- TAB 5: REPORTS & ANALYTICS -->
     <div id="tab-reports" class="admin-card" style="display:none">
       <div class="admin-header" style="flex-wrap:wrap;gap:12px">
@@ -322,17 +363,22 @@
         </div>
 
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="reports-branch-filter" class="field-input" style="padding:6px 12px;font-size:0.85rem;font-weight:700;width:auto;background:var(--bg-primary)" onchange="Admin.loadReports()">
+          <select id="reports-branch-filter" class="field-input"
+            style="padding:6px 12px;font-size:0.85rem;font-weight:700;width:auto;background:var(--bg-primary)"
+            onchange="Admin.loadReports()">
             <option value="all">🌐 كافة الفروع والمحطات (All Branches)</option>
             <option value="main">📍 الفرع الرئيسي (Main Branch)</option>
           </select>
-          <select id="reports-date-filter" class="field-input" style="padding:6px 12px;font-size:0.85rem;font-weight:700;width:auto;background:var(--bg-primary)" onchange="Admin.loadReports()">
+          <select id="reports-date-filter" class="field-input"
+            style="padding:6px 12px;font-size:0.85rem;font-weight:700;width:auto;background:var(--bg-primary)"
+            onchange="Admin.loadReports()">
             <option value="today">📅 مبيعات اليوم (Today)</option>
             <option value="week">📅 آخر 7 أيام (Last 7 Days)</option>
             <option value="month" selected>📅 مبيعات هذا الشهر (This Month)</option>
             <option value="all">📅 جميع المبيعات (All Time)</option>
           </select>
-          <button class="icon-btn" onclick="Admin.loadReports()" style="background:var(--bg-primary);border:1px solid #cbd5e1;padding:6px 12px" title="تحديث التقارير">
+          <button class="icon-btn" onclick="Admin.loadReports()"
+            style="background:var(--bg-primary);border:1px solid #cbd5e1;padding:6px 12px" title="تحديث التقارير">
             🔄
           </button>
         </div>
@@ -341,44 +387,59 @@
       <!-- KPI METRIC CARDS -->
       <!-- LIVE CASH DRAWERS CARDS -->
       <div id="reports-cashbox-container" style="margin-bottom:20px">
-        <div style="background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.02));border:1.5px solid rgba(16,185,129,0.3);border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div
+          style="background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.02));border:1.5px solid rgba(16,185,129,0.3);border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
           <div>
-            <div style="font-size:0.82rem;font-weight:800;color:var(--text-muted)">💵 رصيد الصندوق الفعلي في الدرج الآن (Cash in Drawer)</div>
+            <div style="font-size:0.82rem;font-weight:800;color:var(--text-muted)">💵 رصيد الصندوق الفعلي في الدرج الآن
+              (Cash in Drawer)</div>
             <div style="font-size:2rem;font-weight:900;color:#059669" id="rpt-drawer-total">$0.00</div>
             <div style="font-size:0.8rem;font-weight:700;color:var(--text-muted)" id="rpt-drawer-lbp">0 ل.ل</div>
           </div>
           <div style="font-size:0.82rem;text-align:end">
             <div>الكاشير المناوب: <strong id="rpt-drawer-cashier">Administrator</strong></div>
-            <div>حالة الوردية: <span class="badge" style="background:rgba(16,185,129,0.15);color:#059669;font-weight:800;padding:2px 8px;border-radius:10px" id="rpt-drawer-status">مفتوحة 🟢</span></div>
-            <div style="color:var(--text-muted);font-size:0.75rem;margin-top:2px" id="rpt-drawer-time">مباشر لحظياً</div>
+            <div>حالة الوردية: <span class="badge"
+                style="background:rgba(16,185,129,0.15);color:#059669;font-weight:800;padding:2px 8px;border-radius:10px"
+                id="rpt-drawer-status">مفتوحة 🟢</span></div>
+            <div style="color:var(--text-muted);font-size:0.75rem;margin-top:2px" id="rpt-drawer-time">مباشر لحظياً
+            </div>
           </div>
         </div>
       </div>
 
       <!-- KPI METRIC CARDS -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin-bottom:20px">
-        <div style="background:linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.05));border:1px solid rgba(16,185,129,0.25);border-radius:14px;padding:16px">
-          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-sales">💰 إجمالي المبيعات المحققة</div>
+        <div
+          style="background:linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.05));border:1px solid rgba(16,185,129,0.25);border-radius:14px;padding:16px">
+          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-sales">💰
+            إجمالي المبيعات المحققة</div>
           <div style="font-size:1.6rem;font-weight:900;color:#059669" id="kpi-total-sales">$0.00</div>
           <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="kpi-total-sales-lbp">0 ل.ل</div>
         </div>
 
-        <div style="background:linear-gradient(135deg, rgba(59,130,246,0.1), rgba(29,78,216,0.05));border:1px solid rgba(59,130,246,0.25);border-radius:14px;padding:16px">
-          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-orders">📦 عدد الفواتير والطلبات</div>
+        <div
+          style="background:linear-gradient(135deg, rgba(59,130,246,0.1), rgba(29,78,216,0.05));border:1px solid rgba(59,130,246,0.25);border-radius:14px;padding:16px">
+          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-orders">
+            📦 عدد الفواتير والطلبات</div>
           <div style="font-size:1.6rem;font-weight:900;color:#2563eb" id="kpi-total-orders">0</div>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="kpi-completed-orders">0 طلب مكتمل</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="kpi-completed-orders">0 طلب مكتمل
+          </div>
         </div>
 
-        <div style="background:linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.05));border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:16px">
-          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-avg">🎯 متوسط قيمة الفاتورة</div>
+        <div
+          style="background:linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.05));border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:16px">
+          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-avg">🎯
+            متوسط قيمة الفاتورة</div>
           <div style="font-size:1.6rem;font-weight:900;color:#d97706" id="kpi-avg-order">$0.00</div>
           <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="lbl-kpi-avg-sub">لكل زبون</div>
         </div>
 
-        <div style="background:linear-gradient(135deg, rgba(239,68,68,0.1), rgba(220,38,38,0.05));border:1px solid rgba(239,68,68,0.25);border-radius:14px;padding:16px">
-          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-lowstock">⚠️ تنبيهات المخزون المنخفض</div>
+        <div
+          style="background:linear-gradient(135deg, rgba(239,68,68,0.1), rgba(220,38,38,0.05));border:1px solid rgba(239,68,68,0.25);border-radius:14px;padding:16px">
+          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px"
+            id="lbl-kpi-lowstock">⚠️ تنبيهات المخزون المنخفض</div>
           <div style="font-size:1.6rem;font-weight:900;color:#dc2626" id="kpi-low-stock">0</div>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="lbl-kpi-lowstock-sub">صنف شارف على النفاد</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="lbl-kpi-lowstock-sub">صنف شارف على
+            النفاد</div>
         </div>
       </div>
 
@@ -400,41 +461,51 @@
                 </tr>
               </thead>
               <tbody id="reports-top-products-body">
-                <tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">جارِ تحميل البيانات...</td></tr>
+                <tr>
+                  <td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">جارِ تحميل البيانات...
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
 
         <!-- Detailed Sales Invoices List -->
-      <div style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:14px;padding:16px;margin-bottom:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <div style="font-weight:800;font-size:0.95rem;display:flex;align-items:center;gap:6px">
-            <span>🧾</span>
-            <span>فواتير ومبيعات الكاشير التفصيلية (Detailed Sales Invoices)</span>
+        <div
+          style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:14px;padding:16px;margin-bottom:16px">
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <div style="font-weight:800;font-size:0.95rem;display:flex;align-items:center;gap:6px">
+              <span>🧾</span>
+              <span>فواتير ومبيعات الكاشير التفصيلية (Detailed Sales Invoices)</span>
+            </div>
+            <input type="text" id="admin-inv-search" placeholder="🔍 تصفية برقم الفاتورة أو العميل..."
+              oninput="Admin.filterReportsInvoices()"
+              style="padding:5px 12px;border-radius:8px;border:1px solid #cbd5e1;font-size:0.8rem;outline:none">
           </div>
-          <input type="text" id="admin-inv-search" placeholder="🔍 تصفية برقم الفاتورة أو العميل..." oninput="Admin.filterReportsInvoices()" style="padding:5px 12px;border-radius:8px;border:1px solid #cbd5e1;font-size:0.8rem;outline:none">
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:0.82rem">
+              <thead>
+                <tr style="border-bottom:1.5px solid #cbd5e1;color:var(--text-muted);text-align:start">
+                  <th style="padding:6px 8px">رقم الفاتورة</th>
+                  <th style="padding:6px 8px">الوقت والفرع</th>
+                  <th style="padding:6px 8px">الكاشير / العميل</th>
+                  <th style="padding:6px 8px;text-align:end">الإجمالي ($)</th>
+                  <th style="padding:6px 8px;text-align:end">التكلفة ($)</th>
+                  <th style="padding:6px 8px;text-align:end">صافي الربح ($)</th>
+                </tr>
+              </thead>
+              <tbody id="reports-invoices-body">
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:18px;color:var(--text-muted)">جارِ جلب الفواتير...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:0.82rem">
-            <thead>
-              <tr style="border-bottom:1.5px solid #cbd5e1;color:var(--text-muted);text-align:start">
-                <th style="padding:6px 8px">رقم الفاتورة</th>
-                <th style="padding:6px 8px">الوقت والفرع</th>
-                <th style="padding:6px 8px">الكاشير / العميل</th>
-                <th style="padding:6px 8px;text-align:end">الإجمالي ($)</th>
-                <th style="padding:6px 8px;text-align:end">التكلفة ($)</th>
-                <th style="padding:6px 8px;text-align:end">صافي الربح ($)</th>
-              </tr>
-            </thead>
-            <tbody id="reports-invoices-body">
-              <tr><td colspan="6" style="text-align:center;padding:18px;color:var(--text-muted)">جارِ جلب الفواتير...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- Inventory Status & Out of stock -->
+        <!-- Inventory Status & Out of stock -->
         <div style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:14px;padding:16px">
           <div style="font-weight:800;font-size:0.95rem;margin-bottom:12px;display:flex;align-items:center;gap:6px">
             <span>📦</span>
@@ -450,14 +521,17 @@
                 </tr>
               </thead>
               <tbody id="reports-low-stock-body">
-                <tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">جارِ تحميل البيانات...</td></tr>
+                <tr>
+                  <td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">جارِ تحميل البيانات...
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
     </div>
-  
+
     <div id="tab-orders" class="admin-card" style="display:none">
       <div class="admin-header">
         <h2 style="font-size:1.25rem;font-weight:900" id="h2-orders">📋 الطلبات الواردة من المتجر أونلاين</h2>
@@ -472,13 +546,15 @@
     <div class="modal-sheet" style="max-height:unset">
       <div class="modal-header">
         <h3 style="font-size:1.15rem;font-weight:900" id="modal-add-item-title">➕ إضافة صنف جديد للمتجر الإلكتروني</h3>
-        <button class="icon-btn" onclick="Admin.closeAddItemModal()" style="background:none;border:none;color:var(--text-main)">✕</button>
+        <button class="icon-btn" onclick="Admin.closeAddItemModal()"
+          style="background:none;border:none;color:var(--text-main)">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-grid">
           <div class="form-group">
             <label class="field-label" id="lbl-item-name-ar">اسم الصنف بالعربي *</label>
-            <input type="text" id="new-item-name-ar" class="field-input" placeholder="مثال: زيت زيتون بكر ممتاز 1 لتر" required>
+            <input type="text" id="new-item-name-ar" class="field-input" placeholder="مثال: زيت زيتون بكر ممتاز 1 لتر"
+              required>
           </div>
           <div class="form-group">
             <label class="field-label" id="lbl-item-name-en">اسم الصنف بالإنجليزي</label>
@@ -506,8 +582,10 @@
             <label class="field-label" id="lbl-item-image">صورة المنتج (Image)</label>
             <div class="upload-field-row">
               <input type="text" id="new-item-img" class="field-input" placeholder="https://... أو اضغط زر رفع صورة">
-              <input type="file" id="file-new-item-img" accept="image/*" style="display:none" onchange="Admin.handleFileUpload(this, 'new-item-img', 'preview-new-item-img')">
-              <button type="button" class="btn-upload-file" onclick="document.getElementById('file-new-item-img').click()">
+              <input type="file" id="file-new-item-img" accept="image/*" style="display:none"
+                onchange="Admin.handleFileUpload(this, 'new-item-img', 'preview-new-item-img')">
+              <button type="button" class="btn-upload-file"
+                onclick="document.getElementById('file-new-item-img').click()">
                 <span>📁</span>
                 <span id="btn-upload-item-img-text">رفع صورة</span>
               </button>
@@ -517,7 +595,8 @@
 
           <div class="form-group" style="grid-column:1/-1">
             <label class="field-label" id="lbl-item-desc">وصف الصنف ومميزاته</label>
-            <textarea id="new-item-desc" class="field-input" rows="2" placeholder="تفاصيل المنتج، المنشأ، الحجم..."></textarea>
+            <textarea id="new-item-desc" class="field-input" rows="2"
+              placeholder="تفاصيل المنتج، المنشأ، الحجم..."></textarea>
           </div>
         </div>
 
@@ -534,7 +613,8 @@
     <div class="modal-sheet" style="max-height:unset">
       <div class="modal-header">
         <h3 style="font-size:1.15rem;font-weight:900" id="modal-edit-item-title">✏️ تعديل بيانات وصورة الصنف</h3>
-        <button class="icon-btn" onclick="Admin.closeEditItemModal()" style="background:none;border:none;color:var(--text-main)">✕</button>
+        <button class="icon-btn" onclick="Admin.closeEditItemModal()"
+          style="background:none;border:none;color:var(--text-main)">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="edit-item-id">
@@ -569,15 +649,20 @@
             <label class="field-label" id="lbl-edit-image">صورة المنتج (Product Image)</label>
             <div class="upload-field-row">
               <input type="text" id="edit-item-img" class="field-input" placeholder="https://... أو اضغط زر رفع صورة">
-              <input type="file" id="file-edit-item-img" accept="image/*" style="display:none" onchange="Admin.handleFileUpload(this, 'edit-item-img', 'preview-edit-item-img')">
-              <button type="button" class="btn-upload-file" onclick="document.getElementById('file-edit-item-img').click()">
+              <input type="file" id="file-edit-item-img" accept="image/*" style="display:none"
+                onchange="Admin.handleFileUpload(this, 'edit-item-img', 'preview-edit-item-img')">
+              <button type="button" class="btn-upload-file"
+                onclick="document.getElementById('file-edit-item-img').click()">
                 <span>📁</span>
                 <span id="btn-upload-edit-img-text">رفع صورة</span>
               </button>
-              <button type="button" class="btn-clear-cart" onclick="document.getElementById('edit-item-img').value=''; document.getElementById('preview-edit-item-img').style.display='none';" title="حذف الصورة">🗑️</button>
+              <button type="button" class="btn-clear-cart"
+                onclick="document.getElementById('edit-item-img').value=''; document.getElementById('preview-edit-item-img').style.display='none';"
+                title="حذف الصورة">🗑️</button>
             </div>
             <div style="margin-top:8px">
-              <img id="preview-edit-item-img" class="img-preview-thumb" style="width:80px;height:80px;border-radius:10px" alt="Preview">
+              <img id="preview-edit-item-img" class="img-preview-thumb"
+                style="width:80px;height:80px;border-radius:10px" alt="Preview">
             </div>
           </div>
 
@@ -607,18 +692,21 @@
     <div class="modal-sheet" style="max-height:unset">
       <div class="modal-header">
         <h3 style="font-size:1.15rem;font-weight:900" id="modal-category-title">📂 تعديل بيانات وصورة غلاف القسم</h3>
-        <button class="icon-btn" onclick="Admin.closeCategoryModal()" style="background:none;border:none;color:var(--text-main)">✕</button>
+        <button class="icon-btn" onclick="Admin.closeCategoryModal()"
+          style="background:none;border:none;color:var(--text-main)">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="category-modal-id">
         <div class="form-grid">
           <div class="form-group">
             <label class="field-label" id="lbl-cat-modal-name-ar">اسم القسم بالعربي *</label>
-            <input type="text" id="category-modal-name-ar" class="field-input" placeholder="مثال: الخضار والفواكه" required>
+            <input type="text" id="category-modal-name-ar" class="field-input" placeholder="مثال: الخضار والفواكه"
+              required>
           </div>
           <div class="form-group">
             <label class="field-label" id="lbl-cat-modal-name-en">اسم القسم بالإنجليزي *</label>
-            <input type="text" id="category-modal-name-en" class="field-input" placeholder="Fruits & Vegetables" required>
+            <input type="text" id="category-modal-name-en" class="field-input" placeholder="Fruits & Vegetables"
+              required>
           </div>
 
           <!-- Category Cover Image Upload -->
@@ -626,14 +714,17 @@
             <label class="field-label" id="lbl-cat-modal-img">صورة غلاف القسم (تظهر في الواجهة الرئيسية)</label>
             <div class="upload-field-row">
               <input type="text" id="category-modal-img" class="field-input" placeholder="https://... أو اضغط رفع صورة">
-              <input type="file" id="file-category-img" accept="image/*" style="display:none" onchange="Admin.handleFileUpload(this, 'category-modal-img', 'preview-category-img')">
-              <button type="button" class="btn-upload-file" onclick="document.getElementById('file-category-img').click()">
+              <input type="file" id="file-category-img" accept="image/*" style="display:none"
+                onchange="Admin.handleFileUpload(this, 'category-modal-img', 'preview-category-img')">
+              <button type="button" class="btn-upload-file"
+                onclick="document.getElementById('file-category-img').click()">
                 <span>📁</span>
                 <span id="btn-upload-cat-img-text">رفع صورة الغلاف</span>
               </button>
             </div>
             <div style="margin-top:8px">
-              <img id="preview-category-img" class="img-preview-thumb" style="width:120px;height:75px;border-radius:10px" alt="Cover Preview">
+              <img id="preview-category-img" class="img-preview-thumb"
+                style="width:120px;height:75px;border-radius:10px" alt="Cover Preview">
             </div>
           </div>
         </div>
@@ -650,38 +741,48 @@
   <script src="js/storefront-admin.js?v=3.1"></script>
 
   <!-- MODAL: SELECTIVE POS SYNC -->
-  <div id="modal-pos-sync" class="modal-backdrop" style="display:none" onclick="if(event.target===this) Admin.closePosSyncModal()">
+  <div id="modal-pos-sync" class="modal-backdrop" style="display:none"
+    onclick="if(event.target===this) Admin.closePosSyncModal()">
     <div class="modal-sheet" style="max-width:480px">
       <div class="modal-header">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:1.3rem">🔄</span>
-          <h3 style="font-size:1.15rem;font-weight:900" id="modal-pos-sync-title">مزامنة البيانات مع برنامج الكاشير (POS)</h3>
+          <h3 style="font-size:1.15rem;font-weight:900" id="modal-pos-sync-title">مزامنة البيانات مع برنامج الكاشير
+            (POS)</h3>
         </div>
-        <button class="icon-btn" onclick="Admin.closePosSyncModal()" style="background:none;border:none;color:var(--text-main);font-size:1.2rem">✕</button>
+        <button class="icon-btn" onclick="Admin.closePosSyncModal()"
+          style="background:none;border:none;color:var(--text-main);font-size:1.2rem">✕</button>
       </div>
       <div class="modal-body">
-        <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:16px;line-height:1.5" id="modal-pos-sync-desc">
-          حدد البيانات التي تريد إرسالها فورياً إلى أجهزة الكاشير في المحل. التحديث آمن 100% ولا يؤثر على الفواتير أو المبيعات:
+        <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:16px;line-height:1.5"
+          id="modal-pos-sync-desc">
+          حدد البيانات التي تريد إرسالها فورياً إلى أجهزة الكاشير في المحل. التحديث آمن 100% ولا يؤثر على الفواتير أو
+          المبيعات:
         </p>
 
-        <div style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:12px;padding:14px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px">
+        <div
+          style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:12px;padding:14px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px">
           <label style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.9rem;cursor:pointer">
-            <input type="checkbox" id="sync-chk-items" checked style="width:18px;height:18px;accent-color:var(--brand-primary)">
+            <input type="checkbox" id="sync-chk-items" checked
+              style="width:18px;height:18px;accent-color:var(--brand-primary)">
             <span id="lbl-sync-items">📦 الأصناف والأسعار والباركود (Items & Prices)</span>
           </label>
 
           <label style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.9rem;cursor:pointer">
-            <input type="checkbox" id="sync-chk-stock" checked style="width:18px;height:18px;accent-color:var(--brand-primary)">
+            <input type="checkbox" id="sync-chk-stock" checked
+              style="width:18px;height:18px;accent-color:var(--brand-primary)">
             <span id="lbl-sync-stock">📊 كميات ومستويات المخزون (Stock Quantities)</span>
           </label>
 
           <label style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.9rem;cursor:pointer">
-            <input type="checkbox" id="sync-chk-categories" checked style="width:18px;height:18px;accent-color:var(--brand-primary)">
+            <input type="checkbox" id="sync-chk-categories" checked
+              style="width:18px;height:18px;accent-color:var(--brand-primary)">
             <span id="lbl-sync-categories">📂 الأقسام والتصنيفات وأيقونات 3D (Categories)</span>
           </label>
 
           <label style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.9rem;cursor:pointer">
-            <input type="checkbox" id="sync-chk-offers" checked style="width:18px;height:18px;accent-color:var(--brand-primary)">
+            <input type="checkbox" id="sync-chk-offers" checked
+              style="width:18px;height:18px;accent-color:var(--brand-primary)">
             <span id="lbl-sync-offers">🎯 عروض البانر والشرائح الترويجية (Offers & Banners)</span>
           </label>
         </div>
@@ -689,10 +790,12 @@
         <div id="pos-sync-status-msg" style="margin-bottom:14px;display:none"></div>
 
         <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="icon-btn" onclick="Admin.closePosSyncModal()" style="border:1px solid #cbd5e1;padding:8px 16px;font-weight:700" id="btn-cancel-sync">
+          <button class="icon-btn" onclick="Admin.closePosSyncModal()"
+            style="border:1px solid #cbd5e1;padding:8px 16px;font-weight:700" id="btn-cancel-sync">
             إلغاء
           </button>
-          <button class="icon-btn" id="btn-confirm-pos-sync" onclick="Admin.triggerPosSync()" style="background:var(--brand-primary);color:#fff;border:none;padding:8px 22px;font-weight:800;display:inline-flex;align-items:center;gap:6px">
+          <button class="icon-btn" id="btn-confirm-pos-sync" onclick="Admin.triggerPosSync()"
+            style="background:var(--brand-primary);color:#fff;border:none;padding:8px 22px;font-weight:800;display:inline-flex;align-items:center;gap:6px">
             <span>🚀</span>
             <span id="btn-confirm-sync-text">إرسال المزامنة للكاشير الآن</span>
           </button>
@@ -703,49 +806,64 @@
 
 
   <!-- MODAL: DOWNLOAD / OPEN MOBILE ADMIN APP -->
-  <div id="modal-mobile-app" class="modal-backdrop" style="display:none" onclick="if(event.target===this) Admin.closeMobileAppModal()">
+  <div id="modal-mobile-app" class="modal-backdrop" style="display:none"
+    onclick="if(event.target===this) Admin.closeMobileAppModal()">
     <div class="modal-sheet" style="max-width:450px;text-align:center;padding:24px;border-radius:22px">
       <div class="modal-header" style="justify-content:center;position:relative;border:none;padding-bottom:4px">
         <h3 style="font-size:1.3rem;font-weight:900" id="modal-app-title">📥 تنزيل وتثبيت تطبيق المدير للهاتف</h3>
-        <button class="icon-btn" onclick="Admin.closeMobileAppModal()" style="position:absolute;right:0;top:0;background:none;border:none;color:var(--text-main);font-size:1.3rem">✕</button>
+        <button class="icon-btn" onclick="Admin.closeMobileAppModal()"
+          style="position:absolute;right:0;top:0;background:none;border:none;color:var(--text-main);font-size:1.3rem">✕</button>
       </div>
       <div class="modal-body" style="padding:0">
-        <div style="width:68px;height:68px;border-radius:18px;background:linear-gradient(135deg, #2563eb, #1d4ed8);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 6px 18px rgba(37,99,235,0.35)">
+        <div
+          style="width:68px;height:68px;border-radius:18px;background:linear-gradient(135deg, #2563eb, #1d4ed8);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 6px 18px rgba(37,99,235,0.35)">
           <span style="font-size:2.2rem">🦈</span>
         </div>
-        <h4 style="font-size:1.05rem;font-weight:800;margin:4px 0" id="modal-app-store-name">تطبيق إدارة متجر Red Shark</h4>
+        <h4 style="font-size:1.05rem;font-weight:800;margin:4px 0" id="modal-app-store-name">تطبيق إدارة متجر Red Shark
+        </h4>
         <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;line-height:1.4" id="modal-app-desc">
           امسح الكود بكاميرا هاتفك أو اضغط الزر أدناه لتنزيل وتثبيت التطبيق مباشرة على جهازك:
         </p>
 
         <!-- QR Code Container -->
-        <div style="background:#fff;padding:12px;border-radius:16px;display:inline-block;box-shadow:0 6px 18px rgba(0,0,0,0.08);border:1px solid #e2e8f0;margin-bottom:14px">
+        <div
+          style="background:#fff;padding:12px;border-radius:16px;display:inline-block;box-shadow:0 6px 18px rgba(0,0,0,0.08);border:1px solid #e2e8f0;margin-bottom:14px">
           <img id="modal-app-qr-img" src="" alt="Scan QR Code" style="width:170px;height:170px;display:block">
         </div>
 
         <!-- Download & Setup Button -->
-        <a id="btn-open-mobile-app-link" href="#" target="_blank" class="icon-btn" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:14px;font-weight:900;font-size:1rem;box-shadow:0 4px 16px rgba(37,99,235,0.35);margin-bottom:12px">
+        <a id="btn-open-mobile-app-link" href="#" target="_blank" class="icon-btn"
+          style="background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:14px;font-weight:900;font-size:1rem;box-shadow:0 4px 16px rgba(37,99,235,0.35);margin-bottom:12px">
           <span>📥</span>
           <span id="btn-open-app-text">تنزيل وتثبيت التطبيق على الهاتف الآن</span>
         </a>
 
         <!-- Copy Link box -->
-        <div style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:10px;padding:8px 12px;font-size:0.78rem;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
-          <span id="app-direct-url-text" style="font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://shop.redshark-ai.com/app?shop=shop101</span>
-          <button class="icon-btn" onclick="navigator.clipboard.writeText(document.getElementById('app-direct-url-text').textContent); alert('تم نسخ رابط التطبيق!');" style="font-size:0.75rem;padding:4px 8px;border:1px solid #cbd5e1;white-space:nowrap;background:var(--surface)">
+        <div
+          style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:10px;padding:8px 12px;font-size:0.78rem;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
+          <span id="app-direct-url-text"
+            style="font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://shop.redshark-ai.com/app?shop=shop101</span>
+          <button class="icon-btn"
+            onclick="navigator.clipboard.writeText(document.getElementById('app-direct-url-text').textContent); alert('تم نسخ رابط التطبيق!');"
+            style="font-size:0.75rem;padding:4px 8px;border:1px solid #cbd5e1;white-space:nowrap;background:var(--surface)">
             📋 نسخ الرابط
           </button>
         </div>
 
         <!-- Installation Instructions -->
-        <div style="background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.25);border-radius:14px;padding:12px;text-align:right;font-size:0.78rem;line-height:1.6;color:var(--text-main)">
+        <div
+          style="background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.25);border-radius:14px;padding:12px;text-align:right;font-size:0.78rem;line-height:1.6;color:var(--text-main)">
           <div style="font-weight:900;margin-bottom:4px;color:var(--primary)">💡 كيف يتم تثبيت التطبيق على الهاتف:</div>
-          • <strong>أندرويد (Android Chrome):</strong> اضغط على زر <strong>"تثبيت التطبيق (Install)"</strong> الذي يظهر لك لتحميل التطبيق مباشرة على جهازك كأي تطبيق رسمي.<br>
-          • <strong>آيفون (iPhone Safari):</strong> في متصفح Safari، اضغط زر المشاركة <strong>(Share ⎋)</strong> أسفل الشاشة ➔ اختر <strong>"إضافة إلى الشاشة الرئيسية (Add to Home Screen ➕)"</strong> ليصبح مثبتاً على هاتفك بدون متصفح وبأيقونة القرش الرسمية!
+          • <strong>أندرويد (Android Chrome):</strong> اضغط على زر <strong>"تثبيت التطبيق (Install)"</strong> الذي يظهر
+          لك لتحميل التطبيق مباشرة على جهازك كأي تطبيق رسمي.<br>
+          • <strong>آيفون (iPhone Safari):</strong> في متصفح Safari، اضغط زر المشاركة <strong>(Share ⎋)</strong> أسفل
+          الشاشة ➔ اختر <strong>"إضافة إلى الشاشة الرئيسية (Add to Home Screen ➕)"</strong> ليصبح مثبتاً على هاتفك بدون
+          متصفح وبأيقونة القرش الرسمية!
         </div>
       </div>
     </div>
   </div>
 
 </body>
+
 </html>
