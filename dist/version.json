@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
-  "version": "1.2.46",
-  "build": 62,
+  "version": "1.2.47",
+  "build": 63,
   "releaseDate": "2026-10-22",
-  "description": "Real-time bidirectional item & category deletion synchronization with cloud tombstones and automatic branch reconciliation."
+  "description": "Silent background auto-sync without toast spam, customer balance change detection, and mobile PWA header layout fixes."
 }

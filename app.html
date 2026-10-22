@@ -259,6 +259,37 @@
       gap: 6px;
     }
 
+    .header-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .brand-title {
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
     .hdr-btn {
       background: var(--surface-subtle);
       border: 1px solid var(--border);
@@ -266,12 +297,16 @@
       width: 36px;
       height: 36px;
       border-radius: 10px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       font-size: 0.95rem;
       cursor: pointer;
       transition: all 0.2s;
+      flex-shrink: 0;
+      padding: 0;
+      box-sizing: border-box;
+      overflow: hidden;
     }
     .hdr-btn:active { transform: scale(0.92); }
 
@@ -621,7 +656,7 @@
 
       <div class="header-actions">
         <button class="hdr-btn" onclick="openShopLoginModal(false)" title="تبديل المتجر / Switch Store" style="font-size:1.1rem">🏪</button>
-        <button id="btn-install-app-header" class="hdr-btn" onclick="openInstallModal()" style="background:rgba(37,99,235,0.15);color:var(--primary);font-weight:800;border:1px solid rgba(37,99,235,0.3);display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:8px;font-size:0.75rem" title="تثبيت التطبيق على الهاتف"><span>📲</span> <span id="hdr-install-text">📥 تنزيل التطبيق</span></button>
+        <button id="btn-install-app-header" class="hdr-btn" onclick="openInstallModal()" style="background:rgba(37,99,235,0.12);color:var(--primary);border:1px solid rgba(37,99,235,0.25)" title="تنزيل التطبيق على الهاتف / Install App">📲</button>
         <button class="hdr-btn" onclick="toggleTheme()" title="تبديل الوضع">🌓</button>
         <button class="hdr-btn" onclick="toggleLang()" title="اللغة">🌐</button>
         <button class="hdr-btn" onclick="refreshAppData()" title="تحديث">🔄</button>
@@ -640,7 +675,8 @@
 
   <!-- PWA INSTALL BANNER (Shown if browser supports PWA) -->
   <div id="pwa-install-banner" class="app-main" style="display:none;padding-bottom:0">
-    <div class="pwa-banner">
+    <div class="pwa-banner" style="position:relative">
+      <button onclick="dismissPwaBanner()" style="position:absolute;top:6px;left:8px;background:none;border:none;color:var(--text-muted);font-size:1.1rem;cursor:pointer;padding:4px;line-height:1" title="إغلاق">✕</button>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:1.5rem">📲</span>
         <div>
@@ -893,7 +929,7 @@
         e.preventDefault();
         _deferredInstallPrompt = e;
         const b = document.getElementById('pwa-install-banner');
-        if (b) b.style.display = 'block';
+        if (b && sessionStorage.getItem('rs_pwa_dismissed') !== '1') b.style.display = 'block';
         setTimeout(() => {
           if (_deferredInstallPrompt && !isStandalone) {
             _deferredInstallPrompt.prompt().catch(() => {});
@@ -1551,6 +1587,13 @@
       document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
     }
 
+    
+    function dismissPwaBanner() {
+      const b = document.getElementById('pwa-install-banner');
+      if (b) b.style.display = 'none';
+      sessionStorage.setItem('rs_pwa_dismissed', '1');
+    }
+  
     function installPWA() {
       if (_deferredInstallPrompt) {
         _deferredInstallPrompt.prompt();
