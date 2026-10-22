@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.2.43",
-  "build": 59,
+  "version": "1.2.44",
+  "build": 60,
   "releaseDate": "2026-10-22",
-  "releaseNotes": "Enterprise 24/7 Background OS Daemon Heartbeat, Master Server SSOT Push Protection, Instant Selective Branch Sync.",
+  "releaseNotes": "Fixed Tenant UUID Dynamic Resolution to eliminate Postgres foreign key 23503 errors; Auto-Sync 6,116 items to Supabase; Instant Station Recognition.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
