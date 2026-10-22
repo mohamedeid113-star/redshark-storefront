@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.2.42",
-  "build": 58,
-  "releaseDate": "2026-10-20",
-  "releaseNotes": "Continuous Background Cloud Poller & Delta Engine, Auto-Sync Shop ID Resolver, Instant Price & Customer Updates without manual clicks.",
+  "version": "1.2.43",
+  "build": 59,
+  "releaseDate": "2026-10-22",
+  "releaseNotes": "Enterprise 24/7 Background OS Daemon Heartbeat, Master Server SSOT Push Protection, Instant Selective Branch Sync.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
