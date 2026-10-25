@@ -120,17 +120,42 @@ The multi-tenant cloud e-commerce storefront deployed to Cloudflare Pages. Allow
   - Live order tracking system (`trackOrderQuery`).
   - Banner carousel touch swipe support.
 - `js/supabase-client.js` — Zero-dependency Supabase client for tenant lookup, category fetch, paginated products fetch, and order submission.
-- `admin.html` — Merchant Admin Portal for store profile, custom logo upload, delivery fees, LBP exchange rate, banner slider configuration, and category image overrides.
-- `js/storefront-admin.js` — Admin portal logic and Supabase management.
+- `admin.html` — Merchant Admin Portal for store profile, custom logo upload, delivery fees, LBP exchange rate, banner slider configuration, category manager, sales & profit reports, and mobile admin app launcher.
+- `app.html` — Standalone Mobile Admin Web App / PWA for shop owners (live stock updater, camera barcode scanner, live sales reports, incoming audio order notifications).
+- `js/storefront-admin.js` — Admin portal & mobile app logic, Supabase analytics calculation, and order processing.
 - `assets/categories/` — 3D category illustration assets synced with the desktop POS.
 
 ### 🚀 Common Run & Deploy Commands
 ```powershell
-# Deploy storefront update to Cloudflare
+# Deploy storefront update to Cloudflare Pages
 git -C "D:\GravityProject\RedSharkStorefront" add .
 git -C "D:\GravityProject\RedSharkStorefront" commit -m "feat: your update message"
 git -C "D:\GravityProject\RedSharkStorefront" push origin main
 ```
+
+---
+
+## 🖨️ Hardware Printing Architecture & Universal Rules (Crucial Reference)
+> **Permanent Configuration Standard for Red Shark POS:**  
+> **Detailed Reference Document:** See [`PRINTING_SYSTEM_MASTER_REFERENCE.md`](file:///d:/GravityProject/POSSoftware/PRINTING_SYSTEM_MASTER_REFERENCE.md) for full driver specifications, resolution calculations, and troubleshooting history.
+
+1. **Silent Background Printing (Zero Popups / Zero `window.open`):**
+   - **Mechanism:** Receipts and documents MUST ALWAYS use the hidden DOM `<iframe>` element (`#pos-print-frame`).
+   - **Never Use:** `window.open('', '_blank')` or popup windows because they block cashier flow, show preview dialogs, and require manual close.
+   - **Implementation:** In `js/utils.js` (`printElement`), the document HTML is injected into `#pos-print-frame`, fonts/styles are allowed to settle (~80ms), the target Windows printer is selected via `/api/printer/switch-default`, and `frame.contentWindow.print()` is executed. In Chrome Kiosk mode (`--kiosk --kiosk-printing`), the printer fires instantly with 0 dialogs.
+
+2. **Tri-Printer Routing Architecture:**
+   - **Receipt Printer (`receipt_printer`):** e.g. `XP-80C` / `POS-80`. Handles 80mm / 58mm thermal receipts, kitchen order chits, and cash shift reports.
+   - **Document Printer (`document_printer`):** e.g. `Brother / HP / Canon A4/A5`. Handles fiscal invoices, statements, stocktake sheets, and reports.
+   - **Barcode Label Printer (`label_printer`):** Dedicated thermal label printer (e.g. `Xprinter XP-365B`). Handles standard label sizes:
+     - `40x24mm (2 x 4 stock)` — Native resolution: **320 × 192 dots** at 203 DPI (8 dots/mm).
+     - `40x30mm`, `50x30mm`, `58x40mm`, and custom dimensions.
+
+3. **Thermal Barcode Label Engine (`bin/print_label.ps1`):**
+   - **Native 203 DPI Raster Pipeline:** Renders Product Name (Arial 8.5pt Bold), Code 128 barcode, Digits (Arial 8.0pt Bold), and Price (Arial 11.0pt Bold) onto an in-memory `System.Drawing.Bitmap` before sending via `DrawImage`. Bypasses thermal printer driver TrueType font dropping bugs completely.
+   - **Code 128 Subset C (Numeric Compression):** Compresses numeric barcodes into pairs, shrinking 12-digit barcodes from 167 down to 101 modules.
+   - **Guaranteed Quiet Zones:** Leaves $\ge 7\text{ mm}$ of clear white margin on each side so optical/laser scanners decode instantly.
+   - **Pure Integer Dots:** Modules use exact integer dot widths (2 dots = 0.25 mm) with `SmoothingMode::None` to prevent scanner read failures.
 
 ---
 
@@ -173,3 +198,4 @@ Whenever you start a request, you can prefix it with:
 - **"In [Trial]: ..."** → For trial generator, OTPs, or demo build scripts.
 - **"In [Website]: ..."** → For the main landing page `redshark-ai.com`.
 - **"In [Storefront]: ..."** → For the online shopping website, mobile app, admin portal, or tracking system.
+
