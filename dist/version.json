@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
-  "version": "1.2.47",
-  "build": 63,
-  "releaseDate": "2026-10-22",
-  "description": "Silent background auto-sync without toast spam, customer balance change detection, and mobile PWA header layout fixes."
+  "version": "1.2.51",
+  "build": 67,
+  "releaseDate": "2026-10-25",
+  "description": "Multi-branch sales isolation and consolidation, prevention of sales invoice deletion during sync, shared customer ledger with branch attribution."
 }
