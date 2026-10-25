@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
-  "version": "1.2.60",
-  "build": 76,
+  "version": "1.2.61",
+  "build": 77,
   "releaseDate": "2026-10-25",
   "description": "Multi-branch sales isolation and consolidation, prevention of sales invoice deletion during sync, shared customer ledger with branch attribution."
 }
