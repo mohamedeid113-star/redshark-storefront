@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
   "version": "1.3.9",
-  "build": 88,
+  "build": 89,
   "releaseDate": "2026-10-26",
   "description": "Multi-Branch Cloud Reports: Automatic discovery of Supabase Cloud connected remote branches in reports dropdown, central multi-branch sales & profit analytics consolidation, and protected customer debit balance sync.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
