@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
-  "version": "1.3.2",
-  "build": 81,
+  "version": "1.3.3",
+  "build": 82,
   "releaseDate": "2026-10-26",
-  "description": "Fixed automatic periodic background cloud sync and real-time inter-branch stock transfer quantity adjustments on both server and remote branch stations."
+  "description": "Fixed CMD window popup by enforcing windowsHide globally, fixed script loading order so auto-sync poller initializes reliably, and eliminated LAN sync timeout freeze."
 }
