@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
-  "version": "1.3.1",
-  "build": 80,
+  "version": "1.3.2",
+  "build": 81,
   "releaseDate": "2026-10-26",
-  "description": "Added real-time bidirectional customer debt & balance sync, inter-branch stock transfers and warehouse synchronization, and POS retail delivery modal."
+  "description": "Fixed automatic periodic background cloud sync and real-time inter-branch stock transfer quantity adjustments on both server and remote branch stations."
 }
