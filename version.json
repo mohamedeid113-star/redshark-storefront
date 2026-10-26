@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
   "version": "1.3.9",
-  "build": 90,
+  "build": 91,
   "releaseDate": "2026-10-26",
-  "description": "Invoice Designer: Fixed 80mm thermal receipt live preview display with real-time responsive rendering of all fonts, labels, and receipt sections without altering printer engine.",
+  "description": "Invoice Designer & Printing Sync: Fixed customer reference in print.js so customized invoice designer settings (fonts, layout, store info, labels) accurately reflect on physical thermal 80mm prints and live preview.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
