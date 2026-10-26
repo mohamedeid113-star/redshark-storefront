@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
-  "version": "1.3.3",
-  "build": 82,
+  "version": "1.3.4",
+  "build": 83,
   "releaseDate": "2026-10-26",
-  "description": "Fixed CMD window popup by enforcing windowsHide globally, fixed script loading order so auto-sync poller initializes reliably, and eliminated LAN sync timeout freeze."
+  "description": "Fixed automatic sync by removing node identity skip condition, running background sync every 10s, and triggering instant cloud sync on stock transfer and customer payments."
 }
