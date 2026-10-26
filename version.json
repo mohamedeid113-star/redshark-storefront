@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.3.5",
-  "build": 84,
+  "version": "1.3.6",
+  "build": 85,
   "releaseDate": "2026-10-26",
-  "description": "Fixed automatic bidirectional sync: eliminated self-trigger echo loops, added auto-recovering sync lock, enabled server-side pull for branch customer payments and stock transfers, and automated live UI refresh across POS and Items screens.",
+  "description": "Fixed branch customer debt payment sync: ensures customer balances update bidirectionally between branch and server across both LAN and Cloud in real time, with instant UI updates.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
