@@ -199,7 +199,7 @@ const Storefront = (() => {
         link.rel = 'manifest';
         document.head.appendChild(link);
       }
-      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.0';
+      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.1';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -207,7 +207,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '26.0';
+    const APP_VERSION = '26.1';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -216,7 +216,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=26.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=26.1').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -1298,7 +1298,7 @@ const Storefront = (() => {
     }
     const descEl = document.getElementById('modal-app-desc');
     if (descEl) {
-      descEl.innerHTML = `تثبيت تطبيق متجر <strong>${shopName}</strong> مباشرة على شاشة هاتفك الرئيسية، أو تحميل ملف أندرويد APK مباشرة.`;
+      descEl.innerHTML = `تثبيت تطبيق متجر <strong>${shopName}</strong> مباشرة على شاشة هاتفك الرئيسية للطلب السريع والتصفح الفوري بنقرة واحدة.`;
     }
     const urlEl = document.getElementById('app-direct-url-text');
     if (urlEl) {
