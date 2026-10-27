@@ -1,5 +1,5 @@
-// Red Shark Storefront – Service Worker v9.0
-const CACHE_NAME = 'rs-storefront-v26.1';
+// Red Shark Storefront – Service Worker v26.2
+const CACHE_NAME = 'rs-storefront-v26.2';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -11,16 +11,20 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => caches.delete(key))
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
+  // Only intercept GET requests - never touch POST / PUT / Supabase RPC
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   const url = new URL(event.request.url);
 
   // Serve dynamic Web App Manifest per shop
-  if (url.pathname.endsWith('/manifest.json') || url.pathname.endsWith('manifest.json')) {
+  if (url.pathname.endsWith('manifest.json') || url.pathname.endsWith('/manifest.json')) {
     const shopSlug = url.searchParams.get('shop') || 'shop101';
     const dynamicManifest = {
       name: `${shopSlug} — Red Shark Online Store`,
@@ -34,28 +38,16 @@ self.addEventListener('fetch', (event) => {
       orientation: "portrait",
       icons: [
         {
-          src: "icons/icon-192.png",
+          src: "/icons/icon-192.png",
           sizes: "192x192",
           type: "image/png",
-          purpose: "any maskable"
+          purpose: "any"
         },
         {
-          src: "assets/app-icon-192.png",
-          sizes: "192x192",
-          type: "image/png",
-          purpose: "any maskable"
-        },
-        {
-          src: "icons/icon-512.png",
+          src: "/icons/icon-512.png",
           sizes: "512x512",
           type: "image/png",
-          purpose: "any maskable"
-        },
-        {
-          src: "assets/app-icon-512.png",
-          sizes: "512x512",
-          type: "image/png",
-          purpose: "any maskable"
+          purpose: "any"
         }
       ]
     };
@@ -71,8 +63,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Always fetch fresh from network with no-store to guarantee immediate CSS and JS updates
+  // Safe standard fetch with cache fallback - never pass options to event.request
   event.respondWith(
-    fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request))
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });

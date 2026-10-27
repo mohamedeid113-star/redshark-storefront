@@ -199,7 +199,7 @@ const Storefront = (() => {
         link.rel = 'manifest';
         document.head.appendChild(link);
       }
-      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.1';
+      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.2';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -207,7 +207,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '26.1';
+    const APP_VERSION = '26.2';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -216,7 +216,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=26.1').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=26.2').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -1333,24 +1333,35 @@ const Storefront = (() => {
     }
   }
 
-  async function installPWA() {
-    const prompt = _pwaPrompt || _deferredPrompt;
-    if (prompt) {
+  function installPWA() {
+    const inst = document.getElementById('app-install-instructions');
+    if (inst) inst.style.display = 'block';
+
+    const promptEvent = _deferredPrompt || _pwaPrompt;
+    if (promptEvent) {
       try {
-        prompt.prompt();
-        const choice = await prompt.userChoice;
-        if (choice && choice.outcome === 'accepted') {
-          closeAppDownloadModal();
+        _deferredPrompt = null;
+        _pwaPrompt = null;
+        promptEvent.prompt();
+        if (promptEvent.userChoice) {
+          promptEvent.userChoice.then((choice) => {
+            if (choice && choice.outcome === 'accepted') {
+              closeAppDownloadModal();
+            }
+          }).catch(() => {});
         }
-      } catch(e) {}
+      } catch(err) {
+        console.warn('Install prompt error:', err);
+      }
     } else {
-      const inst = document.getElementById('app-install-instructions');
-      if (inst) inst.style.display = 'block';
+      if (inst) {
+        inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        inst.style.outline = '2px solid #dc2626';
+        setTimeout(() => { inst.style.outline = 'none'; }, 2000);
+      }
     }
   }
 
-  
-  // ── ORDER TRACKING FEATURE ──
   function openTrackOrderModal(orderId) {
     const modal = document.getElementById('modal-track-order');
     const input = document.getElementById('track-order-input');
