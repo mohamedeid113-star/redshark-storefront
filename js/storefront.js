@@ -189,9 +189,53 @@ const Storefront = (() => {
     return 'shop101';
   }
 
+  
+  function applyDynamicManifest(tenant, slug) {
+    try {
+      const shopName = tenant && tenant.shop_name ? tenant.shop_name : 'Red Shark Store';
+      const cleanSlug = encodeURIComponent(slug || 'shop101');
+      const manifestObj = {
+        name: `${shopName} — Online Store`,
+        short_name: shopName,
+        description: `Order groceries, items, and food directly from ${shopName}.`,
+        start_url: `/?shop=${cleanSlug}&source=pwa`,
+        scope: `./`,
+        display: "standalone",
+        background_color: "#09101d",
+        theme_color: "#dc2626",
+        orientation: "portrait",
+        icons: [
+          {
+            src: (tenant && tenant.logo_url) ? tenant.logo_url : "icons/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any maskable"
+          },
+          {
+            src: (tenant && tenant.logo_url) ? tenant.logo_url : "icons/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable"
+          }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+      const manifestUrl = URL.createObjectURL(blob);
+      let link = document.querySelector('link[rel="manifest"]');
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'manifest';
+        document.head.appendChild(link);
+      }
+      link.href = manifestUrl;
+    } catch(e) {
+      console.warn('[Storefront] Dynamic manifest error:', e);
+    }
+  }
+
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '20.0';
+    const APP_VERSION = '24.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -200,7 +244,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=20.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=24.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -232,6 +276,7 @@ const Storefront = (() => {
         return;
       }
       localStorage.setItem('rs_last_shop_slug', _tenant.slug || slug);
+      applyDynamicManifest(_tenant, _tenant.slug || slug);
 
       document.title = `${_tenant.shop_name} — Red Shark Online Store`;
 
@@ -1284,16 +1329,6 @@ const Storefront = (() => {
       descEl.innerHTML = `تثبيت تطبيق متجر <strong>${shopName}</strong> مباشرة على شاشة هاتفك الرئيسية، مرتبط تلقائياً بقاعدة بيانات المتجر.`;
     }
 
-    const prompt = _pwaPrompt || _deferredPrompt;
-    if (prompt) {
-      prompt.prompt().then(choice => {
-        if (choice && choice.outcome === 'accepted') {
-          closeAppDownloadModal();
-        }
-      }).catch(() => {});
-      return;
-    }
-
     modal.style.display = 'flex';
     modal.classList.add('open');
   }
@@ -1306,19 +1341,26 @@ const Storefront = (() => {
     }
   }
 
+  function toggleInstallInstructions() {
+    const el = document.getElementById('app-install-instructions');
+    if (el) {
+      el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+    }
+  }
+
   async function installPWA() {
-    if (_pwaPrompt) {
-      _pwaPrompt.prompt();
-      const choice = await _pwaPrompt.userChoice;
-      if (choice.outcome === 'accepted') {
-        closeAppDownloadModal();
-      }
-      _pwaPrompt = null;
+    const prompt = _pwaPrompt || _deferredPrompt;
+    if (prompt) {
+      try {
+        prompt.prompt();
+        const choice = await prompt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          closeAppDownloadModal();
+        }
+      } catch(e) {}
     } else {
-      // Browser instructions
-      alert(_currentLang === 'ar' 
-        ? 'للتثبيت على هاتفك: اضغط على خيارات المتصفح (⋮ أو زر المشاركة) ثم اختر "إضافة إلى الشاشة الرئيسية" (Add to Home screen).'
-        : 'To install on your phone: Tap browser menu (⋮ or Share) and select "Add to Home Screen".');
+      const inst = document.getElementById('app-install-instructions');
+      if (inst) inst.style.display = 'block';
     }
   }
 
