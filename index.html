@@ -13,7 +13,7 @@
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   
-  <link rel="stylesheet" href="css/storefront.css?v=25.0">
+  <link rel="stylesheet" href="css/storefront.css?v=26.0">
 </head>
 <body>
 
@@ -32,7 +32,7 @@
         <div class="brand-logo" id="header-brand-logo">🦈</div>
         <div class="brand-info">
           <h1 id="header-brand-name">Red Shark Store</h1>
-          <span id="app-version-badge" style="font-size:0.7rem;font-weight:900;padding:2px 8px;border-radius:10px;background:#dc2626;color:#fff;margin-inline-start:6px">v25.0</span>
+          <span id="app-version-badge" style="font-size:0.7rem;font-weight:900;padding:2px 8px;border-radius:10px;background:#dc2626;color:#fff;margin-inline-start:6px">v26.0</span>
         </div>
       </a>
 
@@ -348,69 +348,58 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/supabase-client.js?v=25.0"></script>
-  <script src="js/storefront.js?v=25.0"></script>
+  <script src="js/supabase-client.js?v=26.0"></script>
+  <script src="js/storefront.js?v=26.0"></script>
 
   <!-- Automatic Loader Safety Timeout -->
   <script>
     setTimeout(function() { var l = document.getElementById('app-loader'); if (l) l.style.display = 'none'; }, 8000);
   </script>
 
-    <!-- DOWNLOAD APP & APK MODAL -->
+      <!-- DOWNLOAD / INSTALL MOBILE APP MODAL -->
   <div id="modal-app-download" class="modal-backdrop" onclick="if(event.target===this) Storefront.closeAppDownloadModal()" style="display:none">
     <div class="modal-sheet" style="max-width:480px;text-align:center">
-      <div style="font-size:3.5rem;margin-bottom:8px">📲</div>
-      <h3 style="font-size:1.35rem;font-weight:900;margin-bottom:6px" id="modal-app-title">تثبيت تطبيق المتجر على الهاتف (Mobile App)</h3>
+      <div style="font-size:3.5rem;margin-bottom:8px">🦈📲</div>
+      <h3 style="font-size:1.35rem;font-weight:900;margin-bottom:6px" id="modal-app-title">تطبيق متجر Red Shark الرسمي</h3>
       <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px" id="modal-app-desc">
-        Enjoy fast ordering, exclusive discounts, and live delivery tracking directly from your phone!
+        تثبيت تطبيق المتجر مباشرة على هاتفك للطلب السريع، العروض الحصرية وتتبع الطلبات المباشر.
       </p>
 
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px">
-        <!-- Option 1: Native PWA 1-Click Install -->
-        <button class="btn-checkout-primary" onclick="Storefront.installPWA()" id="btn-install-pwa" style="padding:14px;font-size:1rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px">
+        <!-- Option 1: Native 1-Click Install -->
+        <button class="btn-checkout-primary" onclick="Storefront.installPWA()" id="btn-install-pwa" style="padding:15px;font-size:1rem;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg, #dc2626, #b91c1c);box-shadow:0 6px 20px rgba(220,38,38,0.4)">
           <span>⚡</span>
           <span id="txt-install-app">تثبيت التطبيق على الشاشة الرئيسية (Install App)</span>
-        </button>
-
-        <!-- Option 2: Direct Android APK Download -->
-        <a href="assets/RedSharkStore.apk" download="RedSharkStore.apk" class="icon-btn" style="padding:14px;font-size:0.95rem;font-weight:800;border:1.5px solid var(--border-color);background:var(--bg-card);color:var(--text-main);display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;border-radius:12px">
-          <span>🤖</span>
-          <span id="txt-download-apk">تحميل ملف أندرويد مباشرة (Download Android APK)</span>
-        </a>
-
-        <!-- Option 3: Step-by-Step Mobile Instructions -->
-        <button type="button" class="icon-btn" onclick="Storefront.toggleInstallInstructions()" style="padding:12px;font-size:0.88rem;font-weight:800;border:1.5px solid var(--border-color);background:var(--bg-card);color:var(--text-main);display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;width:100%">
-          <span>📱</span>
-          <span id="txt-help-install">دليل التثبيت السريع (أندرويد وآيفون)</span>
         </button>
       </div>
 
       <!-- Copy Shop Direct App Link Box -->
       <div style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:12px;padding:10px 14px;font-size:0.8rem;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px">
-        <span id="app-direct-url-text" style="font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-main);font-weight:700">https://shop.redshark-ai.com/?shop=eidtest</span>
-        <button type="button" class="icon-btn" onclick="Storefront.copyDirectAppLink()" style="font-size:0.75rem;padding:6px 10px;border:1px solid var(--border-color);white-space:nowrap;border-radius:8px">
+        <span id="app-direct-url-text" style="font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-main);font-weight:700">https://shop.redshark-ai.com/?shop=shop101&source=pwa</span>
+        <button type="button" class="icon-btn" onclick="Storefront.copyDirectAppLink()" style="font-size:0.75rem;padding:6px 12px;border:1px solid var(--border-color);white-space:nowrap;border-radius:8px;font-weight:800">
           📋 نسخ الرابط
         </button>
       </div>
 
-      <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.25);border-radius:12px;padding:14px;font-size:0.82rem;color:var(--text-main);text-align:start;line-height:1.6" id="app-install-instructions">
-        <div style="font-weight:900;color:var(--brand-primary);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-          <span>💡</span> <span>طريقة التثبيت المباشر على الهاتف (Installation Guide)</span>
+      <!-- Step-by-Step Installation Instructions -->
+      <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.25);border-radius:14px;padding:16px;font-size:0.84rem;color:var(--text-main);text-align:start;line-height:1.65" id="app-install-instructions">
+        <div style="font-weight:900;color:var(--brand-primary);margin-bottom:10px;display:flex;align-items:center;gap:6px;font-size:0.95rem">
+          <span>💡</span> <span>خطوات التثبيت كأيقونة تطبيق دائمة على هاتفك:</span>
         </div>
-        <div style="margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed rgba(255,255,255,0.08)">
-          <strong style="color:#38bdf8">🤖 أجهزة أندرويد (Android):</strong><br>
-          1. انقر على زر <strong>"تثبيت التطبيق على الشاشة الرئيسية ⚡"</strong> أعلاه، أو اضغط <strong>"تحميل ملف أندرويد (Download APK)"</strong>.<br>
-          2. أو اضغط على قائمة المتصفح <strong>(⋮)</strong> في أعلى الشاشة ثم اختر <strong>"تثبيت التطبيق" (Install App)</strong> أو <strong>"إضافة إلى الشاشة الرئيسية"</strong>.
+        <div style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px dashed rgba(255,255,255,0.12)">
+          <strong style="color:#38bdf8;font-size:0.9rem">🤖 أجهزة أندرويد (Android - Chrome / Samsung):</strong><br>
+          1. انقر على الزر الأحمر <strong>"تثبيت التطبيق على الشاشة الرئيسية ⚡"</strong> أعلاه.<br>
+          2. أو اضغط على قائمة المتصفح <strong>(⋮)</strong> في أعلى الشاشة واختر <strong>"تثبيت التطبيق" (Install App)</strong> أو <strong>"إضافة إلى الشاشة الرئيسية"</strong>.
         </div>
         <div>
-          <strong style="color:#a78bfa">🍏 أجهزة آيفون (iPhone / Safari):</strong><br>
+          <strong style="color:#a78bfa;font-size:0.9rem">🍏 أجهزة آيفون (iPhone / Safari):</strong><br>
           1. اضغط على زر المشاركة <strong>(Share / ⬆)</strong> في شريط المتصفح السفلي.<br>
           2. مرر للأسفل واختر <strong>"إضافة إلى الشاشة الرئيسية" (Add to Home Screen)</strong>.
         </div>
       </div>
 
-      <button type="button" class="icon-btn" onclick="Storefront.closeAppDownloadModal()" style="margin-top:16px;width:100%;border:none;background:none;color:var(--text-muted)">
-        ✕ Close
+      <button type="button" class="icon-btn" onclick="Storefront.closeAppDownloadModal()" style="margin-top:16px;width:100%;border:none;background:none;color:var(--text-muted);font-weight:700">
+        ✕ إغلاق
       </button>
     </div>
   </div>

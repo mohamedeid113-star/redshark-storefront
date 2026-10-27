@@ -190,7 +190,7 @@ const Storefront = (() => {
   }
 
   
-    function applyDynamicManifest(tenant, slug) {
+      function applyDynamicManifest(tenant, slug) {
     try {
       const cleanSlug = encodeURIComponent(slug || 'shop101');
       let link = document.querySelector('link[rel="manifest"]');
@@ -199,7 +199,7 @@ const Storefront = (() => {
         link.rel = 'manifest';
         document.head.appendChild(link);
       }
-      link.href = `manifest.json?shop=${cleanSlug}&v=25.0`;
+      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.0';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -207,7 +207,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '25.0';
+    const APP_VERSION = '26.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -216,7 +216,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=25.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=26.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
