@@ -190,44 +190,16 @@ const Storefront = (() => {
   }
 
   
-  function applyDynamicManifest(tenant, slug) {
+    function applyDynamicManifest(tenant, slug) {
     try {
-      const shopName = tenant && tenant.shop_name ? tenant.shop_name : 'Red Shark Store';
       const cleanSlug = encodeURIComponent(slug || 'shop101');
-      const manifestObj = {
-        name: `${shopName} — Online Store`,
-        short_name: shopName,
-        description: `Order groceries, items, and food directly from ${shopName}.`,
-        start_url: `/?shop=${cleanSlug}&source=pwa`,
-        scope: `./`,
-        display: "standalone",
-        background_color: "#09101d",
-        theme_color: "#dc2626",
-        orientation: "portrait",
-        icons: [
-          {
-            src: (tenant && tenant.logo_url) ? tenant.logo_url : "icons/icon-192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any maskable"
-          },
-          {
-            src: (tenant && tenant.logo_url) ? tenant.logo_url : "icons/icon-512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable"
-          }
-        ]
-      };
-      const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
-      const manifestUrl = URL.createObjectURL(blob);
       let link = document.querySelector('link[rel="manifest"]');
       if (!link) {
         link = document.createElement('link');
         link.rel = 'manifest';
         document.head.appendChild(link);
       }
-      link.href = manifestUrl;
+      link.href = `manifest.json?shop=${cleanSlug}&v=25.0`;
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -235,7 +207,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '24.0';
+    const APP_VERSION = '25.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -244,7 +216,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=24.0').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=25.0').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -1313,7 +1285,7 @@ const Storefront = (() => {
     _pwaPrompt = e;
   });
 
-  function openAppDownloadModal() {
+    function openAppDownloadModal() {
     const modal = document.getElementById('modal-app-download');
     if (!modal) return;
 
@@ -1326,11 +1298,24 @@ const Storefront = (() => {
     }
     const descEl = document.getElementById('modal-app-desc');
     if (descEl) {
-      descEl.innerHTML = `تثبيت تطبيق متجر <strong>${shopName}</strong> مباشرة على شاشة هاتفك الرئيسية، مرتبط تلقائياً بقاعدة بيانات المتجر.`;
+      descEl.innerHTML = `تثبيت تطبيق متجر <strong>${shopName}</strong> مباشرة على شاشة هاتفك الرئيسية، أو تحميل ملف أندرويد APK مباشرة.`;
+    }
+    const urlEl = document.getElementById('app-direct-url-text');
+    if (urlEl) {
+      urlEl.textContent = `https://shop.redshark-ai.com/?shop=${encodeURIComponent(shopSlug)}&source=pwa`;
     }
 
     modal.style.display = 'flex';
     modal.classList.add('open');
+  }
+
+  function copyDirectAppLink() {
+    const el = document.getElementById('app-direct-url-text');
+    if (el && el.textContent) {
+      navigator.clipboard.writeText(el.textContent).then(() => {
+        alert(_currentLang === 'ar' ? 'تم نسخ رابط التطبيق بنجاح!' : 'App link copied to clipboard!');
+      }).catch(() => {});
+    }
   }
 
   function closeAppDownloadModal() {
@@ -1492,6 +1477,7 @@ const Storefront = (() => {
   }
 
   return {
+    copyDirectAppLink,
     openTrackOrderModal,
     closeTrackOrderModal,
     trackOrderQuery,
