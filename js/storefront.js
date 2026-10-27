@@ -1270,10 +1270,32 @@ const Storefront = (() => {
 
   function openAppDownloadModal() {
     const modal = document.getElementById('modal-app-download');
-    if (modal) {
-      modal.style.display = 'flex';
-      modal.classList.add('open');
+    if (!modal) return;
+
+    const shopName = (_tenant && _tenant.shop_name) ? _tenant.shop_name : 'Red Shark Store';
+    const shopSlug = getShopSlug();
+
+    const titleEl = document.getElementById('modal-app-title');
+    if (titleEl) {
+      titleEl.innerHTML = `📲 تطبيق متجر ${shopName}`;
     }
+    const descEl = document.getElementById('modal-app-desc');
+    if (descEl) {
+      descEl.innerHTML = `تثبيت تطبيق متجر <strong>${shopName}</strong> مباشرة على شاشة هاتفك الرئيسية، مرتبط تلقائياً بقاعدة بيانات المتجر.`;
+    }
+
+    const prompt = _pwaPrompt || _deferredPrompt;
+    if (prompt) {
+      prompt.prompt().then(choice => {
+        if (choice && choice.outcome === 'accepted') {
+          closeAppDownloadModal();
+        }
+      }).catch(() => {});
+      return;
+    }
+
+    modal.style.display = 'flex';
+    modal.classList.add('open');
   }
 
   function closeAppDownloadModal() {
@@ -1462,5 +1484,6 @@ const Storefront = (() => {
 
 window.Storefront = Storefront;
 document.addEventListener('DOMContentLoaded', () => Storefront.init());
+
 
 
