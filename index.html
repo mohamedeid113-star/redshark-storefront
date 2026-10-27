@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
@@ -372,17 +372,27 @@
           <span id="txt-install-app">Install Instant Web App</span>
         </button>
 
-        <!-- Option 2: Direct Android APK Download -->
-        <a href="assets/RedSharkStore.apk" download="RedSharkStore.apk" target="_blank" class="icon-btn" style="padding:14px;font-size:0.95rem;font-weight:800;border:1.5px solid var(--border-color);background:var(--bg-card);color:var(--text-main);display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none">
-          <span>🤖</span>
-          <span id="txt-download-apk">Download Android APK (Direct File)</span>
-        </a>
+        <!-- Option 2: Step-by-Step Mobile Instructions -->
+        <button type="button" class="icon-btn" onclick="Storefront.toggleInstallInstructions()" style="padding:13px;font-size:0.9rem;font-weight:800;border:1.5px solid var(--border-color);background:var(--bg-card);color:var(--text-main);display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;width:100%">
+          <span>📱</span>
+          <span id="txt-help-install">دليل التثبيت السريع (أندرويد وآيفون)</span>
+        </button>
       </div>
 
-      <div style="background:#f1f5f9;border-radius:10px;padding:12px;font-size:0.8rem;color:var(--text-muted);text-align:start" id="app-install-instructions">
-        💡 <strong>Quick Installation Tips:</strong><br>
-        • On Android Chrome / Edge: Tap <strong>"Install Instant Web App"</strong> to add the store directly to your home screen with zero storage used.<br>
-        • Or tap <strong>"Download Android APK"</strong> to install the standalone application file.
+      <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.25);border-radius:12px;padding:14px;font-size:0.82rem;color:var(--text-main);text-align:start;line-height:1.6" id="app-install-instructions">
+        <div style="font-weight:900;color:var(--brand-primary);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          <span>💡</span> <span>طريقة التثبيت المباشر على الهاتف (Installation Guide)</span>
+        </div>
+        <div style="margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed rgba(255,255,255,0.08)">
+          <strong style="color:#38bdf8">🤖 أجهزة أندرويد (Android):</strong><br>
+          1. انقر على زر <strong>"Install Instant Web App ⚡"</strong> أعلاه.<br>
+          2. أو اضغط على قائمة المتصفح <strong>(⋮)</strong> في أعلى الشاشة ثم اختر <strong>"تثبيت التطبيق" (Install App)</strong> أو <strong>"إضافة إلى الشاشة الرئيسية"</strong>.
+        </div>
+        <div>
+          <strong style="color:#a78bfa">🍏 أجهزة آيفون (iPhone / Safari):</strong><br>
+          1. اضغط على زر المشاركة <strong>(Share / ⬆)</strong> في شريط المتصفح السفلي.<br>
+          2. مرر للأسفل واختر <strong>"إضافة إلى الشاشة الرئيسية" (Add to Home Screen)</strong>.
+        </div>
       </div>
 
       <button type="button" class="icon-btn" onclick="Storefront.closeAppDownloadModal()" style="margin-top:16px;width:100%;border:none;background:none;color:var(--text-muted)">
@@ -393,3 +403,4 @@
 
 </body>
 </html>
+

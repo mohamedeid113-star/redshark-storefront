@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Red Shark Storefront — Core Application Controller
  * Big Categories Grid on First Open, Category Detail View, Live Search, Multi-Offer Carousel
  */
@@ -1455,9 +1455,12 @@ const Storefront = (() => {
     goToSlide,
     toggleTheme,
     toggleLang,
-    promptInstallPWA
+    promptInstallPWA,
+    toggleInstallInstructions
   };
 })();
 
 window.Storefront = Storefront;
 document.addEventListener('DOMContentLoaded', () => Storefront.init());
+
+
