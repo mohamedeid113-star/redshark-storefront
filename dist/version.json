@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.2",
-  "build": 94,
-  "releaseDate": "2026-10-27",
+  "version": "1.4.3",
+  "build": 95,
+  "releaseDate": "2026-10-28",
   "description": "Clean Retail Architecture & Modular License Studio: Removed all legacy restaurant configs, routes and dependencies for a 100% dedicated retail & supermarket POS experience. Upgraded Developer License Studio with granular licensing controls for Multi-Branch Sync, Central Box Reports, Direct Thermal Printing, Online Storefront, Workshop Repairs, and ERP Accounting.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
