@@ -1,5 +1,5 @@
-// Red Shark Storefront – Service Worker v26.3
-const CACHE_NAME = 'rs-storefront-v26.3';
+// Red Shark Storefront – Service Worker v26.4
+const CACHE_NAME = 'rs-storefront-v26.4';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -22,6 +22,11 @@ self.addEventListener('fetch', (event) => {
   }
 
   const url = new URL(event.request.url);
+
+  // Never intercept or cache APK installer files - let browser handle download natively
+  if (url.pathname.endsWith('.apk')) {
+    return;
+  }
 
   // Serve dynamic Web App Manifest per shop
   if (url.pathname.endsWith('manifest.json') || url.pathname.endsWith('/manifest.json')) {

@@ -199,7 +199,7 @@ const Storefront = (() => {
         link.rel = 'manifest';
         document.head.appendChild(link);
       }
-      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.3';
+      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.4';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -207,7 +207,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '26.3';
+    const APP_VERSION = '26.4';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -216,7 +216,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=26.3').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=26.4').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -1382,12 +1382,28 @@ const Storefront = (() => {
       return;
     }
 
-    // Android / Desktop Chrome fallback
+    // Android / Desktop fallback: Trigger Direct APK Download immediately!
+    try {
+      const dlLink = document.createElement('a');
+      dlLink.href = 'assets/RedSharkStore.apk';
+      dlLink.download = 'RedSharkStore.apk';
+      document.body.appendChild(dlLink);
+      dlLink.click();
+      document.body.removeChild(dlLink);
+    } catch(e) {
+      window.location.href = 'assets/RedSharkStore.apk';
+    }
+
     alert(isAR
-      ? '🤖 لتثبيت التطبيق على هاتفك:\n\n1. اضغط على قائمة المتصفح (⋮) في أعلى زاوية الشاشة في Chrome.\n2. اختر "تثبيت التطبيق" (Install App) أو "إضافة إلى الشاشة الرئيسية".\n\nسيتم تثبيت التطبيق فوراً والعمل بسرعة فائقة!'
-      : '🤖 To install on Android (Chrome):\n\n1. Tap the browser menu (⋮) in the top corner of Chrome.\n2. Select "Install App" or "Add to Home screen".\n\nThe app will be installed immediately!');
+      ? '✅ جاري تحميل ملف التطبيق للأندرويد (RedSharkStore.apk) مباشرة إلى جهازك الآن!\n\nبمجرد اكتمال التنزيل، اضغط على إشعار التنزيل في هاتفك لتثبيت التطبيق فوراً.'
+      : '✅ Downloading Android APK (RedSharkStore.apk) directly to your phone!\n\nOnce downloaded, tap the notification to install.');
 
     if (inst) {
+      inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      inst.style.border = '2px solid #16a34a';
+      inst.style.boxShadow = '0 0 15px rgba(22, 163, 74, 0.4)';
+      setTimeout(() => { inst.style.border = ''; inst.style.boxShadow = ''; }, 3500);
+    }
       inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       inst.style.border = '2px solid #38bdf8';
       inst.style.boxShadow = '0 0 15px rgba(56, 189, 248, 0.4)';

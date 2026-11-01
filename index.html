@@ -349,7 +349,7 @@
 
   <!-- Scripts -->
   <script src="js/supabase-client.js?v=26.0"></script>
-  <script src="js/storefront.js?v=26.3"></script>
+  <script src="js/storefront.js?v=26.4"></script>
 
   <!-- Automatic Loader Safety Timeout -->
   <script>
@@ -366,8 +366,14 @@
       </p>
 
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px">
-        <!-- Option 1: Native 1-Click Install -->
-        <button class="btn-checkout-primary" onclick="Storefront.installPWA()" id="btn-install-pwa" style="padding:15px;font-size:1rem;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg, #dc2626, #b91c1c);box-shadow:0 6px 20px rgba(220,38,38,0.4)">
+        <!-- Option 1: Direct Android APK Download -->
+        <a href="assets/RedSharkStore.apk" download="RedSharkStore.apk" class="btn-checkout-primary" id="btn-download-apk" style="padding:15px;font-size:1rem;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg, #16a34a, #15803d);box-shadow:0 6px 20px rgba(22,163,74,0.4);text-decoration:none;color:#fff">
+          <span style="font-size:1.25rem">📥</span>
+          <span id="txt-download-apk">تحميل ملف التطبيق مباشرة للأندرويد (Download APK)</span>
+        </a>
+
+        <!-- Option 2: 1-Click Home Screen Install -->
+        <button class="btn-checkout-primary" onclick="Storefront.installPWA()" id="btn-install-pwa" style="padding:13px;font-size:0.92rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg, #dc2626, #b91c1c);box-shadow:0 6px 20px rgba(220,38,38,0.3)">
           <span>⚡</span>
           <span id="txt-install-app">تثبيت التطبيق على الشاشة الرئيسية (Install App)</span>
         </button>
