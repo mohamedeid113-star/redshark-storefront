@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Red Shark Storefront — Core Application Controller
  * Big Categories Grid on First Open, Category Detail View, Live Search, Multi-Offer Carousel
  */
@@ -199,7 +199,7 @@ const Storefront = (() => {
         link.rel = 'manifest';
         document.head.appendChild(link);
       }
-      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.2';
+      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.3';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -207,7 +207,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '26.2';
+    const APP_VERSION = '26.3';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -216,7 +216,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=26.2').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=26.3').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -1350,15 +1350,48 @@ const Storefront = (() => {
             }
           }).catch(() => {});
         }
+        return;
       } catch(err) {
         console.warn('Install prompt error:', err);
       }
-    } else {
+    }
+
+    // Fallback: Smart device detection & interactive guidance
+    const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+    const isInApp = /FBAN|FBAV|Instagram|WhatsApp|Line|Telegram|Snapchat/i.test(ua);
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAR = _currentLang === 'ar';
+
+    if (isInApp) {
+      alert(isAR
+        ? '⚠️ تنبيه مهم:\nأنت تتصفح حالياً من داخل تطبيق (مثل واتساب أو انستغرام).\n\nلتتمكن من تثبيت التطبيق على هاتفك:\n1. اضغط على القائمة (⋮ أو ⋯) في زاوية الشاشة.\n2. اختر "الفتح في متصفح خارجي" (Open in Chrome / Safari).\n3. ثم قم بتثبيت التطبيق بنقرة واحدة.'
+        : '⚠️ Notice:\nYou are viewing from inside an in-app browser (e.g. WhatsApp/Instagram).\n\nTo install:\n1. Tap the menu (...) in the corner.\n2. Choose "Open in Chrome / Safari".\n3. Then install the app.');
+      return;
+    }
+
+    if (isIOS) {
+      alert(isAR
+        ? '🍏 خطوات تثبيت التطبيق على iPhone:\n\n1. اضغط على زر المشاركة (Share ⬆) في شريط المتصفح السفلي في Safari.\n2. مرر للأسفل واختر "إضافة إلى الشاشة الرئيسية" (Add to Home Screen).\n\nسيظهر التطبيق كأيقونة دائمة على شاشة هاتفك!'
+        : '🍏 To install on iPhone (Safari):\n\n1. Tap the Share button (⬆) at the bottom of Safari.\n2. Scroll down and tap "Add to Home Screen".\n\nThe app will be added to your home screen!');
       if (inst) {
         inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        inst.style.outline = '2px solid #dc2626';
-        setTimeout(() => { inst.style.outline = 'none'; }, 2000);
+        inst.style.border = '2px solid #a78bfa';
+        inst.style.boxShadow = '0 0 15px rgba(167, 139, 250, 0.4)';
+        setTimeout(() => { inst.style.border = ''; inst.style.boxShadow = ''; }, 3500);
       }
+      return;
+    }
+
+    // Android / Desktop Chrome fallback
+    alert(isAR
+      ? '🤖 لتثبيت التطبيق على هاتفك:\n\n1. اضغط على قائمة المتصفح (⋮) في أعلى زاوية الشاشة في Chrome.\n2. اختر "تثبيت التطبيق" (Install App) أو "إضافة إلى الشاشة الرئيسية".\n\nسيتم تثبيت التطبيق فوراً والعمل بسرعة فائقة!'
+      : '🤖 To install on Android (Chrome):\n\n1. Tap the browser menu (⋮) in the top corner of Chrome.\n2. Select "Install App" or "Add to Home screen".\n\nThe app will be installed immediately!');
+
+    if (inst) {
+      inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      inst.style.border = '2px solid #38bdf8';
+      inst.style.boxShadow = '0 0 15px rgba(56, 189, 248, 0.4)';
+      setTimeout(() => { inst.style.border = ''; inst.style.boxShadow = ''; }, 3500);
     }
   }
 
