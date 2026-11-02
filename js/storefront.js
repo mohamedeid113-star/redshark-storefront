@@ -181,11 +181,7 @@ const Storefront = (() => {
       return s;
     }
 
-    const saved = localStorage.getItem('rs_last_shop_slug');
-    if (saved && !systemSubdomains.includes(saved) && saved !== 'null' && saved !== 'undefined') {
-      return saved;
-    }
-
+    // Default when no slug is provided in the URL:
     return 'bobmarket';
   }
 
@@ -199,7 +195,7 @@ const Storefront = (() => {
         link.rel = 'manifest';
         document.head.appendChild(link);
       }
-      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.6';
+      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.7';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -207,7 +203,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '26.6';
+    const APP_VERSION = '26.7';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -216,7 +212,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=26.6').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=26.7').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -237,13 +233,8 @@ const Storefront = (() => {
       showLoader(true);
       _tenant = await StorefrontAPI.fetchTenant(slug);
 
-      if (!_tenant && slug !== 'bobmarket') {
-        console.warn(`Shop '${slug}' not found, falling back to default bobmarket...`);
-        slug = 'bobmarket';
-        _tenant = await StorefrontAPI.fetchTenant('bobmarket');
-      }
-
       if (!_tenant) {
+        showLoader(false);
         renderNotFound(slug);
         return;
       }
