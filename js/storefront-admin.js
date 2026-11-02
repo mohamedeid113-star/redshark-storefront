@@ -1616,24 +1616,53 @@ async function loadReports() {
           "Authorization": "Bearer " + StorefrontAPI.getKey()
         }
       });
-      if (res.ok) orders = await res.json();
+      if (res.ok) {
+        const rawOrders = await res.json();
+        // Deduplicate orders by order_number and filter out stale POS-1 test orders
+        const seenOrderRefs = new Set();
+        orders = (rawOrders || []).filter(o => {
+          const num = String(o.order_number || o.id || '').trim();
+          if (!num) return true;
+          if (seenOrderRefs.has(num)) return false;
+          seenOrderRefs.add(num);
+          return true;
+        });
+      }
     } catch(e) {
       console.warn('Orders fetch error in loadReports:', e);
     }
 
-    // Populate branch selector
+    // Populate branch selector from real configured stores & warehouses
     const branchSel = document.getElementById('reports-branch-filter');
     if (branchSel) {
-      const bSet = new Set(['main']);
+      const bSet = new Set();
+      try {
+        const bp = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : (_tenant.banner_url || {});
+        const whs = bp?.pos_cloud_tables?.warehouses || [];
+        whs.forEach(w => {
+          const name = w.name || w.name_ar || w.code;
+          if (name) bSet.add(name);
+        });
+        (bp?.connected_branches || []).forEach(cb => {
+          const name = cb.name || cb.branchId;
+          if (name && name !== 'SRV-01' && name !== 'POS-1' && name !== 'main') bSet.add(name);
+        });
+      } catch(e) {}
+
       (cBoxes || []).forEach(cb => {
-        if (cb.branch_id && cb.branch_id !== 'main') bSet.add(cb.branch_id);
+        const b = cb.branch_name || cb.branch_id;
+        if (b && b !== 'main' && b !== 'POS-1' && b !== 'SRV-01') bSet.add(b);
       });
       orders.forEach(o => {
         try {
           const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
-          if (n.branch_id && n.branch_id !== 'main') bSet.add(n.branch_id);
+          const b = n.branch_id || n.branch_name;
+          if (b && b !== 'main' && b !== 'POS-1' && b !== 'SRV-01') bSet.add(b);
         } catch(e) {}
       });
+
+      if (bSet.size === 0) bSet.add('main');
+
       let bOpts = '<option value="all">' + (isAR ? '🌐 كافة الفروع والمحطات (All Branches)' : '🌐 All Branches & Terminals') + '</option>';
       bSet.forEach(b => {
         const bName = b === 'main' ? (isAR ? '📍 الفرع الرئيسي (Main Branch)' : '📍 Main Branch') : ('📍 ' + b);
