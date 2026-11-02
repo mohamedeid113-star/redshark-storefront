@@ -1306,7 +1306,21 @@ const Storefront = (() => {
     }
 
     modal.style.display = 'flex';
+    modal.style.zIndex = '999999';
     modal.classList.add('open');
+  }
+
+  function downloadAppApk() {
+    try {
+      const dlLink = document.createElement('a');
+      dlLink.href = 'assets/RedSharkStore.apk';
+      dlLink.download = 'RedSharkStore.apk';
+      document.body.appendChild(dlLink);
+      dlLink.click();
+      document.body.removeChild(dlLink);
+    } catch(e) {
+      window.location.href = 'assets/RedSharkStore.apk';
+    }
   }
 
   function copyDirectAppLink() {
@@ -1402,11 +1416,6 @@ const Storefront = (() => {
       inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       inst.style.border = '2px solid #16a34a';
       inst.style.boxShadow = '0 0 15px rgba(22, 163, 74, 0.4)';
-      setTimeout(() => { inst.style.border = ''; inst.style.boxShadow = ''; }, 3500);
-    }
-      inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      inst.style.border = '2px solid #38bdf8';
-      inst.style.boxShadow = '0 0 15px rgba(56, 189, 248, 0.4)';
       setTimeout(() => { inst.style.border = ''; inst.style.boxShadow = ''; }, 3500);
     }
   }
@@ -1543,6 +1552,7 @@ const Storefront = (() => {
     trackOrderQuery,
     openAppDownloadModal,
     closeAppDownloadModal,
+    downloadAppApk,
     installPWA,
     init,
     showCategoriesGrid,

@@ -13,7 +13,7 @@
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   
-  <link rel="stylesheet" href="css/storefront.css?v=26.0">
+  <link rel="stylesheet" href="css/storefront.css?v=26.5">
 </head>
 <body>
 
@@ -349,7 +349,7 @@
 
   <!-- Scripts -->
   <script src="js/supabase-client.js?v=26.0"></script>
-  <script src="js/storefront.js?v=26.4"></script>
+  <script src="js/storefront.js?v=26.5"></script>
 
   <!-- Automatic Loader Safety Timeout -->
   <script>
@@ -367,7 +367,7 @@
 
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:18px">
         <!-- Option 1: Direct Android APK Download -->
-        <a href="assets/RedSharkStore.apk" download="RedSharkStore.apk" class="btn-checkout-primary" id="btn-download-apk" style="padding:15px;font-size:1rem;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg, #16a34a, #15803d);box-shadow:0 6px 20px rgba(22,163,74,0.4);text-decoration:none;color:#fff">
+        <a href="assets/RedSharkStore.apk" download="RedSharkStore.apk" onclick="Storefront.downloadAppApk()" class="btn-checkout-primary" id="btn-download-apk" style="padding:15px;font-size:1rem;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg, #16a34a, #15803d);box-shadow:0 6px 20px rgba(22,163,74,0.4);text-decoration:none;color:#fff;cursor:pointer">
           <span style="font-size:1.25rem">📥</span>
           <span id="txt-download-apk">تحميل ملف التطبيق مباشرة للأندرويد (Download APK)</span>
         </a>

@@ -1088,9 +1088,9 @@ body[dir="rtl"] {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(6px);
-  z-index: 200;
+  z-index: 999999 !important;
   display: none;
   align-items: center;
   justify-content: center;
