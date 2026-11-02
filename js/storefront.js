@@ -186,20 +186,20 @@ const Storefront = (() => {
       return saved;
     }
 
-    return 'shop101';
+    return 'bobmarket';
   }
 
   
       function applyDynamicManifest(tenant, slug) {
     try {
-      const cleanSlug = encodeURIComponent(slug || 'shop101');
+      const cleanSlug = encodeURIComponent(slug || 'bobmarket');
       let link = document.querySelector('link[rel="manifest"]');
       if (!link) {
         link = document.createElement('link');
         link.rel = 'manifest';
         document.head.appendChild(link);
       }
-      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.4';
+      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.6';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -207,7 +207,7 @@ const Storefront = (() => {
 
   async function init() {
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '26.4';
+    const APP_VERSION = '26.6';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -216,7 +216,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=26.4').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=26.6').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -237,10 +237,10 @@ const Storefront = (() => {
       showLoader(true);
       _tenant = await StorefrontAPI.fetchTenant(slug);
 
-      if (!_tenant && slug !== 'shop101') {
-        console.warn(`Shop '${slug}' not found, falling back to default shop101...`);
-        slug = 'shop101';
-        _tenant = await StorefrontAPI.fetchTenant('shop101');
+      if (!_tenant && slug !== 'bobmarket') {
+        console.warn(`Shop '${slug}' not found, falling back to default bobmarket...`);
+        slug = 'bobmarket';
+        _tenant = await StorefrontAPI.fetchTenant('bobmarket');
       }
 
       if (!_tenant) {
@@ -1272,7 +1272,7 @@ const Storefront = (() => {
           <div style="font-size:3.5rem;margin-bottom:12px">🏪</div>
           <h2 style="font-weight:900;margin-bottom:8px">المتجر غير موجود</h2>
           <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px">المعرف (${slug}) غير مسجل في النظام.</p>
-          <button class="icon-btn" onclick="window.location.search='?shop=shop101'" style="margin:0 auto">الذهاب للمتجر الافتراضي</button>
+          <button class="icon-btn" onclick="window.location.search='?shop=bobmarket'" style="margin:0 auto">الذهاب للمتجر الافتراضي</button>
         </div>
       `;
     }
@@ -1311,16 +1311,7 @@ const Storefront = (() => {
   }
 
   function downloadAppApk() {
-    try {
-      const dlLink = document.createElement('a');
-      dlLink.href = 'assets/RedSharkStore.apk';
-      dlLink.download = 'RedSharkStore.apk';
-      document.body.appendChild(dlLink);
-      dlLink.click();
-      document.body.removeChild(dlLink);
-    } catch(e) {
-      window.location.href = 'assets/RedSharkStore.apk';
-    }
+    installPWA();
   }
 
   function copyDirectAppLink() {
@@ -1396,26 +1387,15 @@ const Storefront = (() => {
       return;
     }
 
-    // Android / Desktop fallback: Trigger Direct APK Download immediately!
-    try {
-      const dlLink = document.createElement('a');
-      dlLink.href = 'assets/RedSharkStore.apk';
-      dlLink.download = 'RedSharkStore.apk';
-      document.body.appendChild(dlLink);
-      dlLink.click();
-      document.body.removeChild(dlLink);
-    } catch(e) {
-      window.location.href = 'assets/RedSharkStore.apk';
-    }
-
+    // Android / Desktop fallback: Guide to browser menu install
     alert(isAR
-      ? '✅ جاري تحميل ملف التطبيق للأندرويد (RedSharkStore.apk) مباشرة إلى جهازك الآن!\n\nبمجرد اكتمال التنزيل، اضغط على إشعار التنزيل في هاتفك لتثبيت التطبيق فوراً.'
-      : '✅ Downloading Android APK (RedSharkStore.apk) directly to your phone!\n\nOnce downloaded, tap the notification to install.');
+      ? '📲 لتثبيت التطبيق على هاتفك بنقرة واحدة وبدون أي تحذيرات:\n\n1. اضغط على قائمة المتصفح (⋮) في أعلى أو أسفل الشاشة في Chrome.\n2. اختر "تثبيت التطبيق" (Install app) أو "إضافة إلى الشاشة الرئيسية" (Add to Home screen).\n\nسيتم تثبيت تطبيق Red Shark Store الرسمي فوراً كأيقونة تطبيق كاملة!'
+      : '📲 To install Red Shark Store:\n\n1. Tap the browser menu (⋮) in Chrome.\n2. Tap "Install App" or "Add to Home screen".\n\nThe official Red Shark Store will be installed directly!');
 
     if (inst) {
       inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      inst.style.border = '2px solid #16a34a';
-      inst.style.boxShadow = '0 0 15px rgba(22, 163, 74, 0.4)';
+      inst.style.border = '2px solid #dc2626';
+      inst.style.boxShadow = '0 0 15px rgba(220, 38, 38, 0.4)';
       setTimeout(() => { inst.style.border = ''; inst.style.boxShadow = ''; }, 3500);
     }
   }

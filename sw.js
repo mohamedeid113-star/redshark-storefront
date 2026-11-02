@@ -1,5 +1,5 @@
 // Red Shark Storefront – Service Worker v26.5
-const CACHE_NAME = 'rs-storefront-v26.5';
+const CACHE_NAME = 'rs-storefront-v26.6';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -30,7 +30,7 @@ self.addEventListener('fetch', (event) => {
 
   // Serve dynamic Web App Manifest per shop
   if (url.pathname.endsWith('manifest.json') || url.pathname.endsWith('/manifest.json')) {
-    const shopSlug = url.searchParams.get('shop') || 'shop101';
+    const shopSlug = url.searchParams.get('shop') || 'bobmarket';
     const dynamicManifest = {
       name: `${shopSlug} — Red Shark Online Store`,
       short_name: shopSlug,
