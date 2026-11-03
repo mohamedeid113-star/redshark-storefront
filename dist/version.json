@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.56",
-  "build": 148,
+  "version": "1.4.57",
+  "build": 149,
   "releaseDate": "2026-11-03",
-  "description": "Instant Real-Time Auto-Sync & Cache Buster: 3-second heartbeat, tab focus/visibility refresh, robust stock transfer routing, and automated asset cache busting so branch stations always reflect server price and inventory changes immediately.",
+  "description": "Real-Time Branch Sales Ingestion & Consolidated Server Reporting: Branch sales are automatically pushed on heartbeat and sale completion, and central server continuously imports branch transactions into local IndexedDB and live reports without manual sync.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
