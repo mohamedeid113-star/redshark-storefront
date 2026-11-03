@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.52",
-  "build": 144,
+  "version": "1.4.53",
+  "build": 145,
   "releaseDate": "2026-11-03",
-  "description": "Fault-Tolerant Chunked Branch Catalog Sync: Solved branch zero-items bug by introducing 250-item chunked IndexedDB transactions, request error isolation, fallback resilience, and live real-time UI refresh.",
+  "description": "Ultra-Lightweight Delta Sync: Only modified items and updates are sent during sync instead of downloading the entire catalog, preventing network timeouts and keeping branch sync instant.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
