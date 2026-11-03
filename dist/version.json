@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.54",
-  "build": 146,
+  "version": "1.4.56",
+  "build": 148,
   "releaseDate": "2026-11-03",
-  "description": "Live Stock Transfers & Real-Time Item Updates: Full support for multi-item stock transfers from main server to branch (WH-01 to WH-02) with automatic branch inventory adjustment, plus universal item_code matching for instant real-time price & details synchronization.",
+  "description": "Instant Real-Time Auto-Sync & Cache Buster: 3-second heartbeat, tab focus/visibility refresh, robust stock transfer routing, and automated asset cache busting so branch stations always reflect server price and inventory changes immediately.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
