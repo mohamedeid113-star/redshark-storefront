@@ -19,122 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   
   <!-- HTML5 Barcode/QR Scanner -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js">
-    function openShopLoginModal(forceLock = false) {
-      const modal = document.getElementById('modal-shop-login');
-      const closeBtn = document.getElementById('btn-close-shop-modal');
-      const slugInput = document.getElementById('shop-login-slug');
-      const pinInput = document.getElementById('shop-login-pin');
-      const errBox = document.getElementById('shop-login-error');
-      if (errBox) errBox.style.display = 'none';
-      if (slugInput) slugInput.value = _slug || '';
-      if (pinInput) pinInput.value = '';
-      if (closeBtn) closeBtn.style.display = forceLock ? 'none' : 'block';
-      if (modal) modal.style.display = 'flex';
-      setTimeout(() => slugInput?.focus(), 150);
-    }
-
-    function closeShopLoginModal() {
-      const modal = document.getElementById('modal-shop-login');
-      if (modal) modal.style.display = 'none';
-    }
-
-    async function submitShopLogin() {
-      const slugInput = document.getElementById('shop-login-slug');
-      const pinInput = document.getElementById('shop-login-pin');
-      const errBox = document.getElementById('shop-login-error');
-      const btn = document.getElementById('btn-submit-shop-login');
-
-      const slug = (slugInput?.value || '').trim().toLowerCase();
-      const pin = (pinInput?.value || '').trim();
-
-      if (!slug) {
-        if (errBox) {
-          errBox.textContent = _currentLang === 'ar' ? 'يرجى إدخال معرّف المتجر (Store Slug)' : 'Please enter Store Slug';
-          errBox.style.display = 'block';
-        }
-        slugInput?.focus();
-        return;
-      }
-
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = _currentLang === 'ar' ? 'جارٍ التحقق...' : 'Verifying...';
-      }
-      if (errBox) errBox.style.display = 'none';
-
-      try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(slug)}&select=*`, {
-          headers: getHeaders()
-        });
-        if (!res.ok) throw new Error('Network error');
-        const tenants = await res.json();
-        if (!tenants || tenants.length === 0) {
-          if (errBox) {
-            errBox.textContent = _currentLang === 'ar' ? `المتجر "${slug}" غير مسجل في النظام!` : `Shop "${slug}" not found!`;
-            errBox.style.display = 'block';
-          }
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
-          }
-          return;
-        }
-
-        const t = tenants[0];
-        let bObj = {};
-        try {
-          bObj = typeof t.banner_url === 'string' ? JSON.parse(t.banner_url) : (t.banner_url || {});
-        } catch(e) {}
-
-        const adminPwd = bObj.admin_password || t.admin_pin || '';
-        if (adminPwd && pin && adminPwd.toString() !== pin.toString()) {
-          if (errBox) {
-            errBox.textContent = _currentLang === 'ar' ? 'رمز الحماية / PIN غير صحيح!' : 'Invalid Security PIN!';
-            errBox.style.display = 'block';
-          }
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
-          }
-          return;
-        }
-
-        _slug = slug;
-        _tenant = t;
-        localStorage.setItem('redshark_admin_slug', _slug);
-
-        try {
-          const u = new URL(window.location.href);
-          u.searchParams.set('shop', _slug);
-          window.history.replaceState({}, '', u.toString());
-        } catch(e) {}
-
-        document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug;
-        closeShopLoginModal();
-
-        if (Array.isArray(bObj.pos_cashboxes)) {
-          _cashboxes = bObj.pos_cashboxes;
-        } else {
-          _cashboxes = [];
-        }
-        populateBranchSelector();
-
-        await refreshAppData();
-      } catch(e) {
-        if (errBox) {
-          errBox.textContent = _currentLang === 'ar' ? 'حدث خطأ أثناء التحقق: ' + e.message : 'Login check failed: ' + e.message;
-          errBox.style.display = 'block';
-        }
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
-        }
-      }
-    }
-
-  </script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
     :root, [data-theme="light"] {
@@ -906,6 +791,8 @@
       const isDirect = (
         window.location.pathname.includes('/storefront') ||
         window.location.pathname.includes('/shop') ||
+        window.location.pathname.includes('/app') ||
+        window.location.pathname.includes('/manager') ||
         window.location.port === '3000' ||
         window.location.port === '3443'
       );
@@ -922,9 +809,144 @@
     const SUPABASE_URL = resolveBaseUrl();
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg";
 
-    let _slug = new URLSearchParams(window.location.search).get('shop') || localStorage.getItem('redshark_admin_slug') || '';
-    if (_slug) {
-      try { localStorage.setItem('redshark_admin_slug', _slug); } catch(e) {}
+    function getAdminShopSlug() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('shop') && params.get('shop').trim()) {
+          const s = params.get('shop').trim().toLowerCase();
+          localStorage.setItem('redshark_admin_slug', s);
+          return s;
+        }
+        if (params.get('slug') && params.get('slug').trim()) {
+          const s = params.get('slug').trim().toLowerCase();
+          localStorage.setItem('redshark_admin_slug', s);
+          return s;
+        }
+        const hostParts = window.location.hostname.toLowerCase().split('.');
+        const systemSubdomains = ['shop', 'www', 'pos', 'app', 'api', 'admin', 'localhost', '127'];
+        if (hostParts.length > 2 && !systemSubdomains.includes(hostParts[0])) {
+          const s = hostParts[0].trim();
+          localStorage.setItem('redshark_admin_slug', s);
+          return s;
+        }
+      } catch(e) {}
+      return localStorage.getItem('redshark_admin_slug') || '';
+    }
+
+    let _slug = getAdminShopSlug();
+
+    function openShopLoginModal(forceLock = false) {
+      const modal = document.getElementById('modal-shop-login');
+      const closeBtn = document.getElementById('btn-close-shop-modal');
+      const slugInput = document.getElementById('shop-login-slug');
+      const pinInput = document.getElementById('shop-login-pin');
+      const errBox = document.getElementById('shop-login-error');
+      if (errBox) errBox.style.display = 'none';
+      if (slugInput) slugInput.value = _slug || '';
+      if (pinInput) pinInput.value = '';
+      if (closeBtn) closeBtn.style.display = forceLock ? 'none' : 'block';
+      if (modal) modal.style.display = 'flex';
+      setTimeout(() => slugInput?.focus(), 150);
+    }
+
+    function closeShopLoginModal() {
+      const modal = document.getElementById('modal-shop-login');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function submitShopLogin() {
+      const slugInput = document.getElementById('shop-login-slug');
+      const pinInput = document.getElementById('shop-login-pin');
+      const errBox = document.getElementById('shop-login-error');
+      const btn = document.getElementById('btn-submit-shop-login');
+
+      const slug = (slugInput?.value || '').trim().toLowerCase();
+      const pin = (pinInput?.value || '').trim();
+
+      if (!slug) {
+        if (errBox) {
+          errBox.textContent = _currentLang === 'ar' ? 'يرجى إدخال معرّف المتجر (Store Slug)' : 'Please enter Store Slug';
+          errBox.style.display = 'block';
+        }
+        slugInput?.focus();
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = _currentLang === 'ar' ? 'جارٍ التحقق...' : 'Verifying...';
+      }
+      if (errBox) errBox.style.display = 'none';
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(slug)}&select=*`, {
+          headers: getHeaders()
+        });
+        if (!res.ok) throw new Error('Network error');
+        const tenants = await res.json();
+        if (!tenants || tenants.length === 0) {
+          if (errBox) {
+            errBox.textContent = _currentLang === 'ar' ? `المتجر "${slug}" غير مسجل في النظام!` : `Shop "${slug}" not found!`;
+            errBox.style.display = 'block';
+          }
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
+          }
+          return;
+        }
+
+        const t = tenants[0];
+        let bObj = {};
+        try {
+          bObj = typeof t.banner_url === 'string' ? JSON.parse(t.banner_url) : (t.banner_url || {});
+        } catch(e) {}
+
+        const adminPwd = bObj.admin_password || t.admin_pin || '';
+        if (adminPwd && pin && adminPwd.toString() !== pin.toString()) {
+          if (errBox) {
+            errBox.textContent = _currentLang === 'ar' ? 'رمز الحماية / PIN غير صحيح!' : 'Invalid Security PIN!';
+            errBox.style.display = 'block';
+          }
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
+          }
+          return;
+        }
+
+        _slug = slug;
+        _tenant = t;
+        localStorage.setItem('redshark_admin_slug', _slug);
+
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.set('shop', _slug);
+          window.history.replaceState({}, '', u.toString());
+        } catch(e) {}
+
+        document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug;
+        closeShopLoginModal();
+
+        if (Array.isArray(bObj.pos_cashboxes)) {
+          _cashboxes = bObj.pos_cashboxes;
+        } else {
+          _cashboxes = [];
+        }
+        populateBranchSelector();
+
+        await refreshAppData();
+      } catch(e) {
+        if (errBox) {
+          errBox.textContent = _currentLang === 'ar' ? 'حدث خطأ أثناء التحقق: ' + e.message : 'Login check failed: ' + e.message;
+          errBox.style.display = 'block';
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
+        }
+      }
     }
     let _tenant = null;
     let _orders = [];
