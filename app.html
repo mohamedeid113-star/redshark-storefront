@@ -987,15 +987,11 @@
         }, 800);
       });
 
-      if (!_slug) {
-        openShopLoginModal(true);
+      await loadTenantProfile();
+      if (_tenant) {
+        await refreshAppData();
       } else {
-        await loadTenantProfile();
-        if (_tenant) {
-          await refreshAppData();
-        } else {
-          openShopLoginModal(true);
-        }
+        openShopLoginModal(true);
       }
 
       // Background order polling every 15s
@@ -1010,14 +1006,19 @@
 
     async function loadTenantProfile() {
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(_slug)}&select=*`, {
+        const query = _slug ? `slug=eq.${encodeURIComponent(_slug)}&` : '';
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?${query}select=*`, {
           headers: getHeaders()
         });
         if (res.ok) {
           const tenants = await res.json();
           if (tenants && tenants.length > 0) {
             _tenant = tenants[0];
-            document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug;
+            if (!_slug && _tenant.slug) {
+              _slug = _tenant.slug;
+              try { localStorage.setItem('redshark_admin_slug', _slug); } catch(e) {}
+            }
+            document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug || 'Red Shark';
             
             // Parse cashboxes from banner_url if available
             try {

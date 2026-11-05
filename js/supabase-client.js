@@ -52,14 +52,15 @@ const StorefrontAPI = (() => {
   // 1. Fetch Tenant details by Slug
   async function fetchTenant(slug) {
     try {
-      const url = getUrl() + "/rest/v1/tenants?slug=eq." + encodeURIComponent(slug) + "&select=*";
+      const slugQuery = slug ? "slug=eq." + encodeURIComponent(slug) + "&" : "";
+      const url = getUrl() + "/rest/v1/tenants?" + slugQuery + "select=*";
       const res = await fetch(url, { headers: getHeaders() });
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) return data[0];
       }
       // Fallback check against 'shops' if tenants returns nothing
-      const shopRes = await fetch(getUrl() + "/rest/v1/shops?slug=eq." + encodeURIComponent(slug) + "&select=*", { headers: getHeaders() });
+      const shopRes = await fetch(getUrl() + "/rest/v1/shops?" + slugQuery + "select=*", { headers: getHeaders() });
       if (shopRes.ok) {
         const shops = await shopRes.json();
         if (shops && shops.length > 0) return shops[0];
