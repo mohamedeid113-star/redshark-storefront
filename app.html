@@ -584,9 +584,9 @@
         <select id="rpt-date-filter" class="search-input" style="width:auto;margin:0;padding:6px 10px;font-size:0.8rem;font-weight:800" onchange="loadReports()">
           <option value="today">اليوم (Today)</option>
           <option value="yesterday">أمس (Yesterday)</option>
-          <option value="week">آخر 7 أيام</option>
-          <option value="month" selected>هذا الشهر</option>
-          <option value="all">جميع الفترات</option>
+          <option value="week">آخر 7 أيام (Last 7 Days)</option>
+          <option value="month">هذا الشهر (This Month)</option>
+          <option value="all" selected>جميع الفترات (All Periods)</option>
         </select>
       </div>
 
@@ -1085,6 +1085,7 @@
       _selectedBranch = sel ? sel.value : 'all';
       loadReports();
       renderCashboxes();
+      renderCatalogList();
     }
 
     // ── NAVIGATION ────────────────────────────────────────────────────────────
@@ -1124,7 +1125,7 @@
     // ── 1. REPORTS CONTROLLER ────────────────────────────────────────────────
     async function loadReports() {
       if (!_tenant) return;
-      const dateFilter = document.getElementById('rpt-date-filter')?.value || 'month';
+      const dateFilter = document.getElementById('rpt-date-filter')?.value || 'all';
       const isAR = _currentLang === 'ar';
 
       try {
@@ -1508,7 +1509,19 @@
       }
 
       container.innerHTML = list.map(p => {
-        const stock = parseInt(p.stock_quantity || 0);
+        let stock = parseInt(p.stock_quantity || 0);
+        let branchLabel = '';
+        if (_selectedBranch && _selectedBranch !== 'all') {
+          branchLabel = ` (${_selectedBranch})`;
+          if (p.warehouse_stocks && typeof p.warehouse_stocks === 'object') {
+            const bKey = String(_selectedBranch).toLowerCase();
+            const keys = Object.keys(p.warehouse_stocks);
+            const foundKey = keys.find(k => k.toLowerCase() === bKey || k.toLowerCase().includes(bKey) || bKey.includes(k.toLowerCase()));
+            if (foundKey && p.warehouse_stocks[foundKey] !== undefined) {
+              stock = parseInt(p.warehouse_stocks[foundKey] || 0);
+            }
+          }
+        }
         const isLow = stock <= 5;
         const isZero = stock <= 0;
         const badgeColor = isZero ? '#dc2626' : (isLow ? '#d97706' : '#059669');
@@ -1523,7 +1536,7 @@
               </div>
               <div style="text-align:end">
                 <div style="font-weight:900;color:var(--primary);font-size:1.05rem">$${parseFloat(p.price || 0).toFixed(2)}</div>
-                <span class="badge" style="background:${badgeBg};color:${badgeColor}">المخزون: ${stock}</span>
+                <span class="badge" style="background:${badgeBg};color:${badgeColor}">المخزون${branchLabel}: ${stock}</span>
               </div>
             </div>
 
