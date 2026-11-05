@@ -1276,12 +1276,22 @@ const Storefront = (() => {
     _pwaPrompt = e;
   });
 
-    function openAppDownloadModal() {
+    function getDirectCurrentUrl() {
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.delete('source');
+      return u.toString();
+    } catch(e) {
+      return window.location.href;
+    }
+  }
+
+  function openAppDownloadModal() {
     const modal = document.getElementById('modal-app-download');
     if (!modal) return;
 
     const shopName = (_tenant && _tenant.shop_name) ? _tenant.shop_name : 'Red Shark Store';
-    const shopSlug = getShopSlug();
+    const currentUrl = getDirectCurrentUrl();
 
     const titleEl = document.getElementById('modal-app-title');
     if (titleEl) {
@@ -1293,7 +1303,7 @@ const Storefront = (() => {
     }
     const urlEl = document.getElementById('app-direct-url-text');
     if (urlEl) {
-      urlEl.textContent = `https://shop.redshark-ai.com/?shop=${encodeURIComponent(shopSlug)}&source=pwa`;
+      urlEl.textContent = currentUrl;
     }
 
     modal.style.display = 'flex';
@@ -1306,11 +1316,18 @@ const Storefront = (() => {
   }
 
   function copyDirectAppLink() {
+    const currentUrl = getDirectCurrentUrl();
     const el = document.getElementById('app-direct-url-text');
-    if (el && el.textContent) {
-      navigator.clipboard.writeText(el.textContent).then(() => {
-        alert(_currentLang === 'ar' ? 'تم نسخ رابط التطبيق بنجاح!' : 'App link copied to clipboard!');
-      }).catch(() => {});
+    if (el) el.textContent = currentUrl;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(currentUrl).then(() => {
+        alert(_currentLang === 'ar' ? 'تم نسخ رابط المتجر بنجاح!' : 'Store link copied to clipboard!');
+      }).catch(() => {
+        prompt(_currentLang === 'ar' ? 'انسخ الرابط:' : 'Copy link:', currentUrl);
+      });
+    } else {
+      prompt(_currentLang === 'ar' ? 'انسخ الرابط:' : 'Copy link:', currentUrl);
     }
   }
 
