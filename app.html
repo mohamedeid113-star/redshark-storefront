@@ -891,7 +891,35 @@
 
   <!-- JAVASCRIPT CONTROLLER -->
   <script>
-    const SUPABASE_URL = "https://mcebwpiswvwqcdwjpagy.supabase.co";
+    function resolveBaseUrl() {
+      try {
+        const u = new URL(window.location.href);
+        const serverParam = u.searchParams.get('server') || u.searchParams.get('api');
+        if (serverParam) {
+          const fullServer = serverParam.startsWith('http') ? serverParam : `https://${serverParam}`;
+          try { localStorage.setItem('rs_admin_server_url', fullServer); } catch(e) {}
+          return fullServer.replace(/\/+$/, '');
+        }
+      } catch(e) {}
+
+      // Check if opened directly on POS Server via Cloudflare Tunnel or LAN
+      const isDirect = (
+        window.location.pathname.includes('/storefront') ||
+        window.location.pathname.includes('/shop') ||
+        window.location.port === '3000' ||
+        window.location.port === '3443'
+      );
+      if (isDirect) {
+        return window.location.origin;
+      }
+
+      const saved = localStorage.getItem('rs_admin_server_url');
+      if (saved) return saved;
+
+      return localStorage.getItem('rs_supabase_url') || "https://mcebwpiswvwqcdwjpagy.supabase.co";
+    }
+
+    const SUPABASE_URL = resolveBaseUrl();
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg";
 
     let _slug = new URLSearchParams(window.location.search).get('shop') || localStorage.getItem('redshark_admin_slug') || '';

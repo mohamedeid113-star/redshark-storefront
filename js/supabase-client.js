@@ -8,6 +8,30 @@ const StorefrontAPI = (() => {
   const DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg";
 
   function getUrl() {
+    try {
+      const u = new URL(window.location.href);
+      const serverParam = u.searchParams.get('server') || u.searchParams.get('api');
+      if (serverParam) {
+        const fullServer = serverParam.startsWith('http') ? serverParam : `https://${serverParam}`;
+        try { localStorage.setItem('rs_direct_server_url', fullServer); } catch(e) {}
+        return fullServer.replace(/\/+$/, '');
+      }
+    } catch(e) {}
+
+    // Check if running directly on local or tunneled server.js (e.g. /storefront, /shop or :3000)
+    const isDirectServer = (
+      window.location.pathname.includes('/storefront') ||
+      window.location.pathname.includes('/shop') ||
+      window.location.port === '3000' ||
+      window.location.port === '3443'
+    );
+    if (isDirectServer) {
+      return window.location.origin;
+    }
+
+    const savedDirect = localStorage.getItem('rs_direct_server_url');
+    if (savedDirect) return savedDirect;
+
     return localStorage.getItem('rs_supabase_url') || DEFAULT_SUPABASE_URL;
   }
 
