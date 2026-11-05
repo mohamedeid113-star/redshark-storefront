@@ -1326,30 +1326,33 @@
       const container = document.getElementById('cashboxes-list-container');
       if (!container) return;
 
-      if (!_cashboxes || _cashboxes.length === 0) {
-        // Fallback default main terminal box
-        _cashboxes = [{
-          terminal_id: 'POS-2',
-          branch_name: 'الفرع الرئيسي (Main Branch)',
-          cashier_name: 'Administrator',
-          status: 'open',
-          opening_amount: 0,
-          cash_sales: 100.95,
-          balance_usd: 100.95,
-          balance_lbp: 9035025,
-          last_updated: new Date().toISOString()
-        }];
+      let boxes = _cashboxes || [];
+      if (_selectedBranch && _selectedBranch !== 'all' && boxes.length > 0) {
+        const filtered = boxes.filter(cb => 
+          cb.branch_id === _selectedBranch || 
+          cb.terminal_id === _selectedBranch || 
+          (cb.branch_name && cb.branch_name.includes(_selectedBranch))
+        );
+        if (filtered.length > 0) boxes = filtered;
       }
 
-      container.innerHTML = _cashboxes.map(cb => {
+      if (boxes.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">لا توجد صناديق نقدية مسجلة</div>';
+        return;
+      }
+
+      container.innerHTML = boxes.map(cb => {
         const time = cb.last_updated ? new Date(cb.last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'الآن';
-        const isOpen = cb.status === 'open';
+        const isOpen = cb.status === 'open' || (cb.status !== 'closed' && (parseFloat(cb.balance_usd || cb.current_balance || 0) > 0));
+        const balanceUsd = parseFloat(cb.balance_usd !== undefined ? cb.balance_usd : (cb.current_balance || 0));
+        const rate = parseFloat(_tenant?.currency_lbp_rate || 89500);
+        const balanceLbp = cb.balance_lbp || Math.round(balanceUsd * rate);
 
         return `
           <div class="cashbox-card">
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div>
-                <div style="font-weight:900;font-size:1rem">🏪 ${cb.branch_name || cb.terminal_id}</div>
+                <div style="font-weight:900;font-size:1rem">🏪 ${cb.branch_name || cb.name || cb.terminal_id}</div>
                 <div style="font-size:0.75rem;color:var(--text-muted)">كاشير: <strong>${cb.cashier_name || 'Administrator'}</strong></div>
               </div>
               <span class="badge" style="background:${isOpen ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'};color:${isOpen ? '#059669' : '#dc2626'}">
@@ -1359,13 +1362,13 @@
 
             <div style="margin-top:10px;text-align:center">
               <div style="font-size:0.75rem;font-weight:800;color:var(--text-muted)">المبلغ الموجود في الدرج الآن (Cash in Drawer)</div>
-              <div class="cashbox-amount">$${parseFloat(cb.balance_usd || 0).toFixed(2)}</div>
-              <div style="font-size:0.85rem;font-weight:800;color:var(--text-muted)">≈ ${(cb.balance_lbp || Math.round((cb.balance_usd||0)*89500)).toLocaleString()} ل.ل</div>
+              <div class="cashbox-amount">$${balanceUsd.toFixed(2)}</div>
+              <div style="font-size:0.85rem;font-weight:800;color:var(--text-muted)">≈ ${balanceLbp.toLocaleString()} ل.ل</div>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:10px;border-top:1px dashed rgba(16,185,129,0.3);font-size:0.75rem">
               <div>رصيد الافتتاح: <strong>$${parseFloat(cb.opening_amount || 0).toFixed(2)}</strong></div>
-              <div style="text-align:end">مبيعات الكاش اليوم: <strong>$${parseFloat(cb.cash_sales || 0).toFixed(2)}</strong></div>
+              <div style="text-align:end">مبيعات الكاش: <strong>$${parseFloat(cb.cash_sales || 0).toFixed(2)}</strong></div>
             </div>
 
             <div style="font-size:0.68rem;color:var(--text-muted);text-align:center;margin-top:6px">
