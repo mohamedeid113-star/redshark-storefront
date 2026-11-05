@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.69",
-  "build": 161,
+  "version": "1.4.70",
+  "build": 162,
   "releaseDate": "2026-11-05",
   "description": "Bidirectional Auto-Sync & Warehouse Architecture Fix: Fully restored Main Store (WH-01) vs Branch Store (WH-02) separation. Transfers automatically seed From/To correctly, apply incoming stock directly to branch inventory on reboot or reconnect without manual clicks, and pull pending invoices/transactions directly into Server Reports upon startup.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
