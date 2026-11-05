@@ -13,10 +13,10 @@ const StorefrontAPI = (() => {
       const serverParam = u.searchParams.get('server') || u.searchParams.get('api');
       if (serverParam) {
         const fullServer = serverParam.startsWith('http') ? serverParam : `https://${serverParam}`;
-        try { localStorage.setItem('rs_direct_server_url', fullServer); } catch(e) {}
+        try { localStorage.setItem('rs_direct_server_url', fullServer); } catch (e) { }
         return fullServer.replace(/\/+$/, '');
       }
-    } catch(e) {}
+    } catch (e) { }
 
     // Check if running directly on local or tunneled server.js (e.g. /storefront, /shop or :3000)
     const isDirectServer = (
@@ -109,7 +109,7 @@ const StorefrontAPI = (() => {
       const url = getUrl() + "/rest/v1/products?shop_id=eq." + shopId + "&updated_at=gt." + encodeURIComponent(sinceIso) + "&select=*";
       const res = await fetch(url, { headers: getHeaders() });
       if (res.ok) return await res.json();
-    } catch(e) {}
+    } catch (e) { }
     return [];
   }
 
@@ -175,7 +175,7 @@ const StorefrontAPI = (() => {
               headers: getHeaders(),
               body: JSON.stringify(lineItems)
             });
-          } catch(errLine) {
+          } catch (errLine) {
             console.warn('[StorefrontAPI] Line items insert note:', errLine);
           }
         }

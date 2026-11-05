@@ -787,16 +787,8 @@
         }
       } catch(e) {}
 
-      // Check if opened directly on POS Server via Cloudflare Tunnel or LAN
-      const isDirect = (
-        window.location.pathname.includes('/storefront') ||
-        window.location.pathname.includes('/shop') ||
-        window.location.pathname.includes('/app') ||
-        window.location.pathname.includes('/manager') ||
-        window.location.port === '3000' ||
-        window.location.port === '3443'
-      );
-      if (isDirect) {
+      // Any host other than the central cloud domain is a direct POS server / tunnel!
+      if (window.location.hostname !== 'shop.redshark-ai.com' && window.location.hostname !== 'mcebwpiswvwqcdwjpagy.supabase.co') {
         return window.location.origin;
       }
 
@@ -838,15 +830,22 @@
     function openShopLoginModal(forceLock = false) {
       const modal = document.getElementById('modal-shop-login');
       const closeBtn = document.getElementById('btn-close-shop-modal');
+      const slugGroup = document.getElementById('shop-login-slug')?.closest('div');
       const slugInput = document.getElementById('shop-login-slug');
       const pinInput = document.getElementById('shop-login-pin');
       const errBox = document.getElementById('shop-login-error');
+      const isDirect = (window.location.hostname !== 'shop.redshark-ai.com' && window.location.hostname !== 'mcebwpiswvwqcdwjpagy.supabase.co');
+
       if (errBox) errBox.style.display = 'none';
       if (slugInput) slugInput.value = _slug || '';
       if (pinInput) pinInput.value = '';
       if (closeBtn) closeBtn.style.display = forceLock ? 'none' : 'block';
+      if (isDirect && slugGroup) {
+        // In direct server / tunnel mode, hide the slug field since domain already connects to store
+        slugGroup.style.display = 'none';
+      }
       if (modal) modal.style.display = 'flex';
-      setTimeout(() => slugInput?.focus(), 150);
+      setTimeout(() => (isDirect ? pinInput : slugInput)?.focus(), 150);
     }
 
     function closeShopLoginModal() {
@@ -859,11 +858,12 @@
       const pinInput = document.getElementById('shop-login-pin');
       const errBox = document.getElementById('shop-login-error');
       const btn = document.getElementById('btn-submit-shop-login');
+      const isDirect = (window.location.hostname !== 'shop.redshark-ai.com' && window.location.hostname !== 'mcebwpiswvwqcdwjpagy.supabase.co');
 
-      const slug = (slugInput?.value || '').trim().toLowerCase();
+      const slug = (slugInput?.value || _slug || '').trim().toLowerCase();
       const pin = (pinInput?.value || '').trim();
 
-      if (!slug) {
+      if (!isDirect && !slug) {
         if (errBox) {
           errBox.textContent = _currentLang === 'ar' ? 'يرجى إدخال معرّف المتجر (Store Slug)' : 'Please enter Store Slug';
           errBox.style.display = 'block';
@@ -879,14 +879,20 @@
       if (errBox) errBox.style.display = 'none';
 
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(slug)}&select=*`, {
+        const query = slug ? `slug=eq.${encodeURIComponent(slug)}&` : '';
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?${query}select=*`, {
           headers: getHeaders()
         });
-        if (!res.ok) throw new Error('Network error');
-        const tenants = await res.json();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        let tenants = await res.json();
+        if ((!tenants || tenants.length === 0) && isDirect) {
+          const fallback = await fetch(`${SUPABASE_URL}/rest/v1/tenants?select=*`, { headers: getHeaders() });
+          if (fallback.ok) tenants = await fallback.json();
+        }
+
         if (!tenants || tenants.length === 0) {
           if (errBox) {
-            errBox.textContent = _currentLang === 'ar' ? `المتجر "${slug}" غير مسجل في النظام!` : `Shop "${slug}" not found!`;
+            errBox.textContent = _currentLang === 'ar' ? `المتجر غير مسجل في النظام!` : `Store not found!`;
             errBox.style.display = 'block';
           }
           if (btn) {
@@ -903,7 +909,7 @@
         } catch(e) {}
 
         const adminPwd = bObj.admin_password || t.admin_pin || '';
-        if (adminPwd && pin && adminPwd.toString() !== pin.toString()) {
+        if (adminPwd && adminPwd.toString() !== (pin || '').toString()) {
           if (errBox) {
             errBox.textContent = _currentLang === 'ar' ? 'رمز الحماية / PIN غير صحيح!' : 'Invalid Security PIN!';
             errBox.style.display = 'block';
@@ -915,17 +921,12 @@
           return;
         }
 
-        _slug = slug;
+        _slug = slug || t.slug;
         _tenant = t;
         localStorage.setItem('redshark_admin_slug', _slug);
+        sessionStorage.setItem('rs_admin_authed', '1');
 
-        try {
-          const u = new URL(window.location.href);
-          u.searchParams.set('shop', _slug);
-          window.history.replaceState({}, '', u.toString());
-        } catch(e) {}
-
-        document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug;
+        document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug || 'Red Shark';
         closeShopLoginModal();
 
         if (Array.isArray(bObj.pos_cashboxes)) {
@@ -989,7 +990,18 @@
 
       await loadTenantProfile();
       if (_tenant) {
-        await refreshAppData();
+        let bObj = {};
+        try {
+          bObj = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : (_tenant.banner_url || {});
+        } catch(e) {}
+        const adminPwd = bObj.admin_password || _tenant.admin_pin || '';
+
+        // Only lock if a password is actually configured and not yet authenticated in this session
+        if (adminPwd && sessionStorage.getItem('rs_admin_authed') !== '1') {
+          openShopLoginModal(true);
+        } else {
+          await refreshAppData();
+        }
       } else {
         openShopLoginModal(true);
       }
