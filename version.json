@@ -1,7 +1,7 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.88",
-  "build": 176,
+  "version": "1.4.89",
+  "build": 177,
   "releaseDate": "2026-11-09",
   "description": "Zero-Cost Self-Hosted Storefront & Manager App: Direct-to-Server REST architecture with live Customer QR Code Stand Printing, instant offline/online ordering, and full backward-compatible toggle to Supabase Cloud.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
