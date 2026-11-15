@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Red Shark — تطبيق المدير والمبيعات الذكي</title>
+  <title>لوحة المدير — Manager</title>
   
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="RedShark Admin">
+  <meta name="apple-mobile-web-app-title" content="Manager">
   <meta name="theme-color" content="#1e293b">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
   <link rel="manifest" href="admin-manifest.json">
@@ -521,6 +521,44 @@
       margin-bottom: 12px;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
     }
+    /* ── Shop branding ── */
+    .brand-avatar.has-logo { background: #fff; padding: 2px; overflow: hidden; }
+    .brand-avatar img { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
+    .brand-avatar.initial { font-weight: 900; font-size: 1.15rem; }
+    .rs-mark { display: inline-flex; align-items: center; gap: 3px; font-size: 0.6rem; font-weight: 700; color: var(--text-muted); opacity: 0.75; margin-inline-start: 6px; letter-spacing: 0.2px; }
+    .rs-powered { font-size: 0.65rem; color: var(--text-muted); opacity: 0.7; margin-top: 14px; }
+
+    /* ── Reports ── */
+    .stats-grid.mini { grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: -4px; }
+    .stats-grid.mini .stat-box { padding: 9px 8px; }
+    .stats-grid.mini .stat-val { font-size: 0.98rem; }
+    .stats-grid.mini .stat-label { font-size: 0.66rem; }
+    .stats-grid.mini .stat-sub { font-size: 0.62rem; }
+    @media (max-width: 420px) { .stats-grid.mini { grid-template-columns: repeat(2, 1fr); } }
+    .custom-range { display: none; gap: 6px; align-items: center; margin: -4px 0 12px; flex-wrap: wrap; }
+    .custom-range input { flex: 1; min-width: 120px; margin: 0; padding: 7px 8px; font-size: 0.8rem; }
+    .rpt-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .rpt-row:last-child { border-bottom: none; }
+    .rpt-name { font-weight: 800; font-size: 0.86rem; overflow-wrap: anywhere; }
+    .rpt-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+    .rpt-num { font-weight: 900; font-size: 0.95rem; white-space: nowrap; text-align: end; }
+    .rpt-num small { display: block; font-size: 0.66rem; font-weight: 700; color: var(--text-muted); }
+    .bar-track { height: 7px; border-radius: 6px; background: var(--surface-subtle); border: 1px solid var(--border); overflow: hidden; margin-top: 5px; }
+    .bar-fill { height: 100%; border-radius: 6px; background: var(--primary-gradient); }
+    .bar-fill.green { background: linear-gradient(90deg, #10b981, #059669); }
+    .bar-fill.amber { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .bar-fill.purple { background: linear-gradient(90deg, #a855f7, #9333ea); }
+    .rpt-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .rpt-summary div { background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 12px; padding: 9px; text-align: center; }
+    .rpt-summary b { display: block; font-size: 1.02rem; font-weight: 900; }
+    .rpt-summary span { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; }
+    .rpt-empty { text-align: center; padding: 22px; color: var(--text-muted); font-size: 0.85rem; }
+    .inv-lines { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 0.76rem; }
+    .invoice-card.open .inv-lines { display: block; }
+    .inv-line { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+    .badge-credit { background: rgba(245,158,11,0.15); color: #b45309; }
+    .badge-card { background: rgba(147,51,234,0.12); color: #7e22ce; }
+    .badge-return { background: rgba(239,68,68,0.12); color: #dc2626; }
   </style>
 </head>
 <body>
@@ -529,12 +567,13 @@
   <header class="app-header">
     <div class="header-top-row">
       <div class="header-brand">
-        <div class="brand-avatar">🦈</div>
+        <div class="brand-avatar initial" id="hdr-shop-avatar">🏪</div>
         <div>
-          <div class="brand-title" id="hdr-shop-name">Red Shark Admin</div>
+          <div class="brand-title" id="hdr-shop-name">…</div>
           <div class="live-pulse">
             <span class="pulse-dot"></span>
             <span id="hdr-live-status">متصل لحظياً بالكاشير</span>
+            <span class="rs-mark" title="Red Shark POS">🦈 Red Shark</span>
           </div>
         </div>
       </div>
@@ -581,13 +620,22 @@
       <!-- Date Filter Bar -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div style="font-size:0.95rem;font-weight:900" id="txt-rpt-title">📊 تقارير المبيعات الصافية</div>
-        <select id="rpt-date-filter" class="search-input" style="width:auto;margin:0;padding:6px 10px;font-size:0.8rem;font-weight:800" onchange="loadReports()">
-          <option value="today">اليوم (Today)</option>
+        <select id="rpt-date-filter" class="search-input" style="width:auto;margin:0;padding:6px 10px;font-size:0.8rem;font-weight:800" onchange="onRangeChange()">
+          <option value="today" selected>اليوم (Today)</option>
           <option value="yesterday">أمس (Yesterday)</option>
           <option value="week">آخر 7 أيام (Last 7 Days)</option>
           <option value="month">هذا الشهر (This Month)</option>
-          <option value="all" selected>جميع الفترات (All Periods)</option>
+          <option value="last_month">الشهر الماضي (Last Month)</option>
+          <option value="year">هذه السنة (This Year)</option>
+          <option value="all">جميع الفترات (All Periods)</option>
+          <option value="custom">فترة محددة (Custom)</option>
         </select>
+      </div>
+      <div class="custom-range" id="rpt-custom-range">
+        <input type="date" id="rpt-from" class="search-input">
+        <span style="font-weight:800;color:var(--text-muted)">→</span>
+        <input type="date" id="rpt-to" class="search-input">
+        <button class="btn-action" style="width:auto;padding:7px 14px" onclick="loadReports()">✔</button>
       </div>
 
       <!-- 4 Glowing KPI Cards -->
@@ -617,12 +665,41 @@
         </div>
       </div>
 
+      <!-- Second row: returns, discounts, money owed, stock -->
+      <div class="stats-grid mini">
+        <div class="stat-box" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2)">
+          <div class="stat-label">↩️ المرتجعات</div>
+          <div class="stat-val" style="color:#dc2626" id="kpi-returns">—</div>
+          <div class="stat-sub" id="kpi-returns-sub"></div>
+        </div>
+        <div class="stat-box" style="background:rgba(14,165,233,0.06);border-color:rgba(14,165,233,0.2)">
+          <div class="stat-label">🏷️ الخصومات</div>
+          <div class="stat-val" style="color:#0284c7" id="kpi-discounts">—</div>
+          <div class="stat-sub" id="kpi-discounts-sub"></div>
+        </div>
+        <div class="stat-box" style="background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.2)">
+          <div class="stat-label">💳 ديون العملاء</div>
+          <div class="stat-val" style="color:#b45309" id="kpi-debts">—</div>
+          <div class="stat-sub" id="kpi-debts-sub"></div>
+        </div>
+        <div class="stat-box" style="background:rgba(100,116,139,0.06);border-color:rgba(100,116,139,0.2)">
+          <div class="stat-label">📦 قيمة المخزون</div>
+          <div class="stat-val" style="color:#475569" id="kpi-stock">—</div>
+          <div class="stat-sub" id="kpi-stock-sub"></div>
+        </div>
+      </div>
+
       <!-- Sub-Report Pills -->
       <div class="subtabs-bar">
-        <div class="subtab-pill active" onclick="switchReportSubTab('invoices')" id="subtab-btn-invoices">🧾 فواتير المبيعات</div>
+        <div class="subtab-pill active" onclick="switchReportSubTab('invoices')" id="subtab-btn-invoices">🧾 الفواتير</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('daily')" id="subtab-btn-daily">📈 الأيام والساعات</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('payments')" id="subtab-btn-payments">💵 طرق الدفع</div>
         <div class="subtab-pill" onclick="switchReportSubTab('top-items')" id="subtab-btn-top-items">🏆 الأكثر مبيعاً</div>
-        <div class="subtab-pill" onclick="switchReportSubTab('cashiers')" id="subtab-btn-cashiers">👤 حسب الكاشير</div>
-        <div class="subtab-pill" onclick="switchReportSubTab('categories')" id="subtab-btn-categories">📂 حسب التصنيف</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('categories')" id="subtab-btn-categories">📂 التصنيفات</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('cashiers')" id="subtab-btn-cashiers">👤 الكاشير</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('branches')" id="subtab-btn-branches">🏪 الفروع</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('debts')" id="subtab-btn-debts">💳 الديون</div>
+        <div class="subtab-pill" onclick="switchReportSubTab('stock')" id="subtab-btn-stock">📦 المخزون</div>
       </div>
 
       <!-- SUB-VIEW 1: INVOICES BREAKDOWN -->
@@ -660,6 +737,50 @@
           <div id="categories-container">
             <div style="text-align:center;padding:20px;color:var(--text-muted)">جارِ الحساب...</div>
           </div>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW: DAYS & HOURS -->
+      <div id="subview-daily" style="display:none">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px" id="daily-title">📈 المبيعات حسب اليوم</div>
+          <div id="daily-container"><div class="rpt-empty">…</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">⏰ أوقات الذروة (حسب الساعة)</div>
+          <div id="hours-container"><div class="rpt-empty">…</div></div>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW: PAYMENT METHODS -->
+      <div id="subview-payments" style="display:none">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">💵 المبيعات حسب طريقة الدفع</div>
+          <div id="payments-container"><div class="rpt-empty">…</div></div>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW: BRANCHES -->
+      <div id="subview-branches" style="display:none">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">🏪 مقارنة الفروع</div>
+          <div id="branches-container"><div class="rpt-empty">…</div></div>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW: CUSTOMER DEBTS -->
+      <div id="subview-debts" style="display:none">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">💳 العملاء المدينون (الديون المستحقة)</div>
+          <div id="debts-container"><div class="rpt-empty">…</div></div>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW: STOCK -->
+      <div id="subview-stock" style="display:none">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px">📦 قيمة المخزون والأصناف الناقصة</div>
+          <div id="stock-container"><div class="rpt-empty">…</div></div>
         </div>
       </div>
     </section>
@@ -879,6 +1000,34 @@
       if (errBox) errBox.style.display = 'none';
 
       try {
+        // Connected to a shop's own POS server: the PIN is verified by the server itself, and then
+        // sent with every request (the server only returns manager data with the right PIN).
+        if (talksToPosServer()) {
+          let vj = {};
+          try {
+            const vr = await fetch(`${SUPABASE_URL}/api/storefront/verify-admin-pin`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pin })
+            });
+            vj = await vr.json().catch(() => ({}));
+          } catch (e) { vj = { ok: false, error: e.message }; }
+          if (!vj.ok) {
+            if (errBox) {
+              errBox.textContent = vj.error === 'Invalid PIN' || !vj.error
+                ? (_currentLang === 'ar' ? 'رمز الحماية / PIN غير صحيح!' : 'Invalid Security PIN!')
+                : vj.error;
+              errBox.style.display = 'block';
+            }
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = _currentLang === 'ar' ? 'دخول لوحة الإدارة ⚡' : 'Enter Admin Panel ⚡';
+            }
+            return;
+          }
+          try { sessionStorage.setItem('rs_admin_pin_session', pin); } catch (e) {}
+        }
+
         const query = slug ? `slug=eq.${encodeURIComponent(slug)}&` : '';
         const res = await fetch(`${SUPABASE_URL}/rest/v1/tenants?${query}select=*`, {
           headers: getHeaders()
@@ -909,7 +1058,7 @@
         } catch(e) {}
 
         const adminPwd = bObj.admin_password || t.admin_pin || '';
-        if (adminPwd && adminPwd.toString() !== (pin || '').toString()) {
+        if (!talksToPosServer() && adminPwd && adminPwd.toString() !== (pin || '').toString()) {
           if (errBox) {
             errBox.textContent = _currentLang === 'ar' ? 'رمز الحماية / PIN غير صحيح!' : 'Invalid Security PIN!';
             errBox.style.display = 'block';
@@ -926,7 +1075,7 @@
         localStorage.setItem('redshark_admin_slug', _slug);
         sessionStorage.setItem('rs_admin_authed', '1');
 
-        document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug || 'Red Shark';
+        applyBranding(_tenant);
         closeShopLoginModal();
 
         if (Array.isArray(bObj.pos_cashboxes)) {
@@ -962,12 +1111,24 @@
     let _deferredInstallPrompt = null;
     let _audioChime = null;
 
+    // True when this app talks to a shop's own POS server (directly or through its tunnel),
+    // false for the Supabase cloud.
+    function talksToPosServer() {
+      try { return !/\.supabase\.co$/i.test(new URL(SUPABASE_URL).hostname); } catch (e) { return true; }
+    }
+
     function getHeaders() {
-      return {
+      const h = {
         "apikey": SUPABASE_KEY,
         "Authorization": "Bearer " + SUPABASE_KEY,
         "Content-Type": "application/json"
       };
+      // The POS server only returns manager data (orders, cash drawers…) with the manager PIN.
+      try {
+        const pin = sessionStorage.getItem('rs_admin_pin_session');
+        if (pin && talksToPosServer()) h['x-admin-pin'] = pin;
+      } catch (e) {}
+      return h;
     }
 
     // ── INITIALIZATION ────────────────────────────────────────────────────────
@@ -982,6 +1143,8 @@
         const b = document.getElementById('pwa-install-banner');
         if (b && sessionStorage.getItem('rs_pwa_dismissed') !== '1') b.style.display = 'block';
         setTimeout(() => {
+          // (isStandalone was never defined: this threw an error every time the install prompt fired)
+          const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
           if (_deferredInstallPrompt && !isStandalone) {
             _deferredInstallPrompt.prompt().catch(() => {});
           }
@@ -995,9 +1158,13 @@
           bObj = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : (_tenant.banner_url || {});
         } catch(e) {}
         const adminPwd = bObj.admin_password || _tenant.admin_pin || '';
+        // A POS server no longer sends the PIN to the browser; it says whether one is required.
+        // Over the internet the manager app always needs the PIN.
+        const pinRequired = Boolean(adminPwd || _tenant.admin_pin_required ||
+          (talksToPosServer() && !['localhost', '127.0.0.1'].includes(window.location.hostname) && !/^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\./.test(window.location.hostname)));
 
         // Only lock if a password is actually configured and not yet authenticated in this session
-        if (adminPwd && sessionStorage.getItem('rs_admin_authed') !== '1') {
+        if (pinRequired && (sessionStorage.getItem('rs_admin_authed') !== '1' || (talksToPosServer() && !sessionStorage.getItem('rs_admin_pin_session')))) {
           openShopLoginModal(true);
         } else {
           await refreshAppData();
@@ -1030,8 +1197,8 @@
               _slug = _tenant.slug;
               try { localStorage.setItem('redshark_admin_slug', _slug); } catch(e) {}
             }
-            document.getElementById('hdr-shop-name').textContent = _tenant.shop_name || _slug || 'Red Shark';
-            
+            applyBranding(_tenant);
+
             // Parse cashboxes from banner_url if available
             try {
               const bObj = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : (_tenant.banner_url || {});
@@ -1050,6 +1217,19 @@
     function populateBranchSelector() {
       const select = document.getElementById('app-branch-select');
       if (!select) return;
+
+      // Server report available: real branch names with each branch's sales for the period.
+      if (Array.isArray(_reportBranches) && _reportBranches.length) {
+        let html = '<option value="all">🌐 كافة الفروع والمحطات (All Branches)</option>';
+        _reportBranches.forEach(b => {
+          const safeName = String(b.name || b.id).replace(/[<>&"]/g, '');
+          html += `<option value="${String(b.id).replace(/[<>&"]/g, '')}">📍 ${safeName} — $${(b.sales || 0).toFixed(2)}</option>`;
+        });
+        select.innerHTML = html;
+        select.value = _selectedBranch;
+        if (select.value !== _selectedBranch) select.value = 'all';
+        return;
+      }
 
       const branches = new Set(['main']);
       _cashboxes.forEach(cb => {
@@ -1110,210 +1290,378 @@
       if (tab === 'orders') loadOnlineOrders();
     }
 
+    const REPORT_SUBTABS = ['invoices', 'daily', 'payments', 'top-items', 'categories', 'cashiers', 'branches', 'debts', 'stock'];
     function switchReportSubTab(sub) {
       _activeReportSubTab = sub;
       document.querySelectorAll('.subtab-pill').forEach(p => p.classList.remove('active'));
       const btn = document.getElementById('subtab-btn-' + sub);
       if (btn) btn.classList.add('active');
-
-      ['invoices', 'top-items', 'cashiers', 'categories'].forEach(s => {
+      REPORT_SUBTABS.forEach(s => {
         const el = document.getElementById('subview-' + s);
         if (el) el.style.display = (s === sub) ? 'block' : 'none';
       });
     }
 
+    // ── helpers ──
+    const L = (ar, en) => (_currentLang === 'ar' ? ar : en);
+    function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function money(n) {
+      const v = Number(n) || 0;
+      return (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function lbp(n) {
+      const rate = parseFloat((_tenant && _tenant.currency_lbp_rate) || 89500);
+      return Math.round((Number(n) || 0) * rate).toLocaleString('en-US') + ' ' + L('ل.ل', 'LBP');
+    }
+    function pct(part, whole) { return whole > 0 ? Math.max(0, Math.min(100, (part / whole) * 100)) : 0; }
+    function bar(part, whole, cls) { return `<div class="bar-track"><div class="bar-fill ${cls || ''}" style="width:${pct(Math.abs(part), Math.abs(whole)).toFixed(1)}%"></div></div>`; }
+    function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+    function setHtml(id, v) { const el = document.getElementById(id); if (el) el.innerHTML = v; }
+    const PAY_LABELS = { cash: ['💵 نقدي', '💵 Cash'], card: ['💳 بطاقة', '💳 Card'], credit: ['📒 دين (آجل)', '📒 Credit'], mixed: ['🔀 مختلط', '🔀 Mixed'], other: ['🌐 أخرى', '🌐 Other'] };
+    function payKey(m) {
+      const v = String(m || 'cash').toLowerCase();
+      if (v === 'cash' || v === 'cod' || v === 'cash_in_store') return 'cash';
+      if (v === 'credit') return 'credit';
+      if (v === 'card' || v === 'card_on_delivery' || v === 'visa') return 'card';
+      if (v === 'mixed' || v === 'split') return 'mixed';
+      return 'other';
+    }
+
+    function onRangeChange() {
+      const v = document.getElementById('rpt-date-filter')?.value;
+      const box = document.getElementById('rpt-custom-range');
+      if (box) box.style.display = v === 'custom' ? 'flex' : 'none';
+      if (v === 'custom') {
+        const f = document.getElementById('rpt-from'), t = document.getElementById('rpt-to');
+        const today = new Date().toISOString().slice(0, 10);
+        if (f && !f.value) f.value = today.slice(0, 8) + '01';
+        if (t && !t.value) t.value = today;
+      }
+      loadReports();
+    }
+    function _rangeBounds(range) {
+      const now = new Date();
+      const start = new Date(now); start.setHours(0, 0, 0, 0);
+      if (range === 'today') return [start, null];
+      if (range === 'yesterday') { const y = new Date(start); y.setDate(y.getDate() - 1); return [y, start]; }
+      if (range === 'week') { const w = new Date(start); w.setDate(w.getDate() - 6); return [w, null]; }
+      if (range === 'month') return [new Date(now.getFullYear(), now.getMonth(), 1), null];
+      if (range === 'last_month') return [new Date(now.getFullYear(), now.getMonth() - 1, 1), new Date(now.getFullYear(), now.getMonth(), 1)];
+      if (range === 'year') return [new Date(now.getFullYear(), 0, 1), null];
+      if (range === 'custom') {
+        const f = document.getElementById('rpt-from')?.value, t = document.getElementById('rpt-to')?.value;
+        const to = t ? new Date(t + 'T00:00:00') : null; if (to) to.setDate(to.getDate() + 1);
+        return [f ? new Date(f + 'T00:00:00') : null, to];
+      }
+      return [null, null];
+    }
+
     // ── 1. REPORTS CONTROLLER ────────────────────────────────────────────────
+    // Report computed by the shop's server over ALL sales of the server and every branch.
+    // Cloud shops get the same report shape computed here from their synced orders.
+    let _reportBranches = null;
+    let _lastInvoices = [];
+
+    function buildReportFromOrders(orders) {
+      const r2 = (n) => Math.round((n || 0) * 100) / 100;
+      let total = 0, cost = 0, discounts = 0, returns = 0, returnsCount = 0;
+      const payments = {}, items = {}, cashiers = {}, daily = {}, hours = {};
+      orders.forEach(o => {
+        const amount = parseFloat(o.total || 0) || 0;
+        let meta = {}; try { meta = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {}); } catch (e) {}
+        const c = parseFloat(meta.cost || 0) || 0;
+        total += amount; cost += c; discounts += parseFloat(o.discount_amount || meta.discount || 0) || 0;
+        if (amount < 0) { returns += -amount; returnsCount++; }
+        const pk = payKey(o.payment_method);
+        payments[pk] = payments[pk] || { sales: 0, count: 0 }; payments[pk].sales += amount; payments[pk].count++;
+        const cn = meta.cashier || L('الكاشير', 'Cashier');
+        cashiers[cn] = cashiers[cn] || { sales: 0, count: 0, profit: 0 }; cashiers[cn].sales += amount; cashiers[cn].count++; cashiers[cn].profit += amount - c;
+        const d = new Date(o.created_at);
+        if (!isNaN(d.getTime())) {
+          const dk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          daily[dk] = daily[dk] || { day: dk, sales: 0, profit: 0, count: 0 }; daily[dk].sales += amount; daily[dk].profit += amount - c; daily[dk].count++;
+          const h = d.getHours(); hours[h] = hours[h] || { hour: h, sales: 0, count: 0 }; hours[h].sales += amount; hours[h].count++;
+        }
+        let lines = []; try { lines = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []); } catch (e) {}
+        lines.forEach(it => {
+          const name = it.product_name || it.name || 'Product';
+          const qty = parseFloat(it.quantity || it.qty || 1) || 1;
+          const rev = parseFloat(it.total_price || it.total || 0) || (qty * (parseFloat(it.unit_price || it.price || 0) || 0));
+          items[name] = items[name] || { qty: 0, revenue: 0, profit: null }; items[name].qty += qty; items[name].revenue += rev;
+        });
+      });
+      return {
+        success: true, cloud: true,
+        totals: { sales: r2(total), count: orders.length, cost: r2(cost), profit: r2(total - cost), margin: total > 0 ? r2(((total - cost) / total) * 100) : 0, avg_basket: orders.length ? r2(total / orders.length) : 0, discounts: r2(discounts), returns: r2(returns), returns_count: returnsCount },
+        payments, daily: Object.values(daily).sort((a, b) => a.day.localeCompare(b.day)), hours: Object.values(hours).sort((a, b) => a.hour - b.hour),
+        top_items: Object.fromEntries(Object.entries(items).sort((a, b) => b[1].qty - a[1].qty).slice(0, 30)),
+        cashiers, categories: null, branches: null, debtors: null, stock: null, invoices: orders
+      };
+    }
+
+    function renderReport(rep) {
+      const t = rep.totals || {};
+      if (!rep.cloud) { _reportBranches = Array.isArray(rep.branches) ? rep.branches : null; populateBranchSelector(); }
+      setText('kpi-sales', money(t.sales));
+      setText('kpi-sales-lbp', lbp(t.sales));
+      setText('kpi-profit', money(t.profit));
+      setText('kpi-margin', L('هامش الربح: ', 'Margin: ') + (t.margin || 0) + '%');
+      setText('kpi-cost', money(t.cost));
+      setText('kpi-cost-sub', L('تكلفة البضاعة المباعة', 'Cost of goods sold'));
+      setText('kpi-orders', (t.count || 0).toLocaleString('en-US'));
+      setText('kpi-avg-basket', L('متوسط الفاتورة: ', 'Avg basket: ') + money(t.avg_basket));
+      setText('kpi-returns', t.returns != null ? money(t.returns) : '—');
+      setText('kpi-returns-sub', t.returns_count ? `${t.returns_count} ${L('فاتورة', 'invoices')}` : '');
+      setText('kpi-discounts', t.discounts != null ? money(t.discounts) : '—');
+      setText('kpi-discounts-sub', t.gifts_cost ? L('هدايا/تالف: ', 'Gifts/damaged: ') + money(t.gifts_cost) : '');
+      setText('kpi-debts', rep.debtors ? money(rep.debtors.total) : '—');
+      setText('kpi-debts-sub', rep.debtors ? `${rep.debtors.count} ${L('عميل', 'customers')}` : L('متاح عبر سيرفر المحل', 'via shop server'));
+      setText('kpi-stock', rep.stock ? money(rep.stock.value_cost) : '—');
+      setText('kpi-stock-sub', rep.stock ? `${rep.stock.low_count} ${L('صنف ناقص', 'low items')}` : L('متاح عبر سيرفر المحل', 'via shop server'));
+
+      _lastInvoices = rep.invoices || [];
+      filterInvoices();
+      renderDaily(rep);
+      renderPayments(rep.payments || {}, t.sales || 0);
+      renderTopItems(rep.top_items || {});
+      renderCategories(rep.categories);
+      renderCashiers(rep.cashiers || {});
+      renderBranches(rep.branches);
+      renderDebts(rep.debtors);
+      renderStock(rep.stock);
+    }
+    // kept for older callers
+    function renderServerReport(rep) { renderReport(rep); }
+
     async function loadReports() {
       if (!_tenant) return;
-      const dateFilter = document.getElementById('rpt-date-filter')?.value || 'all';
-      const isAR = _currentLang === 'ar';
+      const dateFilter = document.getElementById('rpt-date-filter')?.value || 'today';
+
+      if (talksToPosServer()) {
+        try {
+          let q = `range=${encodeURIComponent(dateFilter)}&branch=${encodeURIComponent(_selectedBranch || 'all')}`;
+          if (dateFilter === 'custom') q += `&from=${encodeURIComponent(document.getElementById('rpt-from')?.value || '')}&to=${encodeURIComponent(document.getElementById('rpt-to')?.value || '')}`;
+          const r = await fetch(`${SUPABASE_URL}/api/manager/report?${q}`, { headers: getHeaders() });
+          if (r.ok) {
+            const rep = await r.json();
+            if (rep && rep.success) { renderReport(rep); return; }
+          }
+        } catch (e) {}
+      }
 
       try {
-        // Fetch orders from Supabase
-        const url = `${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${_tenant.id}&order=created_at.desc&limit=250`;
+        const url = `${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${_tenant.id}&order=created_at.desc&limit=1000`;
         const res = await fetch(url, { headers: getHeaders() });
-        if (res.ok) {
-          _orders = await res.json();
-          populateBranchSelector();
-        }
-      } catch(e) {}
+        if (res.ok) { _orders = await res.json(); populateBranchSelector(); }
+      } catch (e) {}
 
-      // Filter by Branch & Date
-      const now = new Date();
+      const [from, to] = _rangeBounds(dateFilter);
       const filtered = _orders.filter(o => {
-        // Branch match
         if (_selectedBranch !== 'all') {
           let bMatch = false;
           try {
             const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
             if (n.branch_id === _selectedBranch || n.terminal_id === _selectedBranch) bMatch = true;
-          } catch(e) {}
+          } catch (e) {}
           if (o.delivery_address === _selectedBranch) bMatch = true;
           if (!bMatch) return false;
         }
-
-        // Date match
-        if (!o.created_at) return true;
-        const d = new Date(o.created_at);
-        if (dateFilter === 'today') {
-          return d.toDateString() === now.toDateString();
-        } else if (dateFilter === 'yesterday') {
-          const yest = new Date(now);
-          yest.setDate(yest.getDate() - 1);
-          return d.toDateString() === yest.toDateString();
-        } else if (dateFilter === 'week') {
-          return (now - d) <= (7 * 24 * 60 * 60 * 1000);
-        } else if (dateFilter === 'month') {
-          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        }
-        return true;
+        if (!o.created_at) return !from && !to;
+        const t = new Date(o.created_at).getTime();
+        return (!from || t >= from.getTime()) && (!to || t < to.getTime());
       });
-
-      // Calculate totals
-      let totalSales = 0;
-      let totalCost = 0;
-      let ordersCount = filtered.length;
-      const productCounts = {};
-      const cashierCounts = {};
-      const categoryCounts = {};
-
-      filtered.forEach(o => {
-        const amount = parseFloat(o.total || 0);
-        totalSales += amount;
-
-        let meta = {};
-        try { meta = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {}); } catch(e) {}
-
-        const cost = parseFloat(meta.cost || 0);
-        totalCost += cost;
-
-        const cashier = meta.cashier || 'الكاشير (Cashier)';
-        if (!cashierCounts[cashier]) cashierCounts[cashier] = { sales: 0, count: 0 };
-        cashierCounts[cashier].sales += amount;
-        cashierCounts[cashier].count++;
-
-        let items = [];
-        try { items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []); } catch(e) {}
-
-        items.forEach(it => {
-          const name = it.product_name || it.name || 'Product';
-          const qty = parseFloat(it.quantity || it.qty || 1);
-          const price = parseFloat(it.unit_price || it.price || 0);
-          if (!productCounts[name]) productCounts[name] = { qty: 0, revenue: 0 };
-          productCounts[name].qty += qty;
-          productCounts[name].revenue += (qty * price);
-        });
-      });
-
-      const netProfit = totalSales - totalCost;
-      const margin = totalSales > 0 ? ((netProfit / totalSales) * 100).toFixed(1) : '0';
-      const avgBasket = ordersCount > 0 ? (totalSales / ordersCount).toFixed(2) : '0.00';
-      const rate = parseFloat(_tenant.currency_lbp_rate || 89500);
-
-      // Update KPI Cards
-      document.getElementById('kpi-sales').textContent = '$' + totalSales.toFixed(2);
-      document.getElementById('kpi-sales-lbp').textContent = Math.round(totalSales * rate).toLocaleString() + ' ' + (isAR ? 'ل.ل' : 'LBP');
-      document.getElementById('kpi-profit').textContent = '$' + netProfit.toFixed(2);
-      document.getElementById('kpi-margin').textContent = (isAR ? 'هامش الربح: ' : 'Margin: ') + margin + '%';
-      document.getElementById('kpi-cost').textContent = '$' + totalCost.toFixed(2);
-      document.getElementById('kpi-orders').textContent = ordersCount;
-      document.getElementById('kpi-avg-basket').textContent = (isAR ? 'متوسط الفاتورة: $' : 'Avg Basket: $') + avgBasket;
-
-      // Render Sub-Views
-      renderInvoicesList(filtered);
-      renderTopItems(productCounts);
-      renderCashiers(cashierCounts);
+      renderReport(buildReportFromOrders(filtered));
     }
 
     function renderInvoicesList(invoices) {
       const container = document.getElementById('invoices-list-container');
       if (!container) return;
-
       if (!invoices || invoices.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">لا توجد فواتير مسجلة في هذه الفترة</div>';
+        container.innerHTML = `<div class="rpt-empty">${L('لا توجد فواتير مسجلة في هذه الفترة', 'No invoices in this period')}</div>`;
         return;
       }
-
+      const multiDay = new Set(invoices.map(i => String(i.created_at || '').slice(0, 10))).size > 1;
       container.innerHTML = invoices.map(inv => {
         let meta = {};
-        try { meta = typeof inv.notes === 'string' ? JSON.parse(inv.notes) : (inv.notes || {}); } catch(e) {}
-        
+        try { meta = typeof inv.notes === 'string' ? JSON.parse(inv.notes) : (inv.notes || {}); } catch (e) {}
         const isPos = meta.source === 'pos' || inv.pos_synced;
-        const branchBadge = meta.terminal_id || meta.branch_id || 'الفرع الرئيسي';
+        const branchBadge = meta.branch_name || meta.terminal_id || meta.branch_id || L('الفرع الرئيسي', 'Main');
         const cashier = meta.cashier || (isPos ? 'Administrator' : 'Online Store');
         const cost = parseFloat(meta.cost || 0);
         const total = parseFloat(inv.total || 0);
         const profit = total - cost;
         const margin = total > 0 ? ((profit / total) * 100).toFixed(1) : '0';
-        const time = new Date(inv.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
+        const d = new Date(inv.created_at);
+        const when = isNaN(d.getTime()) ? '' : (multiDay ? d.toLocaleDateString('en-GB') + ' ' : '') + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const pk = payKey(inv.payment_method);
+        const payBadge = total < 0 ? `<span class="badge badge-return">${L('مرتجع', 'Return')}</span>`
+          : `<span class="badge ${pk === 'credit' ? 'badge-credit' : pk === 'card' ? 'badge-card' : 'badge-cash'}">${esc(PAY_LABELS[pk] ? L(PAY_LABELS[pk][0], PAY_LABELS[pk][1]) : (inv.payment_method || 'CASH'))}</span>`;
+        let lines = []; try { lines = typeof inv.items === 'string' ? JSON.parse(inv.items) : (inv.items || []); } catch (e) {}
+        const disc = parseFloat(meta.discount || inv.discount_amount || 0) || 0;
+        const linesHtml = lines.length ? lines.map(it => `
+            <div class="inv-line"><span>${esc(it.product_name || it.name || '')} × ${esc(it.quantity || it.qty || 1)}${it.line_type && it.line_type !== 'sale' ? ` <em style="color:var(--text-muted)">(${esc(it.line_type)})</em>` : ''}</span><strong>${money(it.total_price || it.total || 0)}</strong></div>`).join('') : '';
         return `
-          <div class="invoice-card">
+          <div class="invoice-card" onclick="this.classList.toggle('open')">
             <div class="inv-header">
-              <div style="display:flex;align-items:center;gap:6px">
-                <span class="inv-ref">${inv.order_number}</span>
-                <span class="badge badge-branch">${branchBadge}</span>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span class="inv-ref">${esc(inv.order_number)}</span>
+                <span class="badge badge-branch">${esc(branchBadge)}</span>
               </div>
-              <span class="badge badge-cash">${(inv.payment_method || 'CASH').toUpperCase()}</span>
+              ${payBadge}
             </div>
-
             <div class="inv-body">
               <div>
-                <div style="color:var(--text-muted);font-size:0.75rem">${inv.customer_name || 'عميل عابر'} • ${cashier}</div>
-                <div style="font-size:0.7rem;color:var(--text-muted)">⏰ ${time} | ربح: <strong style="color:#059669">$${profit.toFixed(2)}</strong> (${margin}%)</div>
+                <div style="color:var(--text-muted);font-size:0.75rem">${esc(inv.customer_name || L('عميل عابر', 'Walk-in'))} • ${esc(cashier)}</div>
+                <div style="font-size:0.7rem;color:var(--text-muted)">⏰ ${when} | ${L('ربح', 'Profit')}: <strong style="color:#059669">${money(profit)}</strong> (${margin}%)${disc ? ` | ${L('خصم', 'Disc.')}: ${money(disc)}` : ''}</div>
               </div>
-              <div class="inv-price">$${total.toFixed(2)}</div>
+              <div class="inv-price">${money(total)}</div>
             </div>
-          </div>
-        `;
+            ${linesHtml ? `<div class="inv-lines">${linesHtml}</div>` : ''}
+          </div>`;
       }).join('');
     }
 
-    function renderTopItems(counts) {
-      const container = document.getElementById('top-items-container');
-      if (!container) return;
-
-      const sorted = Object.keys(counts).map(k => ({ name: k, ...counts[k] }))
-        .sort((a,b) => b.qty - a.qty);
-
-      if (sorted.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">لا توجد مبيعات في هذه الفترة</div>';
-        return;
-      }
-
-      container.innerHTML = sorted.slice(0, 10).map((it, idx) => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-weight:900;color:var(--primary);width:20px">${idx + 1}.</span>
-            <div>
-              <div style="font-weight:800;font-size:0.86rem">${it.name}</div>
-              <div style="font-size:0.72rem;color:var(--text-muted)">الكمية المباعة: <strong>${it.qty}</strong></div>
+    function renderDaily(rep) {
+      const range = document.getElementById('rpt-date-filter')?.value || 'today';
+      const daily = rep.daily || [];
+      setText('daily-title', L('📈 المبيعات حسب اليوم', '📈 Sales by day'));
+      if (!daily.length) setHtml('daily-container', `<div class="rpt-empty">${L('لا توجد مبيعات في هذه الفترة', 'No sales in this period')}</div>`);
+      else {
+        const max = Math.max(...daily.map(d => d.sales), 0.01);
+        const best = daily.reduce((a, b) => (b.sales > a.sales ? b : a), daily[0]);
+        const avg = daily.reduce((t, d) => t + d.sales, 0) / daily.length;
+        setHtml('daily-container', `
+          <div class="rpt-summary">
+            <div><b>${money(avg)}</b><span>${L('متوسط المبيعات اليومية', 'Average per day')}</span></div>
+            <div><b>${esc(best.day)}</b><span>${L('أفضل يوم', 'Best day')}: ${money(best.sales)}</span></div>
+          </div>` + daily.slice().reverse().map(d => `
+          <div class="rpt-row" style="display:block">
+            <div style="display:flex;justify-content:space-between;gap:8px">
+              <span class="rpt-name">${esc(new Date(d.day + 'T12:00:00').toLocaleDateString(_currentLang === 'ar' ? 'ar-LB' : 'en-GB', { weekday: 'short', day: '2-digit', month: 'short' }))}</span>
+              <span class="rpt-num">${money(d.sales)}<small>${d.count} ${L('فاتورة', 'inv.')} • ${L('ربح', 'profit')} ${money(d.profit)}</small></span>
             </div>
+            ${bar(d.sales, max, 'green')}
+          </div>`).join(''));
+      }
+      const hours = rep.hours || [];
+      if (!hours.length) setHtml('hours-container', `<div class="rpt-empty">${L('لا توجد بيانات', 'No data')}</div>`);
+      else {
+        const maxH = Math.max(...hours.map(h => h.sales), 0.01);
+        const peak = hours.reduce((a, b) => (b.sales > a.sales ? b : a), hours[0]);
+        setHtml('hours-container', `<div class="rpt-sub" style="margin-bottom:6px">${L('ساعة الذروة', 'Peak hour')}: <strong>${String(peak.hour).padStart(2, '0')}:00</strong></div>` + hours.map(h => `
+          <div class="rpt-row" style="display:block;padding:6px 0">
+            <div style="display:flex;justify-content:space-between"><span class="rpt-name">${String(h.hour).padStart(2, '0')}:00 – ${String((h.hour + 1) % 24).padStart(2, '0')}:00</span><span class="rpt-num" style="font-size:0.85rem">${money(h.sales)} <span style="color:var(--text-muted);font-weight:700">(${h.count})</span></span></div>
+            ${bar(h.sales, maxH, 'purple')}
+          </div>`).join(''));
+      }
+      if (range === 'today' || range === 'yesterday') setText('daily-title', L('📈 مبيعات اليوم', '📈 Sales of the day'));
+    }
+
+    function renderPayments(payments, totalSales) {
+      const keys = Object.keys(payments).filter(k => payments[k] && payments[k].count);
+      if (!keys.length) { setHtml('payments-container', `<div class="rpt-empty">${L('لا توجد مبيعات في هذه الفترة', 'No sales in this period')}</div>`); return; }
+      keys.sort((a, b) => payments[b].sales - payments[a].sales);
+      setHtml('payments-container', keys.map(k => `
+        <div class="rpt-row" style="display:block">
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <span class="rpt-name">${esc(PAY_LABELS[k] ? L(PAY_LABELS[k][0], PAY_LABELS[k][1]) : k)}</span>
+            <span class="rpt-num">${money(payments[k].sales)}<small>${payments[k].count} ${L('فاتورة', 'inv.')} • ${pct(payments[k].sales, totalSales).toFixed(0)}%</small></span>
           </div>
-          <div style="font-weight:900;color:#059669;font-size:0.95rem">$${it.revenue.toFixed(2)}</div>
-        </div>
-      `).join('');
+          ${bar(payments[k].sales, totalSales, k === 'credit' ? 'amber' : k === 'card' ? 'purple' : 'green')}
+        </div>`).join('') + `<div class="rpt-sub" style="margin-top:8px">${L('📒 "دين (آجل)" = مبيعات على حساب العميل لم تُقبض بعد.', '📒 "Credit" = sales on the customer\'s account, not collected yet.')}</div>`);
+    }
+
+    function renderTopItems(counts) {
+      const sorted = Object.keys(counts).map(k => ({ name: k, ...counts[k] })).sort((a, b) => b.qty - a.qty);
+      if (!sorted.length) { setHtml('top-items-container', `<div class="rpt-empty">${L('لا توجد مبيعات في هذه الفترة', 'No sales in this period')}</div>`); return; }
+      const maxRev = Math.max(...sorted.map(i => i.revenue), 0.01);
+      setHtml('top-items-container', sorted.slice(0, 30).map((it, idx) => `
+        <div class="rpt-row" style="display:block">
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <div style="display:flex;gap:8px"><span style="font-weight:900;color:var(--primary);min-width:22px">${idx + 1}.</span>
+              <div><div class="rpt-name">${esc(it.name)}</div><div class="rpt-sub">${L('الكمية', 'Qty')}: <strong>${Number(it.qty).toLocaleString('en-US')}</strong>${it.profit != null ? ` • ${L('ربح', 'Profit')}: <strong style="color:#059669">${money(it.profit)}</strong>` : ''}</div></div>
+            </div>
+            <span class="rpt-num" style="color:#059669">${money(it.revenue)}</span>
+          </div>
+          ${bar(it.revenue, maxRev, 'green')}
+        </div>`).join(''));
+    }
+
+    function renderCategories(cats) {
+      if (cats == null) { setHtml('categories-container', `<div class="rpt-empty">${L('تقرير التصنيفات متاح عند الاتصال بسيرفر المحل (الرابط المباشر).', 'Category report is available through the shop\'s own server (direct link).')}</div>`); return; }
+      const list = Object.keys(cats).map(k => ({ name: k, ...cats[k] }));
+      if (!list.length) { setHtml('categories-container', `<div class="rpt-empty">${L('لا توجد مبيعات في هذه الفترة', 'No sales in this period')}</div>`); return; }
+      const total = list.reduce((t, c) => t + c.revenue, 0);
+      setHtml('categories-container', list.map(c => `
+        <div class="rpt-row" style="display:block">
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <div><div class="rpt-name">📂 ${esc(c.name)}</div><div class="rpt-sub">${L('الكمية', 'Qty')}: ${Number(c.qty).toLocaleString('en-US')} • ${L('ربح', 'Profit')}: <strong style="color:#059669">${money(c.profit)}</strong></div></div>
+            <span class="rpt-num">${money(c.revenue)}<small>${pct(c.revenue, total).toFixed(0)}%</small></span>
+          </div>
+          ${bar(c.revenue, total)}
+        </div>`).join(''));
     }
 
     function renderCashiers(cashiers) {
-      const container = document.getElementById('cashiers-container');
-      if (!container) return;
-
-      const keys = Object.keys(cashiers);
-      if (keys.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">لا توجد بيانات</div>';
-        return;
-      }
-
-      container.innerHTML = keys.map(k => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-          <div>
-            <div style="font-weight:800;font-size:0.9rem">👤 ${k}</div>
-            <div style="font-size:0.72rem;color:var(--text-muted)">${cashiers[k].count} فواتير مسجلة</div>
+      const keys = Object.keys(cashiers).sort((a, b) => cashiers[b].sales - cashiers[a].sales);
+      if (!keys.length) { setHtml('cashiers-container', `<div class="rpt-empty">${L('لا توجد بيانات', 'No data')}</div>`); return; }
+      const total = keys.reduce((t, k) => t + cashiers[k].sales, 0);
+      setHtml('cashiers-container', keys.map(k => {
+        const c = cashiers[k];
+        return `
+        <div class="rpt-row" style="display:block">
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <div><div class="rpt-name">👤 ${esc(k)}</div><div class="rpt-sub">${c.count} ${L('فاتورة', 'invoices')} • ${L('متوسط', 'avg')} ${money(c.count ? c.sales / c.count : 0)}${c.profit != null ? ` • ${L('ربح', 'profit')} ${money(c.profit)}` : ''}</div></div>
+            <span class="rpt-num" style="color:var(--primary)">${money(c.sales)}<small>${pct(c.sales, total).toFixed(0)}%</small></span>
           </div>
-          <div style="font-weight:900;color:var(--primary);font-size:1rem">$${cashiers[k].sales.toFixed(2)}</div>
+          ${bar(c.sales, total)}
+        </div>`;
+      }).join(''));
+    }
+
+    function renderBranches(branches) {
+      if (!Array.isArray(branches) || !branches.length) { setHtml('branches-container', `<div class="rpt-empty">${L('مقارنة الفروع متاحة عند الاتصال بسيرفر المحل.', 'Branch comparison is available through the shop\'s server.')}</div>`); return; }
+      const total = branches.reduce((t, b) => t + (b.sales || 0), 0);
+      setHtml('branches-container', branches.map(b => `
+        <div class="rpt-row" style="display:block">
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <div><div class="rpt-name">🏪 ${esc(b.name || b.id)}</div><div class="rpt-sub">${b.count || 0} ${L('فاتورة', 'invoices')} • ${L('ربح', 'profit')} <strong style="color:#059669">${money(b.profit)}</strong></div></div>
+            <span class="rpt-num">${money(b.sales)}<small>${pct(b.sales, total).toFixed(0)}%</small></span>
+          </div>
+          ${bar(b.sales, total)}
+        </div>`).join(''));
+    }
+
+    function renderDebts(debtors) {
+      if (!debtors) { setHtml('debts-container', `<div class="rpt-empty">${L('ديون العملاء متاحة عند الاتصال بسيرفر المحل (الرابط المباشر).', 'Customer debts are available through the shop\'s own server (direct link).')}</div>`); return; }
+      const head = `
+        <div class="rpt-summary">
+          <div><b style="color:#b45309">${money(debtors.total)}</b><span>${L('إجمالي الديون المستحقة', 'Total owed to you')}</span></div>
+          <div><b>${debtors.count}</b><span>${L('عميل مدين', 'customers owing')}</span></div>
         </div>
-      `).join('');
+        ${debtors.customer_credit > 0.009 ? `<div class="rpt-sub" style="margin-bottom:8px">${L('رصيد دائن للعملاء (دفعات مقدمة)', 'Customer credit (prepaid)')}: <strong>${money(debtors.customer_credit)}</strong></div>` : ''}`;
+      if (!debtors.list || !debtors.list.length) { setHtml('debts-container', head + `<div class="rpt-empty">${L('لا توجد ديون مستحقة 🎉', 'Nobody owes money 🎉')}</div>`); return; }
+      setHtml('debts-container', head + debtors.list.map(c => `
+        <div class="rpt-row">
+          <div><div class="rpt-name">${esc(c.name)}</div>${c.phone ? `<div class="rpt-sub">📞 <a href="tel:${esc(c.phone)}" style="color:inherit">${esc(c.phone)}</a></div>` : ''}</div>
+          <span class="rpt-num" style="color:#b45309">${money(c.balance)}</span>
+        </div>`).join('') + (debtors.count > debtors.list.length ? `<div class="rpt-sub" style="text-align:center;margin-top:6px">+${debtors.count - debtors.list.length} ${L('عميل آخر', 'more')}</div>` : ''));
+    }
+
+    function renderStock(stock) {
+      if (!stock) { setHtml('stock-container', `<div class="rpt-empty">${L('تقرير المخزون متاح عند الاتصال بسيرفر المحل (الرابط المباشر).', 'Stock report is available through the shop\'s own server (direct link).')}</div>`); return; }
+      const head = `
+        <div class="rpt-summary">
+          <div><b>${money(stock.value_cost)}</b><span>${L('قيمة المخزون بالتكلفة', 'Stock value at cost')}</span></div>
+          <div><b>${money(stock.value_retail)}</b><span>${L('قيمته بسعر البيع', 'At selling price')}</span></div>
+        </div>
+        <div class="rpt-sub" style="margin-bottom:8px">${stock.items} ${L('صنف', 'items')} • <strong style="color:#dc2626">${stock.low_count}</strong> ${L('صنف نفد أو تحت الحد الأدنى', 'out of stock or below minimum')}</div>`;
+      if (!stock.low || !stock.low.length) { setHtml('stock-container', head + `<div class="rpt-empty">${L('كل الأصناف متوفرة ✅', 'Everything is in stock ✅')}</div>`); return; }
+      setHtml('stock-container', head + stock.low.map(i => `
+        <div class="rpt-row">
+          <div><div class="rpt-name">${esc(i.name)}</div><div class="rpt-sub">${i.barcode ? esc(i.barcode) : ''}${i.min ? ` • ${L('الحد الأدنى', 'min')} ${i.min}` : ''}</div></div>
+          <span class="badge" style="background:${i.stock <= 0 ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.15)'};color:${i.stock <= 0 ? '#dc2626' : '#b45309'}">${i.stock <= 0 ? L('نفد', 'Out') : i.stock}</span>
+        </div>`).join(''));
     }
 
     // ── 2. CASH DRAWERS CONTROLLER ──────────────────────────────────────────
@@ -1457,7 +1805,18 @@
       }
     }
 
+    // Stock is kept by each POS (per branch). The phone cannot change it on a shop's own server —
+    // say so instead of pretending the change was saved.
+    function stockEditUnavailable() {
+      if (!talksToPosServer()) return false;
+      alert(_currentLang === 'ar'
+        ? 'تعديل المخزون يتم من نقطة البيع (الكاشير) لأن كل فرع يحتفظ بمخزونه. يمكنك هنا الاطلاع على الكميات فقط.'
+        : 'Stock is changed from the POS (each branch keeps its own stock). Here you can only view quantities.');
+      return true;
+    }
+
     async function saveScannedStock() {
+      if (stockEditUnavailable()) return;
       if (!_currentScannedItem) return;
       const newStock = parseInt(document.getElementById('scan-prod-stock-inp').value) || 0;
       _currentScannedItem.stock_quantity = newStock;
@@ -1554,6 +1913,7 @@
     }
 
     async function quickEditStock(prodId, delta) {
+      if (stockEditUnavailable()) return;
       const p = _products.find(x => x.id === prodId);
       if (!p) return;
       const newStock = Math.max(0, (parseInt(p.stock_quantity) || 0) + delta);
@@ -1570,12 +1930,56 @@
     function filterCatalogList() { renderCatalogList(); }
     function filterInvoices() {
       const q = document.getElementById('inv-search-inp')?.value.toLowerCase().trim() || '';
-      const filtered = _orders.filter(o => {
+      const filtered = (_lastInvoices || []).filter(o => {
         if (!q) return true;
         return (o.order_number || '').toLowerCase().includes(q) || (o.customer_name || '').toLowerCase().includes(q);
       });
       renderInvoicesList(filtered);
     }
+
+    // ── SHOP BRANDING: the shop's own logo and name, with a small Red Shark mark ──
+    function _absUrl(u) {
+      if (!u) return '';
+      if (/^(https?:|data:)/i.test(u)) return u;
+      return SUPABASE_URL.replace(/\/+$/, '') + (u.startsWith('/') ? u : '/' + u);
+    }
+    function applyBranding(t) {
+      const name = (t && (t.shop_name || t.slug)) || (_slug || '');
+      const logo = _absUrl(t && t.logo_url);
+      try { localStorage.setItem('rs_admin_brand_' + (_slug || 'direct'), JSON.stringify({ name, logo })); } catch (e) {}
+      _paintBrand(name, logo);
+    }
+    function _paintBrand(name, logo) {
+      const title = document.getElementById('hdr-shop-name');
+      if (title) title.textContent = name || L('لوحة المدير', 'Manager');
+      const av = document.getElementById('hdr-shop-avatar');
+      const avatarHtml = (sizeEmoji) => logo
+        ? `<img src="${esc(logo)}" alt="" onerror="this.parentNode.classList.remove('has-logo');this.parentNode.classList.add('initial');this.replaceWith(document.createTextNode('${esc((name || '🏪').trim().charAt(0).toUpperCase())}'))">`
+        : esc((name || sizeEmoji).trim().charAt(0).toUpperCase());
+      if (av) {
+        av.classList.toggle('has-logo', !!logo);
+        av.classList.toggle('initial', !logo);
+        av.innerHTML = avatarHtml('🏪');
+      }
+      ['m-shop-logo', 'm-inst-logo'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.innerHTML = logo ? `<img src="${esc(logo)}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;background:#fff">` : `<span style="font-size:2rem;font-weight:900">${esc((name || '🏪').trim().charAt(0).toUpperCase())}</span>`; }
+      });
+      const mt = document.getElementById('m-shop-title');
+      if (mt && name) mt.textContent = name;
+      document.title = `${name || 'Manager'} — ${L('لوحة المدير', 'Manager')}`;
+      const at = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+      if (at) at.setAttribute('content', name || 'Manager');
+      if (logo) {
+        const ic = document.querySelector('link[rel="icon"]'); if (ic) ic.href = logo;
+        const ap = document.querySelector('link[rel="apple-touch-icon"]'); if (ap) ap.href = logo;
+      }
+    }
+    // show the last known brand instantly (before the network answers)
+    try {
+      const saved = JSON.parse(localStorage.getItem('rs_admin_brand_' + (_slug || 'direct')) || 'null');
+      if (saved) document.addEventListener('DOMContentLoaded', () => _paintBrand(saved.name, saved.logo));
+    } catch (e) {}
 
     // ── 5. ONLINE ORDERS CONTROLLER ──────────────────────────────────────────
     async function loadOnlineOrders() {
@@ -1690,8 +2094,8 @@
     <div style="background:var(--surface);border-radius:20px;max-width:420px;width:100%;padding:22px;box-shadow:0 20px 40px rgba(0,0,0,0.4);border:1px solid var(--border);position:relative;text-align:center">
       <button onclick="closeInstallModal()" style="position:absolute;top:14px;left:14px;background:none;border:none;font-size:1.2rem;color:var(--text-muted);cursor:pointer">✕</button>
       
-      <div style="width:64px;height:64px;border-radius:16px;background:var(--primary-gradient);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 6px 16px rgba(37,99,235,0.3)">
-        <span style="font-size:2rem">🦈</span>
+      <div id="m-inst-logo" style="width:64px;height:64px;border-radius:16px;background:var(--primary-gradient);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 6px 16px rgba(37,99,235,0.3);overflow:hidden">
+        <span style="font-size:2rem">🏪</span>
       </div>
       <h3 style="margin:0 0 6px;font-size:1.15rem;font-weight:900" id="m-inst-title">تثبيت تطبيق المدير على هاتفك</h3>
       <p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 16px;line-height:1.4" id="m-inst-sub">
@@ -1739,7 +2143,7 @@
     <div style="background:var(--surface);border-radius:24px;max-width:390px;width:100%;padding:26px 20px;box-shadow:0 24px 48px rgba(0,0,0,0.5);border:1px solid var(--border);position:relative;text-align:center">
       <button id="btn-close-shop-modal" onclick="closeShopLoginModal()" style="display:none;position:absolute;top:16px;left:16px;background:none;border:none;font-size:1.3rem;color:var(--text-muted);cursor:pointer">✕</button>
       
-      <div style="width:68px;height:68px;border-radius:20px;background:var(--primary-gradient);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 8px 20px rgba(37,99,235,0.35)">
+      <div id="m-shop-logo" style="width:68px;height:68px;border-radius:20px;background:var(--primary-gradient);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 8px 20px rgba(37,99,235,0.35);overflow:hidden">
         <span style="font-size:2.2rem">🏪</span>
       </div>
       
@@ -1761,6 +2165,7 @@
       <button id="btn-submit-shop-login" onclick="submitShopLogin()" style="width:100%;padding:13px;background:var(--primary-gradient);color:#fff;border:none;border-radius:14px;font-size:0.95rem;font-weight:900;cursor:pointer;box-shadow:0 6px 16px rgba(37,99,235,0.3)">
         دخول لوحة الإدارة ⚡
       </button>
+      <div class="rs-powered">Powered by 🦈 Red Shark POS</div>
     </div>
   </div>
 
