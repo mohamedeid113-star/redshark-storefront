@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.121",
-  "build": 209,
+  "version": "1.4.122",
+  "build": 210,
   "releaseDate": "2026-11-15",
-  "description": "Zero-Cost Self-Hosted Storefront & Manager App: Direct-to-Server REST architecture with live Customer QR Code Stand Printing, instant offline/online ordering, and full backward-compatible toggle to Supabase Cloud.",
+  "description": "Header notifications: license / trial expiry warning (7 days), expired and expiring items, low stock, online orders waiting. Manager app: full English labels and shop name on language switch.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
