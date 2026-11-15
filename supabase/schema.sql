@@ -49,6 +49,10 @@ ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS banner_url TEXT;
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS address TEXT;
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS description_ar TEXT;
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS description_en TEXT;
+-- How the shop takes online orders: 'direct' = on its own PC (direct_url), 'cloud' = through this database.
+-- The POS main server fills these in; the cloud store page sends direct-shop customers to direct_url.
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS store_mode TEXT;
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS direct_url TEXT;
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
 ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 

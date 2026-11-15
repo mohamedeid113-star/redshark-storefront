@@ -239,6 +239,9 @@ const Storefront = (() => {
         return;
       }
       localStorage.setItem('rs_last_shop_slug', _tenant.slug || slug);
+      // A shop that takes orders on its own PC (direct mode) never reads cloud orders: send the
+      // customer there, or say it is closed, instead of taking an order nobody will see.
+      if (await handleDirectShop(_tenant, _tenant.slug || slug)) return;
       applyDynamicManifest(_tenant, _tenant.slug || slug);
 
       document.title = `${_tenant.shop_name} — Red Shark Online Store`;
@@ -1253,6 +1256,59 @@ const Storefront = (() => {
   function showLoader(visible) {
     const el = document.getElementById('app-loader');
     if (el) el.style.display = visible ? 'flex' : 'none';
+  }
+
+  // True when this page is the shared cloud store (not already the shop's own server).
+  function isCloudStorePage() {
+    try {
+      const u = new URL(window.location.href);
+      if (u.searchParams.get('server') || u.searchParams.get('api')) return false;
+      const p = window.location.pathname;
+      if (p.includes('/storefront') || p.includes('/shop')) return false;
+      if (window.location.port === '3000' || window.location.port === '3443') return false;
+      return true;
+    } catch (e) { return false; }
+  }
+
+  async function handleDirectShop(tenant, slug) {
+    if (!tenant || tenant.store_mode !== 'direct' || !isCloudStorePage()) return false;
+    const base = String(tenant.direct_url || '').trim().replace(/\/+$/, '');
+    if (base && /^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(base)) {
+      try {
+        const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const timer = ctl ? setTimeout(() => ctl.abort(), 7000) : null;
+        const r = await fetch(`${base}/rest/v1/tenants?select=id`, { mode: 'cors', cache: 'no-store', signal: ctl ? ctl.signal : undefined });
+        if (timer) clearTimeout(timer);
+        if (r.ok) {
+          const q = new URLSearchParams(window.location.search);
+          q.set('shop', slug);
+          window.location.replace(`${base}/storefront/?${q.toString()}`);
+          return true;
+        }
+      } catch (e) { /* PC off, no internet, or address not set up */ }
+    }
+    showLoader(false);
+    renderStoreClosed(tenant);
+    return true;
+  }
+
+  function renderStoreClosed(tenant) {
+    document.title = `${tenant.shop_name || ''} — Red Shark Online Store`;
+    const main = document.getElementById('main-content');
+    const wa = String(tenant.whatsapp_phone || '').replace(/[^0-9]/g, '');
+    const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    if (main) {
+      main.innerHTML = `
+        <div style="grid-column:1/-1;max-width:500px;margin:80px auto;text-align:center;padding:32px 20px;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-md)">
+          <div style="font-size:3.5rem;margin-bottom:12px">🕒</div>
+          <h2 style="font-weight:900;margin-bottom:6px">${esc(tenant.shop_name)}</h2>
+          <h3 style="font-weight:800;margin-bottom:8px">المتجر مغلق حالياً — Store closed right now</h3>
+          <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px">لا يمكن استقبال الطلبات الآن. يرجى المحاولة لاحقاً.<br>Orders cannot be taken right now. Please try again later.</p>
+          <button class="icon-btn" onclick="location.reload()" style="margin:0 auto 10px">🔄 إعادة المحاولة / Try again</button>
+          ${wa ? `<div><a href="https://wa.me/${wa}" target="_blank" rel="noopener" style="font-weight:800;color:#16a34a">💬 WhatsApp</a></div>` : ''}
+        </div>`;
+    }
+    ['mobile-cart-bar', 'cart-fab', 'btn-cart', 'cart-btn'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   }
 
   function renderNotFound(slug) {
