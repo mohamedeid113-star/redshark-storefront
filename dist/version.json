@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.123",
-  "build": 211,
+  "version": "1.4.124",
+  "build": 212,
   "releaseDate": "2026-11-16",
-  "description": "Update fixes: POS shortcut always starts this installation with this PC's browser profile (no more \"requested version is less than existing version\" login error); login works even if the database was opened by a newer copy.",
+  "description": "POS item boxes show the item name again (newer Chrome versions were squeezing the name to zero height), plus the divider, unit and stock line.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
