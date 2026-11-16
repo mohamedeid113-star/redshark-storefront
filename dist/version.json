@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.124",
-  "build": 212,
+  "version": "1.4.125",
+  "build": 213,
   "releaseDate": "2026-11-16",
-  "description": "POS item boxes show the item name again (newer Chrome versions were squeezing the name to zero height), plus the divider, unit and stock line.",
+  "description": "Branch customers: the opening balance (رصيد افتتاحي) now shows on the statement and is no longer reset to 0 when the statement is opened. Customers already affected get their balance back when the statement is opened again.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
