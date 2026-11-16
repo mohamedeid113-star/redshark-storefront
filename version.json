@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.126",
-  "build": 214,
+  "version": "1.4.127",
+  "build": 215,
   "releaseDate": "2026-11-16",
-  "description": "Manager app: shops that sell in LBP now see LBP amounts (not $) with the dollar value underneath; the POS sends its main currency to the manager app.",
+  "description": "Manager app cash drawer now matches the POS Cash Box: same shift and till, 0 when the shift has no cash sale yet (it showed the whole day), updates on shift open/close, cash in/out and opening edits, and never counts card or on-account sales as cash.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
