@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.125",
-  "build": 213,
+  "version": "1.4.126",
+  "build": 214,
   "releaseDate": "2026-11-16",
-  "description": "Branch customers: the opening balance (رصيد افتتاحي) now shows on the statement and is no longer reset to 0 when the statement is opened. Customers already affected get their balance back when the statement is opened again.",
+  "description": "Manager app: shops that sell in LBP now see LBP amounts (not $) with the dollar value underneath; the POS sends its main currency to the manager app.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
