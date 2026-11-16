@@ -1464,6 +1464,7 @@
 
       const [from, to] = _rangeBounds(dateFilter);
       const filtered = _orders.filter(o => {
+        if (String(o.order_status || '').toLowerCase() === 'cancelled') return false; // cancelled / deleted in the POS
         if (_selectedBranch !== 'all') {
           let bMatch = false;
           try {
