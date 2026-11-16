@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.122",
-  "build": 210,
-  "releaseDate": "2026-11-15",
-  "description": "Header notifications: license / trial expiry warning (7 days), expired and expiring items, low stock, online orders waiting. Manager app: full English labels and shop name on language switch.",
+  "version": "1.4.123",
+  "build": 211,
+  "releaseDate": "2026-11-16",
+  "description": "Update fixes: POS shortcut always starts this installation with this PC's browser profile (no more \"requested version is less than existing version\" login error); login works even if the database was opened by a newer copy.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
