@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.127",
-  "build": 215,
+  "version": "1.4.128",
+  "build": 216,
   "releaseDate": "2026-11-16",
-  "description": "Manager app cash drawer now matches the POS Cash Box: same shift and till, 0 when the shift has no cash sale yet (it showed the whole day), updates on shift open/close, cash in/out and opening edits, and never counts card or on-account sales as cash.",
+  "description": "Reports, dashboard, finance and statements use the shop's local day (sales after midnight were counted on the previous day). Deleted invoices are removed from the manager app reports.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
