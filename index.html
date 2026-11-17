@@ -6,8 +6,15 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>Red Shark Storefront</title>
-  
+  <title>Online Store</title>
+  <script>
+    // Chrome offers the one-tap install only once, often before the store script has loaded:
+    // keep the offer here so the "Install App" button can use it any time later.
+    window.__rsInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__rsInstallPrompt = e; });
+    window.addEventListener('appinstalled', function () { window.__rsInstallPrompt = null; });
+  </script>
+
   <meta name="theme-color" content="#09101d">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png" type="image/png">
@@ -29,10 +36,10 @@
   <header class="store-header">
     <div class="header-main-bar">
       <a href="#" class="brand-badge" onclick="Storefront.showCategoriesGrid(); return false;">
-        <div class="brand-logo" id="header-brand-logo">🦈</div>
+        <div class="brand-logo" id="header-brand-logo">🏪</div>
         <div class="brand-info">
-          <h1 id="header-brand-name">Red Shark Store</h1>
-          <span id="app-version-badge" style="font-size:0.7rem;font-weight:900;padding:2px 8px;border-radius:10px;background:#dc2626;color:#fff;margin-inline-start:6px">v26.7</span>
+          <h1 id="header-brand-name"></h1>
+          <span id="app-version-badge" style="display:none">v26.7</span>
         </div>
       </a>
 
@@ -347,6 +354,11 @@
     </div>
   </div>
 
+  <!-- The shop's own store: Red Shark only as a small credit -->
+  <div id="rs-powered-by" style="text-align:center;font-size:0.72rem;color:var(--text-muted);opacity:0.75;padding:18px 12px 96px">
+    Powered by <strong>🦈 Red Shark POS</strong>
+  </div>
+
   <!-- Scripts -->
   <script src="js/supabase-client.js?v=26.0"></script>
   <script src="js/storefront.js?v=26.8"></script>
@@ -359,8 +371,8 @@
       <!-- DOWNLOAD / INSTALL MOBILE APP MODAL -->
   <div id="modal-app-download" class="modal-backdrop" onclick="if(event.target===this) Storefront.closeAppDownloadModal()" style="display:none">
     <div class="modal-sheet" style="max-width:480px;text-align:center">
-      <div style="font-size:3.5rem;margin-bottom:8px">🦈📲</div>
-      <h3 style="font-size:1.35rem;font-weight:900;margin-bottom:6px" id="modal-app-title">تطبيق متجر Red Shark الرسمي</h3>
+      <div style="font-size:3.5rem;margin-bottom:8px">📲</div>
+      <h3 style="font-size:1.35rem;font-weight:900;margin-bottom:6px" id="modal-app-title">تطبيق المتجر</h3>
       <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px" id="modal-app-desc">
         تثبيت تطبيق المتجر مباشرة على هاتفك للطلب السريع، العروض الحصرية وتتبع الطلبات المباشر.
       </p>

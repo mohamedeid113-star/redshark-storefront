@@ -1,5 +1,5 @@
 // Red Shark Storefront – Service Worker v26.5
-const CACHE_NAME = 'rs-storefront-v26.7';
+const CACHE_NAME = 'rs-storefront-v26.8';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -29,32 +29,29 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Serve dynamic Web App Manifest per shop
-  if (url.pathname.endsWith('manifest.json') || url.pathname.endsWith('/manifest.json')) {
-    const shopSlug = url.searchParams.get('shop') || 'bobmarket';
+  // The page passes the shop's own name and logo (name=…&logo=…). Without them, the server's (or
+  // the site's) manifest is used as it is. Scope follows where this worker lives: "/" on the
+  // cloud site, "/storefront/" on a shop's own server.
+  if (url.pathname.endsWith('manifest.json') && url.searchParams.get('name')) {
+    const shopSlug = url.searchParams.get('shop') || '';
+    const shopName = url.searchParams.get('name');
+    const logo = url.searchParams.get('logo') || '';
+    const scope = new URL(self.registration.scope).pathname;
+    const icons = [];
+    if (logo) icons.push({ src: logo, sizes: 'any', purpose: 'any' });
+    icons.push({ src: scope + 'assets/app-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' });
+    icons.push({ src: scope + 'assets/app-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' });
     const dynamicManifest = {
-      name: `${shopSlug} — Red Shark Online Store`,
-      short_name: shopSlug,
-      description: `Order directly from ${shopSlug} store.`,
-      start_url: `/?shop=${encodeURIComponent(shopSlug)}&source=pwa`,
-      scope: `/`,
+      name: shopName,
+      short_name: shopName.length > 15 ? shopName.substring(0, 15) : shopName,
+      description: `Order online from ${shopName}`,
+      start_url: `${scope}?${shopSlug ? 'shop=' + encodeURIComponent(shopSlug) + '&' : ''}source=pwa`,
+      scope: scope,
       display: "standalone",
       background_color: "#09101d",
       theme_color: "#dc2626",
       orientation: "portrait",
-      icons: [
-        {
-          src: "/icons/icon-192.png",
-          sizes: "192x192",
-          type: "image/png",
-          purpose: "any"
-        },
-        {
-          src: "/icons/icon-512.png",
-          sizes: "512x512",
-          type: "image/png",
-          purpose: "any"
-        }
-      ]
+      icons
     };
 
     event.respondWith(

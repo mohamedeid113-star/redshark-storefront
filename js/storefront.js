@@ -186,6 +186,27 @@ const Storefront = (() => {
   }
 
   
+  function isArabicUi() { return (typeof _currentLang !== 'undefined' ? _currentLang : 'ar') === 'ar'; }
+  // Last known shop name / logo per store, painted before the network answers (no Red Shark flash).
+  function _brandCacheKey() { try { return 'rs_store_brand_' + (getShopSlug() || 'default'); } catch (e) { return 'rs_store_brand_default'; } }
+  function _saveBrandCache(tn) {
+    try { if (tn && tn.shop_name) localStorage.setItem(_brandCacheKey(), JSON.stringify({ name: tn.shop_name, logo: tn.logo_url || '' })); } catch (e) {}
+  }
+  function _paintCachedBrand() {
+    try {
+      const b = JSON.parse(localStorage.getItem(_brandCacheKey()) || 'null');
+      if (!b || !b.name) return;
+      document.title = b.name;
+      const nm = document.getElementById('header-brand-name');
+      if (nm && !nm.textContent) nm.textContent = b.name;
+      const lg = document.getElementById('header-brand-logo');
+      if (lg) {
+        if (b.logo) lg.innerHTML = '<img src="' + String(b.logo).replace(/"/g, '&quot;') + '" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:10px;">';
+        else lg.textContent = String(b.name).trim().charAt(0).toUpperCase();
+      }
+    } catch (e) {}
+  }
+
       function applyDynamicManifest(tenant, slug) {
     try {
       const cleanSlug = encodeURIComponent(slug || 'bobmarket');
@@ -195,15 +216,20 @@ const Storefront = (() => {
         link.rel = 'manifest';
         document.head.appendChild(link);
       }
-      link.href = 'manifest.json?shop=' + cleanSlug + '&v=26.7';
+      // The shop's own name and logo go into the installed app (not Red Shark's).
+      let extra = '';
+      if (tenant && tenant.shop_name) extra += '&name=' + encodeURIComponent(tenant.shop_name);
+      if (tenant && tenant.logo_url) extra += '&logo=' + encodeURIComponent(tenant.logo_url);
+      link.href = 'manifest.json?shop=' + cleanSlug + extra + '&v=26.8';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
   }
 
   async function init() {
+    _paintCachedBrand();
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '26.7';
+    const APP_VERSION = '26.8';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -212,7 +238,7 @@ const Storefront = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=26.7').then(reg => {
+      navigator.serviceWorker.register('sw.js?v=26.8').then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -244,7 +270,8 @@ const Storefront = (() => {
       if (await handleDirectShop(_tenant, _tenant.slug || slug)) return;
       applyDynamicManifest(_tenant, _tenant.slug || slug);
 
-      document.title = `${_tenant.shop_name} — Red Shark Online Store`;
+      document.title = _tenant.shop_name || document.title;
+      _saveBrandCache(_tenant);
 
       // 1. Fetch categories and first batch of products in parallel for INSTANT display
       const [cats, initialProds] = await Promise.all([
@@ -347,7 +374,7 @@ const Storefront = (() => {
       if (_tenant.logo_url) {
         brandLogo.innerHTML = `<img src="${_tenant.logo_url}" alt="${_tenant.shop_name}" style="width:100%;height:100%;object-fit:contain;border-radius:10px;">`;
       } else {
-        brandLogo.innerHTML = `<img src="assets/red_shark_icon.png" alt="Red Shark" style="width:100%;height:100%;object-fit:contain;border-radius:10px;">`;
+        brandLogo.textContent = String(_tenant.shop_name || '🏪').trim().charAt(0).toUpperCase();
       }
     }
     if (openStatus) openStatus.textContent = t('openNow');
@@ -1243,9 +1270,11 @@ const Storefront = (() => {
   }
 
   function promptInstallPWA() {
+    if (!_deferredPrompt && window.__rsInstallPrompt) _deferredPrompt = window.__rsInstallPrompt;
     if (_deferredPrompt) {
       _deferredPrompt.prompt();
       _deferredPrompt = null;
+      window.__rsInstallPrompt = null;
     } else {
       alert(_currentLang === 'ar' 
         ? 'لتثبيت التطبيق: اضغط على زر المشاركة أو القائمة (⋮) ثم اختر "إضافة إلى الشاشة الرئيسية"' 
@@ -1346,7 +1375,7 @@ const Storefront = (() => {
     const modal = document.getElementById('modal-app-download');
     if (!modal) return;
 
-    const shopName = (_tenant && _tenant.shop_name) ? _tenant.shop_name : 'Red Shark Store';
+    const shopName = (_tenant && _tenant.shop_name) ? _tenant.shop_name : (isArabicUi() ? 'المتجر' : 'the store');
     const currentUrl = getDirectCurrentUrl();
 
     const titleEl = document.getElementById('modal-app-title');
@@ -1406,11 +1435,12 @@ const Storefront = (() => {
     const inst = document.getElementById('app-install-instructions');
     if (inst) inst.style.display = 'block';
 
-    const promptEvent = _deferredPrompt || _pwaPrompt;
+    const promptEvent = _deferredPrompt || _pwaPrompt || window.__rsInstallPrompt;
     if (promptEvent) {
       try {
         _deferredPrompt = null;
         _pwaPrompt = null;
+        window.__rsInstallPrompt = null;
         promptEvent.prompt();
         if (promptEvent.userChoice) {
           promptEvent.userChoice.then((choice) => {
@@ -1453,8 +1483,8 @@ const Storefront = (() => {
 
     // Android / Desktop fallback: Guide to browser menu install
     alert(isAR
-      ? '📲 لتثبيت التطبيق على هاتفك بنقرة واحدة وبدون أي تحذيرات:\n\n1. اضغط على قائمة المتصفح (⋮) في أعلى أو أسفل الشاشة في Chrome.\n2. اختر "تثبيت التطبيق" (Install app) أو "إضافة إلى الشاشة الرئيسية" (Add to Home screen).\n\nسيتم تثبيت تطبيق Red Shark Store الرسمي فوراً كأيقونة تطبيق كاملة!'
-      : '📲 To install Red Shark Store:\n\n1. Tap the browser menu (⋮) in Chrome.\n2. Tap "Install App" or "Add to Home screen".\n\nThe official Red Shark Store will be installed directly!');
+      ? '📲 لتثبيت التطبيق على هاتفك بنقرة واحدة وبدون أي تحذيرات:\n\n1. اضغط على قائمة المتصفح (⋮) في أعلى أو أسفل الشاشة في Chrome.\n2. اختر "تثبيت التطبيق" (Install app) أو "إضافة إلى الشاشة الرئيسية" (Add to Home screen).'
+      : '📲 To install ' + ((_tenant && _tenant.shop_name) || 'the store') + ':\n\n1. Tap the browser menu (⋮) in Chrome.\n2. Tap "Install App" or "Add to Home screen".');
 
     if (inst) {
       inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
