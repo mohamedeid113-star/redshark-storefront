@@ -220,7 +220,7 @@ const Storefront = (() => {
       let extra = '';
       if (tenant && tenant.shop_name) extra += '&name=' + encodeURIComponent(tenant.shop_name);
       if (tenant && tenant.logo_url) extra += '&logo=' + encodeURIComponent(tenant.logo_url);
-      link.href = 'manifest.json?shop=' + cleanSlug + extra + '&v=26.8';
+      link.href = 'manifest.json?shop=' + cleanSlug + extra + '&v=26.9';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -229,7 +229,7 @@ const Storefront = (() => {
   async function init() {
     _paintCachedBrand();
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '26.8';
+    const APP_VERSION = '26.9';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -237,8 +237,11 @@ const Storefront = (() => {
       }
     }
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=26.8').then(reg => {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if ('serviceWorker' in navigator && !isLocal) {
+      // scope './' = the folder the store is served from ("/" on the cloud site, "/storefront/"
+      // on a shop's own server): the store page must be inside it to be installable.
+      navigator.serviceWorker.register('sw.js?v=26.9', { scope: './' }).then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -268,6 +271,12 @@ const Storefront = (() => {
       // A shop that takes orders on its own PC (direct mode) never reads cloud orders: send the
       // customer there, or say it is closed, instead of taking an order nobody will see.
       if (await handleDirectShop(_tenant, _tenant.slug || slug)) return;
+      // On the shop's own server: when no POS is open there, nobody would see the order.
+      if (_tenant.pos_online === false) {
+        showLoader(false);
+        renderStoreClosed(_tenant);
+        return;
+      }
       applyDynamicManifest(_tenant, _tenant.slug || slug);
 
       document.title = _tenant.shop_name || document.title;
@@ -1322,7 +1331,18 @@ const Storefront = (() => {
   }
 
   function renderStoreClosed(tenant) {
-    document.title = `${tenant.shop_name || ''} — Red Shark Online Store`;
+    document.title = tenant.shop_name || document.title;
+    // keep the shop's own name and logo in the header
+    try {
+      _saveBrandCache(tenant);
+      const nm = document.getElementById('header-brand-name');
+      if (nm && tenant.shop_name) nm.textContent = tenant.shop_name;
+      const lg = document.getElementById('header-brand-logo');
+      if (lg) {
+        if (tenant.logo_url) lg.innerHTML = '<img src="' + String(tenant.logo_url).replace(/"/g, '&quot;') + '" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:10px;">';
+        else if (tenant.shop_name) lg.textContent = String(tenant.shop_name).trim().charAt(0).toUpperCase();
+      }
+    } catch (e) {}
     const main = document.getElementById('main-content');
     const wa = String(tenant.whatsapp_phone || '').replace(/[^0-9]/g, '');
     const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
