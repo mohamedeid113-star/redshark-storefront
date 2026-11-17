@@ -229,7 +229,7 @@ const Storefront = (() => {
   async function init() {
     _paintCachedBrand();
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '26.9';
+    const APP_VERSION = '27.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -529,7 +529,7 @@ const Storefront = (() => {
 
     container.innerHTML = _categories.map(cat => {
       const name = _currentLang === 'ar' ? (cat.name_ar || cat.name) : (cat.name_en || cat.name);
-      const count = _products.filter(p => p.category_id === cat.id).length;
+      const count = _products.filter(p => String(p.category_id) === String(cat.id)).length;
       
       // Auto image selector
       let img = _categoryImages[cat.id] || cat.image_url;
@@ -606,9 +606,9 @@ const Storefront = (() => {
 
     if (prodsView) prodsView.style.display = 'block';
 
-    const cat = _categories.find(c => c.id === catId);
+    const cat = _categories.find(c => String(c.id) === String(catId));
     const catName = cat ? (_currentLang === 'ar' ? (cat.name_ar || cat.name) : (cat.name_en || cat.name)) : t('allProducts');
-    const catCount = cat ? _products.filter(p => p.category_id === catId).length : _products.length;
+    const catCount = cat ? _products.filter(p => String(p.category_id) === String(catId)).length : _products.length;
 
     const vTitle = document.getElementById('current-view-title');
     const vCount = document.getElementById('current-view-count');
@@ -693,19 +693,19 @@ const Storefront = (() => {
     const catGroups = new Map();
     const activeCats = _selectedCategory === 'all' 
       ? _categories 
-      : _categories.filter(c => c.id === _selectedCategory);
+      : _categories.filter(c => String(c.id) === String(_selectedCategory));
 
     activeCats.forEach(cat => {
-      const prodsInCat = filtered.filter(p => p.category_id === cat.id);
+      const prodsInCat = filtered.filter(p => String(p.category_id) === String(cat.id));
       if (prodsInCat.length > 0) {
-        catGroups.set(cat.id, {
+        catGroups.set(String(cat.id), {
           name: _currentLang === 'ar' ? (cat.name_ar || cat.name) : (cat.name_en || cat.name),
           products: prodsInCat
         });
       }
     });
 
-    const uncategorizedProds = filtered.filter(p => !p.category_id || !catGroups.has(p.category_id));
+    const uncategorizedProds = filtered.filter(p => !p.category_id || !catGroups.has(String(p.category_id)));
     if (uncategorizedProds.length > 0 && (_selectedCategory === 'all' || _searchQuery.trim() !== '')) {
       catGroups.set('uncat', {
         name: t('uncategorized') || (_currentLang === 'ar' ? 'أصناف عامة' : 'General Items'),
@@ -798,7 +798,7 @@ const Storefront = (() => {
 
     _categories.forEach(cat => {
       const catName = _currentLang === 'ar' ? (cat.name_ar || cat.name) : (cat.name_en || cat.name);
-      const isActive = _viewMode === 'products' && _selectedCategory === cat.id ? 'active' : '';
+      const isActive = _viewMode === 'products' && String(_selectedCategory) === String(cat.id) ? 'active' : '';
       html += `
         <button class="cat-chip ${isActive}" onclick="Storefront.selectCategory('${cat.id}')">
           <span>${catName}</span>
