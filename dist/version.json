@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.135",
-  "build": 223,
+  "version": "1.4.136",
+  "build": 224,
   "releaseDate": "2026-11-17",
-  "description": "Online store shows the category pictures uploaded in the POS (and the store admin pictures first), and counts every product in its category.",
+  "description": "Faster: after each sale only recent sales are checked (full check hourly); the server reads its database about 3x faster. Item safety: editing an item keeps every field the form does not show and keeps live stock unless you change it; supplier code is saved; online orders and branch syncs no longer overwrite newer item edits; stock transfers match items exactly.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
