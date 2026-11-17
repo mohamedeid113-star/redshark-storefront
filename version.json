@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.132",
-  "build": 220,
+  "version": "1.4.133",
+  "build": 221,
   "releaseDate": "2026-11-17",
-  "description": "Shop name, logo and currency always reach the online store and manager app: kept in their own file, and the server database recovers from a damaged or locked file instead of silently dropping every save.",
+  "description": "Safer server database recovery: a file that is being written at that instant is read again before it is treated as damaged. Shop name, logo and currency always reach the online store and manager app.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
