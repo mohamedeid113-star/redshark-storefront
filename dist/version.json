@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.128",
-  "build": 216,
-  "releaseDate": "2026-11-16",
-  "description": "Reports, dashboard, finance and statements use the shop's local day (sales after midnight were counted on the previous day). Deleted invoices are removed from the manager app reports.",
+  "version": "1.4.129",
+  "build": 217,
+  "releaseDate": "2026-11-17",
+  "description": "Online store shows the shop's own name and logo (Red Shark only as a small Powered by line) and can be installed as an app with one tap on Android.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
