@@ -315,6 +315,26 @@ const Admin = (() => {
     }
   }
 
+  (function attachPinToShopServer() {
+    try {
+      const origFetch = window.fetch.bind(window);
+      window.fetch = function (input, init) {
+        try {
+          const s = getActiveSession();
+          if (s && s.pin) {
+            const url = typeof input === 'string' ? input : (input && input.url) || '';
+            const base = (window.StorefrontAPI && StorefrontAPI.getUrl) ? StorefrontAPI.getUrl() : window.location.origin;
+            if (url.startsWith('/') || url.startsWith(base) || url.startsWith(window.location.origin)) {
+              init = Object.assign({}, init || {});
+              init.headers = Object.assign({}, (init.headers && !(init.headers instanceof Headers)) ? init.headers : {}, { 'x-admin-pin': s.pin });
+            }
+          }
+        } catch (e) { }
+        return origFetch(input, init);
+      };
+    } catch (e) { }
+  })();
+
   function toggleLoginPwdVisibility() {
     const input = document.getElementById('admin-login-pwd');
     if (!input) return;
@@ -345,8 +365,32 @@ const Admin = (() => {
         return;
       }
 
-      // Check tenant password inside banner_url JSON
-      let expectedPwd = '1234';
+      // A shop's own server checks the manager PIN itself (it never sends the PIN to the page).
+      if (tenant.id === 'tenant-local-01') {
+        let ok = false;
+        try {
+          const vr = await fetch(StorefrontAPI.getUrl() + '/api/storefront/verify-admin-pin', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: pwd })
+          });
+          const vj = await vr.json().catch(() => ({}));
+          ok = vr.ok && vj && vj.ok === true;
+        } catch (e) { ok = false; }
+        if (ok) {
+          setActiveSession({ slug: tenant.slug, id: tenant.id, name: tenant.shop_name, pin: pwd });
+          const modal = document.getElementById('admin-pin-modal');
+          if (modal) modal.style.display = 'none';
+          updateHeaderShopBadge(tenant.slug);
+          await loadData();
+        } else {
+          alert(_lang === 'ar' ? '❌ رمز المدير (PIN) غير صحيح' : '❌ Incorrect manager PIN');
+          if (pwdInput) { pwdInput.value = ''; pwdInput.focus(); }
+        }
+        if (btn) btn.disabled = false;
+        return;
+      }
+
+      // Cloud: check tenant password inside banner_url JSON
+      let expectedPwd = '';
       if (tenant.banner_url) {
         try {
           const bObj = typeof tenant.banner_url === 'string' ? JSON.parse(tenant.banner_url) : tenant.banner_url;
@@ -355,7 +399,8 @@ const Admin = (() => {
       }
 
       // Allow either the tenant password OR standard default 1234
-      if (pwd === expectedPwd || pwd === '1234') {
+      // "1234" only while the shop has not set its own password
+      if ((expectedPwd && pwd === expectedPwd) || (!expectedPwd && pwd === '1234')) {
         setActiveSession({
           slug: tenant.slug,
           id: tenant.id,
