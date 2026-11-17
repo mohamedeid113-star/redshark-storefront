@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.130",
-  "build": 218,
+  "version": "1.4.131",
+  "build": 219,
   "releaseDate": "2026-11-17",
-  "description": "Header buttons are reachable on every screen size: on smaller screens (1366, 1280, 1024) Online Orders, Sync and Deliveries were pushed off the edge. Buttons show as icons when space is short and the strip scrolls; the unused Search button is hidden.",
+  "description": "Online store: shows Store closed (and refuses orders) when no POS is open at the shop; the shop name and logo are re-sent to the store and manager app whenever the server lost them (they showed Red Shark Store).",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
