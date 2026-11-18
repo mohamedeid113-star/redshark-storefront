@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.138",
-  "build": 226,
+  "version": "1.4.139",
+  "build": 227,
   "releaseDate": "2026-11-18",
-  "description": "Security: users and settings no longer reachable over the internet. POS refunds now leave the cash drawer; P&L and dashboard profit fixed. Daily automatic backups of all data. Main shop sales in the manager app. Warnings for stopped printing and unpaid cash purchases.",
+  "description": "Fix: refunds on account now lower the customer's debt. Mixed cash+card payments checked. Back-office invoices no longer change the cash box when deleted. Credit limit check. New optional Modern design (Settings > Design).",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
