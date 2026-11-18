@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.140",
-  "build": 228,
+  "version": "1.4.141",
+  "build": 229,
   "releaseDate": "2026-11-18",
-  "description": "Important fix: opening a customer statement no longer changes the customer's balance. Backup now saves all data and restore is safe (checks the file, asks first, all-or-nothing). Repairs on account shown on statements. New layout for the optional Modern design.",
+  "description": "Performance fix: high CPU and memory use. Only one server copy runs now, and background jobs no longer reload the whole database every few seconds.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
