@@ -1000,7 +1000,12 @@
     // BILINGUAL & MULTI-BRANCH SUPERADMIN CONTROLLER
     // ══════════════════════════════════════════════════════════════════════════════
     const SuperAdmin = (() => {
-      const MASTER_HASH = 'redshark2026';
+      // SHA-256 of the master password (the password itself is no longer in the page source).
+      const MASTER_HASH = 'c77935bbc3af73511d9a04150d719cd27117ccc38faa6ebc8b62c99e3df3df03';
+      async function _sha256Hex(text) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
       const SUPABASE_URL = 'https://mcebwpiswvwqcdwjpagy.supabase.co';
       const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg';
 
@@ -1227,12 +1232,14 @@
       }
 
       // ─── MASTER PIN AUTH ──────────────────────────────────────────────────
-      function verifyMasterAuth() {
+      async function verifyMasterAuth() {
         const input = document.getElementById('master-key-input');
         const err = document.getElementById('auth-error-msg');
         const entered = (input?.value || '').trim();
 
-        if (entered === MASTER_HASH) {
+        let enteredHash = '';
+        try { enteredHash = entered ? await _sha256Hex(entered) : ''; } catch (e) { enteredHash = ''; }
+        if (enteredHash && enteredHash === MASTER_HASH) {
           sessionStorage.setItem('rs_master_auth', 'true');
           const modal = document.getElementById('master-auth-modal');
           if (modal) {
