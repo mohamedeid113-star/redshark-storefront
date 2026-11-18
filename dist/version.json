@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.137",
-  "build": 225,
-  "releaseDate": "2026-11-17",
-  "description": "Fix: the server read its database too early at start-up (start-up checks were skipped). Faster sales sync and server, item data protection.",
+  "version": "1.4.138",
+  "build": 226,
+  "releaseDate": "2026-11-18",
+  "description": "Security: users and settings no longer reachable over the internet. POS refunds now leave the cash drawer; P&L and dashboard profit fixed. Daily automatic backups of all data. Main shop sales in the manager app. Warnings for stopped printing and unpaid cash purchases.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
