@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.143",
-  "build": 231,
+  "version": "1.4.144",
+  "build": 232,
   "releaseDate": "2026-11-20",
-  "description": "Status for the RedShark support portal: the app reports its version, licence expiry and last automatic backup. Encrypted backup to RedShark support only when requested. No change to your data.",
+  "description": "Payment: an invoice paid with the exact amount (for example the LBP total shown) could be refused as \"amount tendered is less than total\" and could not be closed. Fixed.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
