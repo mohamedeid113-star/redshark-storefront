@@ -330,6 +330,7 @@
   </header>
 
   <main class="page">
+    <div id="status-notice" class="notice warn hidden" style="margin-bottom:14px"></div>
     <section class="kpis" id="kpis"></section>
 
     <section class="panel">
@@ -454,6 +455,9 @@
       let _backupModalShop = null;
       let _menuEl = null;
       let _lastRefreshAt = null;
+      let _statusRows = [];         // pos_status: one row per POS device (version, licence, backups)
+      let _requests = {};           // pos_backup_requests by slug
+      let _statusError = '';
 
       // ─── Translations ──────────────────────────────────────────────────
       const I18N = {
@@ -525,7 +529,8 @@
           resetDone: 'تم تصفير بيانات المتجر الإلكتروني ({s})',
           deleteConfirm: 'حذف المتجر ({s}) نهائياً من السحاب؟\n\nللتأكيد اكتب المعرّف بالضبط:\n{s}',
           deleteAbort: 'أُلغي الحذف: المعرّف غير مطابق', deleteDone: 'تم حذف المتجر ({s})',
-          loadErr: 'تعذر تحميل البيانات: '
+          loadErr: 'تعذر تحميل البيانات: ',
+          statusMissing: 'جدول حالة الأجهزة (pos_status) غير موجود بعد في Supabase. نفّذ ملف tools/supabase_pos_backups.sql مرة واحدة لتظهر كل المتاجر المتصلة.'
         },
         en: {
           loginSub: 'Cloud shops and connected devices console',
@@ -595,7 +600,8 @@
           resetDone: 'Online-store data of ({s}) reset',
           deleteConfirm: 'Permanently delete shop ({s}) from the cloud?\n\nTo confirm, type the slug exactly:\n{s}',
           deleteAbort: 'Deletion cancelled: slug did not match', deleteDone: 'Shop ({s}) deleted',
-          loadErr: 'Could not load data: '
+          loadErr: 'Could not load data: ',
+          statusMissing: 'The device status table (pos_status) does not exist in Supabase yet. Run tools/supabase_pos_backups.sql once so every connected shop appears.'
         }
       };
       const tr = (k, vars) => {
@@ -683,8 +689,15 @@
 
       function getShopBranches(t) {
         const b = parseBanner(t);
-        const raw = b.connected_branches || b.pos_branches || b.branches || [];
-        if (!Array.isArray(raw)) return [];
+        let raw = b.connected_branches || b.pos_branches || b.branches || [];
+        if (!Array.isArray(raw)) raw = [];
+        // Devices on v1.4.143+ report in pos_status (richer, and never touches the shop's settings).
+        const slug = String(t.slug || '').toLowerCase();
+        const rows = _statusRows.filter(r => String(r.slug || '').toLowerCase() === slug);
+        if (rows.length) {
+          const ids = new Set(rows.map(r => r.node_id));
+          raw = raw.filter(i => !ids.has(i.nodeId)).concat(rows.map(r => Object.assign({}, r.data || {}, { nodeId: r.node_id, lastSeen: r.last_seen, nodeKey: r.node_key })));
+        }
         const now = Date.now();
         return raw.map(item => {
           const lastSeenMs = item.lastSeen ? new Date(item.lastSeen).getTime() : 0;
@@ -756,6 +769,21 @@
         if (el) el.textContent = _latest ? 'v' + _latest.version : '—';
       }
 
+      async function loadStatusTables() {
+        _statusError = '';
+        try {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/pos_status?select=*`, { headers: headers() });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          _statusRows = await r.json();
+        } catch (e) { _statusRows = []; _statusError = e.message; }
+        try {
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/pos_backup_requests?select=*`, { headers: headers() });
+          const map = {};
+          if (r.ok) for (const q of await r.json()) map[String(q.slug || '').toLowerCase()] = q;
+          _requests = map;
+        } catch (e) { }
+      }
+
       async function loadShops() {
         const btn = document.getElementById('btn-refresh');
         if (btn) btn.querySelector('i').classList.add('fa-spin');
@@ -764,6 +792,7 @@
           const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants?select=*&order=created_at.desc`, { headers: headers() });
           if (!resp.ok) throw new Error('HTTP ' + resp.status);
           _allTenants = await resp.json();
+          await loadStatusTables();
           _rows = _allTenants.map(summarize);
           _lastRefreshAt = new Date();
           showLastRefresh();
@@ -796,6 +825,8 @@
 
       function renderAll() {
         showLastRefresh();
+        const sn = document.getElementById('status-notice');
+        if (sn) { sn.textContent = _statusError ? tr('statusMissing') : ''; sn.classList.toggle('hidden', !_statusError); }
         _rows = _allTenants.map(summarize);
         renderKpis();
         renderFilters();
@@ -1086,6 +1117,7 @@
           if (Array.isArray(b.connected_branches)) b.connected_branches = b.connected_branches.filter(i => i.nodeId !== nodeId);
           if (Array.isArray(b.pos_branches)) b.pos_branches = b.pos_branches.filter(i => i.nodeId !== nodeId);
           await patchBanner(shopId, b);
+          await fetch(`${SUPABASE_URL}/rest/v1/pos_status?slug=eq.${encodeURIComponent(shopSlug(shopId))}&node_id=eq.${encodeURIComponent(nodeId)}`, { method: 'DELETE', headers: headers() }).catch(() => { });
           toast(tr('nodeRemoved'));
           await loadShops();
           openBranchesModal(shopId);
@@ -1120,12 +1152,14 @@
       // ─── Backup modal ──────────────────────────────────────────────────
       let _cloudList = { shopId: null, items: null, error: null };
 
+      const shopSlug = (shopId) => String((_allTenants.find(x => x.id === shopId) || {}).slug || '').toLowerCase();
+
       async function loadCloudList(shopId) {
         _cloudList = { shopId, items: null, error: null };
         try {
           const r = await fetch(`${SUPABASE_URL}/storage/v1/object/list/${BACKUP_BUCKET}`, {
             method: 'POST', headers: headers({ 'Content-Type': 'application/json' }),
-            body: JSON.stringify({ prefix: shopId, limit: 100, offset: 0, sortBy: { column: 'name', order: 'desc' } })
+            body: JSON.stringify({ prefix: shopSlug(shopId), limit: 100, offset: 0, sortBy: { column: 'name', order: 'desc' } })
           });
           if (!r.ok) throw new Error(r.status === 400 || r.status === 404 ? 'storage-missing' : 'HTTP ' + r.status);
           const items = (await r.json()).filter(i => i && i.name && /\.rsbk$/.test(i.name));
@@ -1157,7 +1191,8 @@
       }
 
       function backupRequestState(r) {
-        const req = r.banner.backup_request;
+        const q0 = _requests[String(r.t.slug || '').toLowerCase()];
+        const req = q0 ? { id: q0.req_id, at: q0.at } : null;
         if (!req || !req.id) return null;
         const done = r.devices.some(d => d.cloudBackup && d.cloudBackup.last && d.cloudBackup.last.req === req.id);
         const preparing = r.devices.some(d => d.cloudBackup && d.cloudBackup.pendingReq === req.id);
@@ -1250,9 +1285,13 @@
 
       async function requestBackup(shopId) {
         try {
-          const b = parseBanner(await fetchTenant(shopId));
-          b.backup_request = { id: 'REQ-' + Date.now().toString(36).toUpperCase(), at: new Date().toISOString() };
-          await patchBanner(shopId, b);
+          const t = _allTenants.find(x => x.id === shopId);
+          const r = await fetch(`${SUPABASE_URL}/rest/v1/pos_backup_requests?on_conflict=slug`, {
+            method: 'POST',
+            headers: headers({ 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+            body: JSON.stringify({ slug: String(t.slug || '').toLowerCase(), req_id: 'REQ-' + Date.now().toString(36).toUpperCase(), at: new Date().toISOString() })
+          });
+          if (!r.ok) throw new Error(await r.text());
           toast(tr('bkRequested'));
           await loadShops();
           if (_backupModalShop === shopId) renderBackupModal();
@@ -1270,7 +1309,7 @@
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>${esc(tr('bkDecrypting'))}</span>`;
         try {
-          const r = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/${BACKUP_BUCKET}/${encodeURIComponent(shopId)}/${encodeURIComponent(name)}`, { headers: headers() });
+          const r = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/${BACKUP_BUCKET}/${encodeURIComponent(shopSlug(shopId))}/${encodeURIComponent(name)}`, { headers: headers() });
           if (!r.ok) throw new Error('HTTP ' + r.status);
           const json = await decryptBackup(await r.arrayBuffer());
           const t = _allTenants.find(x => x.id === shopId);
@@ -1406,7 +1445,6 @@
             last_change_time: new Date().toISOString(),
             connected_branches: bannerObj.connected_branches || []
           };
-          if (bannerObj.backup_request) cleanBanner.backup_request = bannerObj.backup_request;
           await patchBanner(shopId, cleanBanner);
           toast(tr('resetDone', { s: slug }));
           await loadShops();
