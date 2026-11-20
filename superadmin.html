@@ -3,1651 +3,1300 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RedShark POS & Cloud — SuperAdmin Master Portal</title>
-  
-  <!-- Fonts -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>RedShark Master Portal</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/storefront.css">
 
+  <!-- Owner-only console. All styles are in this file: nothing here changes the customer store pages. -->
   <style>
     :root {
-      --bg-base: #07090e;
-      --bg-surface: #0e131f;
-      --bg-surface-elevated: #151d2f;
-      --bg-surface-glass: rgba(14, 19, 31, 0.85);
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --border-strong: rgba(255, 255, 255, 0.16);
-      
-      --brand-red: #ef4444;
-      --brand-emerald: #10b981;
-      --brand-cyan: #06b6d4;
-      --brand-indigo: #6366f1;
-      --brand-amber: #f59e0b;
-      
-      --text-main: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      
-      --font-ar: 'Cairo', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      --font-en: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
+      --bg: #0a0e16;
+      --surface: #10161f;
+      --surface-2: #151c28;
+      --surface-3: #1b2433;
+      --line: rgba(148, 163, 184, 0.12);
+      --line-strong: rgba(148, 163, 184, 0.24);
+      --text: #e7ebf3;
+      --text-2: #a3adbf;
+      --muted: #6f7a8e;
+      --brand: #ef4444;
+      --brand-2: #b91c1c;
+      --accent: #7c8cff;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --bad: #f43f5e;
+      --info: #38bdf8;
+      --radius: 14px;
+      --font-ar: 'Cairo', 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-en: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, monospace;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg); }
     body {
-      background: var(--bg-base);
-      color: var(--text-main);
+      color: var(--text);
       font-family: var(--font-ar);
-      min-height: 100vh;
+      font-size: 14px;
       line-height: 1.5;
-      overflow-x: hidden;
-      background-image: 
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
-        radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05), transparent 40%);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
+    html[dir="ltr"] body { font-family: var(--font-en); }
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .mono { font-family: var(--mono); }
+    .muted { color: var(--muted); }
+    .hidden { display: none !important; }
 
-    html[dir="ltr"] body {
-      font-family: var(--font-en);
+    /* ─── Top bar ─────────────────────────────────────────────────────────── */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; gap: 16px;
+      padding: 12px 24px;
+      background: rgba(10, 14, 22, 0.86);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
     }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+      display: grid; place-items: center; color: #fff; font-size: 1.05rem;
+      background: linear-gradient(140deg, var(--brand), var(--brand-2));
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.28);
+    }
+    .brand h1 { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; }
+    .brand p { font-size: 0.74rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-search { flex: 1; max-width: 460px; margin-inline-start: auto; position: relative; }
+    .topbar-search i { position: absolute; top: 50%; transform: translateY(-50%); inset-inline-start: 13px; color: var(--muted); font-size: 0.85rem; }
+    .topbar-search input {
+      width: 100%; height: 38px; border-radius: 10px;
+      background: var(--surface); border: 1px solid var(--line);
+      padding-inline: 38px 12px; font-size: 0.86rem; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .topbar-search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.18); }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
 
-    /* ─── Top Navbar ───────────────────────────────────────────────────────── */
-    .master-nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      background: var(--bg-surface-glass);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 14px 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
+    .btn {
+      height: 38px; padding: 0 14px; border-radius: 10px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 0.84rem; font-weight: 700; white-space: nowrap;
+      background: var(--surface); border: 1px solid var(--line); color: var(--text);
+      transition: background .15s, border-color .15s, transform .1s;
     }
+    .btn:hover { background: var(--surface-3); border-color: var(--line-strong); }
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(140deg, var(--brand), #dc2626); border-color: transparent; color: #fff; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25); }
+    .btn-primary:hover { background: linear-gradient(140deg, #f05252, #e02424); border-color: transparent; }
+    .btn-sm { height: 30px; padding: 0 10px; font-size: 0.78rem; border-radius: 8px; gap: 6px; }
+    .btn-icon { width: 30px; padding: 0; }
+    .btn-ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+    .btn-ghost:hover { background: var(--surface-3); color: var(--text); }
+    .btn-danger { color: #fda4af; border-color: rgba(244, 63, 94, 0.3); background: rgba(244, 63, 94, 0.08); }
+    .btn-danger:hover { background: rgba(244, 63, 94, 0.16); border-color: rgba(244, 63, 94, 0.45); }
+    .btn-accent { color: #c7d0ff; border-color: rgba(124, 140, 255, 0.32); background: rgba(124, 140, 255, 0.1); }
+    .btn-accent:hover { background: rgba(124, 140, 255, 0.18); border-color: rgba(124, 140, 255, 0.5); }
 
-    .brand-group {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
+    /* ─── Page ────────────────────────────────────────────────────────────── */
+    .page { max-width: 1520px; margin: 0 auto; padding: 22px 24px 60px; }
 
-    .brand-logo-badge {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+    .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .kpi {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 16px 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+      cursor: pointer; transition: border-color .15s, background .15s;
     }
+    .kpi:hover { border-color: var(--line-strong); background: var(--surface-2); }
+    .kpi.active { border-color: rgba(124, 140, 255, 0.5); background: var(--surface-2); }
+    .kpi-label { font-size: 0.76rem; font-weight: 700; color: var(--text-2); }
+    .kpi-value { font-family: var(--font-en); font-size: 1.75rem; font-weight: 800; line-height: 1.15; margin-top: 4px; letter-spacing: -0.02em; }
+    .kpi-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .kpi-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; font-size: 0.95rem; }
+    .tone-ok { color: var(--ok); } .tone-warn { color: var(--warn); } .tone-bad { color: var(--bad); } .tone-info { color: var(--info); } .tone-accent { color: var(--accent); }
+    .bg-ok { background: rgba(34, 197, 94, 0.12); } .bg-warn { background: rgba(245, 158, 11, 0.12); } .bg-bad { background: rgba(244, 63, 94, 0.12); } .bg-info { background: rgba(56, 189, 248, 0.12); } .bg-accent { background: rgba(124, 140, 255, 0.13); }
 
-    .brand-titles h1 {
-      font-size: 1.15rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    .segmented { display: flex; gap: 4px; flex-wrap: wrap; }
+    .seg {
+      height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid transparent; background: transparent;
+      color: var(--text-2); font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 7px;
     }
+    .seg:hover { background: var(--surface-3); color: var(--text); }
+    .seg.active { background: var(--surface-3); border-color: var(--line-strong); color: var(--text); }
+    .seg .count { font-family: var(--font-en); font-size: 0.7rem; padding: 0 6px; border-radius: 99px; background: rgba(148, 163, 184, 0.14); color: var(--text-2); }
+    .panel-meta { font-size: 0.76rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 
-    .brand-titles p {
-      font-size: 0.76rem;
-      color: var(--text-secondary);
-      font-weight: 500;
+    /* ─── Shops table ─────────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table.shops { width: 100%; border-collapse: collapse; }
+    .shops th {
+      text-align: start; font-size: 0.72rem; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--surface);
     }
+    .shops td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    .shops tbody tr:last-child td { border-bottom: 0; }
+    .shops tbody tr:hover td { background: rgba(148, 163, 184, 0.035); }
+    .shops tr.is-inactive td:first-child { opacity: .65; }
 
-    .master-tag {
-      background: rgba(99, 102, 241, 0.15);
-      color: #a5b4fc;
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .shop-cell { display: flex; align-items: center; gap: 12px; min-width: 220px; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center;
+      font-weight: 800; font-size: 0.95rem; color: #fff; font-family: var(--font-en);
     }
+    .shop-name { font-weight: 800; font-size: 0.92rem; line-height: 1.3; }
+    .shop-sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px; font-size: 0.74rem; color: var(--muted); }
+    .slug { font-family: var(--mono); font-size: 0.74rem; color: #7dd3fc; }
+    .pwd { display: inline-flex; align-items: center; gap: 2px; font-family: var(--mono); font-size: 0.74rem; color: var(--text-2); }
+    .pwd button { border: 0; background: transparent; color: var(--muted); padding: 1px 4px; border-radius: 4px; font-size: 0.72rem; }
+    .pwd button:hover { color: var(--text); background: var(--surface-3); }
 
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+      height: 24px; padding: 0 9px; border-radius: 99px; font-size: 0.74rem; font-weight: 700;
+      border: 1px solid transparent; background: rgba(148, 163, 184, 0.1); color: var(--text-2);
     }
+    .chip.ok { background: rgba(34, 197, 94, 0.1); color: #86efac; border-color: rgba(34, 197, 94, 0.22); }
+    .chip.warn { background: rgba(245, 158, 11, 0.1); color: #fcd34d; border-color: rgba(245, 158, 11, 0.24); }
+    .chip.bad { background: rgba(244, 63, 94, 0.1); color: #fda4af; border-color: rgba(244, 63, 94, 0.26); }
+    .chip.info { background: rgba(56, 189, 248, 0.1); color: #7dd3fc; border-color: rgba(56, 189, 248, 0.24); }
+    .chip.none { background: transparent; color: var(--muted); border-color: var(--line); }
+    button.chip { cursor: pointer; }
+    button.chip:hover { filter: brightness(1.15); }
+    .cell-stack { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+    .cell-note { font-size: 0.71rem; color: var(--muted); white-space: nowrap; }
 
-    /* Modern Lang Switcher */
-    .lang-toggle-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-main);
-      padding: 7px 14px;
-      border-radius: 10px;
-      font-size: 0.84rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-    .lang-toggle-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--border-strong);
-    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .dot.live { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); animation: live 1.8s infinite; }
+    @keyframes live { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
 
-    .btn-create-shop {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      color: #fff;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 10px;
-      font-size: 0.88rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-      transition: all 0.2s;
-    }
-    .btn-create-shop:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45);
-    }
+    .row-actions { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
 
-    /* ─── Main Content Container ───────────────────────────────────────────── */
-    .super-container {
-      max-width: 1480px;
-      margin: 0 auto;
-      padding: 24px 28px 60px;
-    }
+    .empty-state { text-align: center; padding: 56px 16px; color: var(--muted); }
+    .empty-state i { font-size: 1.8rem; display: block; margin-bottom: 10px; opacity: .7; }
 
-    /* ─── Metric Cards ─────────────────────────────────────────────────────── */
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 18px;
-      margin-bottom: 28px;
+    /* ─── Row menu (fixed, so the table never clips it) ───────────────────── */
+    .menu {
+      position: fixed; z-index: 400; min-width: 210px; padding: 6px;
+      background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 12px;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
     }
+    .menu button, .menu a {
+      width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+      border: 0; background: transparent; font-size: 0.83rem; font-weight: 600; color: var(--text); text-align: start;
+    }
+    .menu button:hover, .menu a:hover { background: var(--surface-3); }
+    .menu i { width: 16px; text-align: center; color: var(--text-2); }
+    .menu .sep { height: 1px; background: var(--line); margin: 5px 4px; }
+    .menu .danger, .menu .danger i { color: #fda4af; }
 
-    .metric-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 20px 22px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
+    /* ─── Modals ──────────────────────────────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; z-index: 300; display: none; align-items: center; justify-content: center; padding: 16px;
+      background: rgba(3, 6, 12, 0.74); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
     }
-    .metric-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--card-glow, #6366f1), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
+    .overlay.open { display: flex; }
+    .modal {
+      width: 100%; max-width: 640px; max-height: calc(100vh - 32px); display: flex; flex-direction: column;
+      background: var(--surface); border: 1px solid var(--line-strong); border-radius: 18px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); animation: pop .18s ease-out;
     }
-    .metric-card:hover {
-      transform: translateY(-3px);
-      border-color: var(--border-strong);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-    }
-    .metric-card:hover::before {
-      opacity: 1;
-    }
+    .modal.wide { max-width: 860px; }
+    @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: none; } }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+    .modal-head h3 { font-size: 1.02rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .modal-body { padding: 18px 20px; overflow-y: auto; }
+    .modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); }
 
-    .metric-info h3 {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 6px;
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+    .input {
+      width: 100%; height: 40px; border-radius: 10px; padding: 0 12px; outline: none;
+      background: var(--bg); border: 1px solid var(--line); font-size: 0.88rem;
+      transition: border-color .15s, box-shadow .15s;
     }
-    .metric-info .metric-num {
-      font-size: 2rem;
-      font-weight: 900;
-      font-family: var(--font-en);
-      color: #fff;
-      line-height: 1;
-    }
-    .metric-info p {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 6px;
-    }
+    .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.18); }
+    .input:disabled { opacity: .55; }
+    .hint { font-size: 0.72rem; color: var(--muted); margin-top: 5px; }
 
-    .metric-icon-box {
-      width: 52px;
-      height: 52px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-    }
+    .section-title { font-size: 0.78rem; font-weight: 800; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
+    .section-title:first-child { margin-top: 0; }
+    .info-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+    .notice { padding: 12px 14px; border-radius: 12px; font-size: 0.84rem; line-height: 1.6; border: 1px solid var(--line); background: var(--surface-2); color: var(--text-2); }
+    .notice.warn { border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.07); color: #fde68a; }
+    .notice.bad { border-color: rgba(244, 63, 94, 0.3); background: rgba(244, 63, 94, 0.07); color: #fecdd3; }
+    .notice.ok { border-color: rgba(34, 197, 94, 0.3); background: rgba(34, 197, 94, 0.07); color: #bbf7d0; }
 
-    /* ─── Control Bar (Search & Quick Filters) ──────────────────────────────── */
-    .controls-panel {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 16px 20px;
-      margin-bottom: 22px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
+    .list { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .list-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--surface); }
+    .list-row:last-child { border-bottom: 0; }
+    .list-row .title { font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .list-row .meta { font-size: 0.75rem; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 3px; }
 
-    .search-box-wrapper {
-      position: relative;
-      flex: 1;
-      min-width: 280px;
-      max-width: 480px;
+    /* ─── Login ───────────────────────────────────────────────────────────── */
+    .login {
+      position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center; padding: 16px;
+      background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(239, 68, 68, 0.12), transparent 70%), var(--bg);
     }
-    .search-box-wrapper i {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-    html[dir="rtl"] .search-box-wrapper i {
-      right: 14px;
-    }
-    html[dir="ltr"] .search-box-wrapper i {
-      left: 14px;
-    }
+    .login-card { width: 100%; max-width: 400px; padding: 32px 28px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line-strong); text-align: center; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5); }
+    .login-card .brand-mark { width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 16px; font-size: 1.5rem; }
+    .login-card h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
+    .login-card p { font-size: 0.84rem; color: var(--text-2); margin-bottom: 22px; }
+    .login-card .input { height: 46px; text-align: center; font-family: var(--mono); letter-spacing: .15em; font-size: 1.05rem; }
+    .login-row { display: flex; gap: 8px; margin-top: 12px; }
+    .login-row .btn { height: 44px; }
+    .login-err { color: #fda4af; font-size: 0.82rem; font-weight: 700; margin-top: 12px; min-height: 1.2em; }
 
-    .search-input {
-      width: 100%;
-      background: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      color: #fff;
-      border-radius: 10px;
-      padding: 10px 16px;
-      font-size: 0.9rem;
-      transition: all 0.2s;
+    .toast {
+      position: fixed; z-index: 600; bottom: 20px; inset-inline-start: 50%; transform: translateX(-50%);
+      background: var(--surface-3); border: 1px solid var(--line-strong); color: var(--text);
+      padding: 10px 16px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
     }
-    html[dir="rtl"] .search-input {
-      padding-right: 42px;
-    }
-    html[dir="ltr"] .search-input {
-      padding-left: 42px;
-    }
-    .search-input:focus {
-      outline: none;
-      border-color: var(--brand-indigo);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-    }
+    html[dir="rtl"] .toast { transform: translateX(50%); }
 
-    .filter-chips {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+    /* ─── Responsive ──────────────────────────────────────────────────────── */
+    @media (max-width: 1200px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 900px) {
+      .topbar { flex-wrap: wrap; padding: 10px 16px; }
+      .topbar-search { order: 3; flex-basis: 100%; max-width: none; margin: 0; }
+      .topbar-actions { margin-inline-start: auto; }
+      .topbar-actions .btn span { display: none; }
+      .page { padding: 16px 16px 48px; }
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .kpi { padding: 12px 14px; }
+      .kpi-value { font-size: 1.4rem; }
+      .kpi:last-child:nth-child(odd) { grid-column: 1 / -1; }
+      .segmented { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+      .segmented::-webkit-scrollbar { display: none; }
+      .seg { flex-shrink: 0; }
+      .shops thead { display: none; }
+      .shops, .shops tbody, .shops tr, .shops td { display: block; width: 100%; }
+      .shops tr { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+      .shops tbody tr:last-child { border-bottom: 0; }
+      .shops td { border: 0; padding: 5px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .shops td::before { content: attr(data-label); font-size: 0.72rem; font-weight: 700; color: var(--muted); }
+      .shops td.td-shop::before, .shops td.td-actions::before { display: none; }
+      .shops td.td-shop { padding-bottom: 8px; }
+      .cell-stack { align-items: flex-end; }
+      .row-actions { justify-content: flex-start; padding-top: 6px; }
+      .form-grid { grid-template-columns: 1fr; }
     }
-
-    .filter-chip {
-      background: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-secondary);
-      padding: 6px 14px;
-      border-radius: 9999px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-    }
-    .filter-chip:hover {
-      background: rgba(255, 255, 255, 0.06);
-      color: #fff;
-    }
-    .filter-chip.active {
-      background: rgba(99, 102, 241, 0.18);
-      color: #a5b4fc;
-      border-color: rgba(99, 102, 241, 0.4);
-    }
-
-    /* ─── Table Container & Styling ────────────────────────────────────────── */
-    .table-container {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-    }
-
-    .shops-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      text-align: start;
-    }
-
-    .shops-table th {
-      background: #111827;
-      color: var(--text-secondary);
-      font-size: 0.78rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--border-subtle);
-      white-space: nowrap;
-    }
-
-    .shops-table td {
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--border-subtle);
-      vertical-align: middle;
-      font-size: 0.88rem;
-    }
-
-    .shops-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .shops-table tbody tr {
-      transition: background 0.15s;
-    }
-    .shops-table tbody tr:hover {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    /* Slug Pill */
-    .slug-badge {
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      font-weight: 600;
-      background: rgba(6, 182, 212, 0.1);
-      color: #38bdf8;
-      border: 1px solid rgba(6, 182, 212, 0.25);
-      padding: 4px 10px;
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* Password Box */
-    .pwd-cell-box {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 4px 8px;
-    }
-    .pwd-text {
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      color: #e2e8f0;
-      min-width: 50px;
-    }
-    .pwd-action-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 0.8rem;
-      padding: 2px 4px;
-      border-radius: 4px;
-      transition: color 0.15s;
-    }
-    .pwd-action-btn:hover {
-      color: #fff;
-    }
-
-    /* ─── Branches Presence Badge ─────────────────────────────────────────── */
-    .branch-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid transparent;
-      text-align: start;
-    }
-
-    .branch-pill.online {
-      background: rgba(16, 185, 129, 0.12);
-      border-color: rgba(16, 185, 129, 0.35);
-      color: #34d399;
-    }
-    .branch-pill.online:hover {
-      background: rgba(16, 185, 129, 0.2);
-      transform: translateY(-1px);
-    }
-
-    .branch-pill.offline {
-      background: rgba(245, 158, 11, 0.12);
-      border-color: rgba(245, 158, 11, 0.3);
-      color: #fbbf24;
-    }
-    .branch-pill.offline:hover {
-      background: rgba(245, 158, 11, 0.2);
-      transform: translateY(-1px);
-    }
-
-    .branch-pill.empty {
-      background: rgba(255, 255, 255, 0.03);
-      border-color: rgba(255, 255, 255, 0.08);
-      color: var(--text-muted);
-      cursor: default;
-    }
-
-    .live-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      display: inline-block;
-      flex-shrink: 0;
-      position: relative;
-    }
-    .live-dot.green {
-      background: #10b981;
-      box-shadow: 0 0 10px #10b981;
-    }
-    .live-dot.green::after {
-      content: '';
-      position: absolute;
-      inset: -3px;
-      border-radius: 50%;
-      border: 2px solid #10b981;
-      opacity: 0.7;
-      animation: pulse-ring 1.8s infinite;
-    }
-    .live-dot.amber {
-      background: #f59e0b;
-    }
-    .live-dot.gray {
-      background: #64748b;
-    }
-
-    @keyframes pulse-ring {
-      0% { transform: scale(0.8); opacity: 0.8; }
-      100% { transform: scale(2.2); opacity: 0; }
-    }
-
-    /* Action Buttons Group */
-    .actions-cluster {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .btn-action-pro {
-      padding: 6px 11px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      text-decoration: none;
-      transition: all 0.2s;
-      border: 1px solid transparent;
-    }
-    .btn-action-pro:hover {
-      transform: translateY(-1px);
-    }
-
-    .btn-store {
-      background: rgba(56, 189, 248, 0.12);
-      color: #38bdf8;
-      border-color: rgba(56, 189, 248, 0.25);
-    }
-    .btn-store:hover {
-      background: rgba(56, 189, 248, 0.22);
-    }
-
-    .btn-admin {
-      background: rgba(245, 158, 11, 0.12);
-      color: #fbbf24;
-      border-color: rgba(245, 158, 11, 0.25);
-    }
-    .btn-admin:hover {
-      background: rgba(245, 158, 11, 0.22);
-    }
-
-    .btn-edit {
-      background: rgba(255, 255, 255, 0.05);
-      color: #e2e8f0;
-      border-color: var(--border-subtle);
-    }
-    .btn-edit:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: #fff;
-    }
-
-    .btn-reset {
-      background: rgba(249, 115, 22, 0.12);
-      color: #fb923c;
-      border-color: rgba(249, 115, 22, 0.25);
-    }
-    .btn-reset:hover {
-      background: rgba(249, 115, 22, 0.22);
-    }
-
-    .btn-danger {
-      background: rgba(239, 68, 68, 0.12);
-      color: #f87171;
-      border-color: rgba(239, 68, 68, 0.25);
-    }
-    .btn-danger:hover {
-      background: rgba(239, 68, 68, 0.25);
-    }
-
-    /* ─── Modern Glass Modals ──────────────────────────────────────────────── */
-    .pro-modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(3, 7, 18, 0.88);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      z-index: 1000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .pro-modal-box {
-      background: var(--bg-surface-elevated);
-      border: 1px solid var(--border-strong);
-      border-radius: 20px;
-      width: 100%;
-      max-width: 620px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-      animation: modal-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-      overflow: hidden;
-    }
-
-    @keyframes modal-enter {
-      from { opacity: 0; transform: scale(0.96) translateY(10px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    .modal-head {
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(255, 255, 255, 0.02);
-    }
-    .modal-head h3 {
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .btn-close-modal {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.2rem;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 8px;
-      transition: all 0.15s;
-    }
-    .btn-close-modal:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .modal-body {
-      padding: 24px;
-      max-height: 75vh;
-      overflow-y: auto;
-    }
-
-    .form-group-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-    .form-group-full {
-      grid-column: 1 / -1;
-    }
-
-    .input-label {
-      display: block;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-    }
-    .pro-input {
-      width: 100%;
-      background: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      color: #fff;
-      padding: 10px 14px;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-    }
-    .pro-input:focus {
-      outline: none;
-      border-color: var(--brand-indigo);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-    }
-    .pro-input:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .modal-footer {
-      padding: 16px 24px;
-      border-top: 1px solid var(--border-subtle);
-      background: rgba(0, 0, 0, 0.2);
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-
-    /* Branch Detail Node Card */
-    .branch-node-card {
-      background: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      transition: border-color 0.2s;
-    }
-    .branch-node-card:hover {
-      border-color: var(--border-strong);
-    }
-
-    .node-meta h4 {
-      font-size: 0.96rem;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .node-meta p {
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    /* Master Auth Overlay */
-    .auth-card {
-      background: var(--bg-surface-elevated);
-      border: 1px solid var(--border-strong);
-      border-radius: 24px;
-      padding: 36px 32px;
-      width: 100%;
-      max-width: 440px;
-      text-align: center;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
-      position: relative;
-    }
+    @media (max-width: 420px) { .kpis { grid-template-columns: 1fr 1fr; } .brand p { display: none; } }
   </style>
 </head>
 <body>
 
-  <!-- MASTER AUTH MODAL -->
-  <div id="master-auth-modal" class="pro-modal-overlay" style="display:flex">
-    <div class="auth-card">
-      <div style="width:68px;height:68px;margin:0 auto 18px;border-radius:20px;background:linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);display:flex;align-items:center;justify-content:center;font-size:1.9rem;color:#fff;box-shadow:0 8px 24px rgba(239, 68, 68, 0.4)">
-        <i class="fa-solid fa-shield-halved"></i>
+  <!-- LOGIN -->
+  <div id="login" class="login">
+    <div class="login-card">
+      <div class="brand-mark"><i class="fa-solid fa-shield-halved"></i></div>
+      <h2 id="t-login-title">RedShark Master Portal</h2>
+      <p id="t-login-sub"></p>
+      <input type="password" id="master-key-input" class="input" placeholder="••••••••••" autocomplete="current-password">
+      <div class="login-row">
+        <button type="button" class="btn" style="flex:1" onclick="SuperAdmin.toggleLanguage()"><i class="fa-solid fa-globe"></i><span class="t-lang"></span></button>
+        <button type="button" id="auth-submit-btn" class="btn btn-primary" style="flex:2" onclick="SuperAdmin.verifyMasterAuth()"><i class="fa-solid fa-lock-open"></i><span id="t-login-btn"></span></button>
       </div>
-      <h2 id="auth-title" style="font-size:1.4rem;font-weight:900;margin-bottom:8px">RedShark Master Portal</h2>
-      <p id="auth-subtitle" style="color:var(--text-secondary);font-size:0.86rem;margin-bottom:24px">
-        منظومة إدارة المتاجر المركزية وشبكة الفروع المتصلة عبر السحاب.
-      </p>
-
-      <div style="margin-bottom:20px;position:relative">
-        <input type="password" id="master-key-input" class="pro-input" placeholder="••••••••••••" style="text-align:center;font-size:1.2rem;letter-spacing:0.2em;font-family:var(--font-mono);padding:12px">
-      </div>
-
-      <div style="display:flex;gap:10px">
-        <button type="button" class="lang-toggle-btn" onclick="SuperAdmin.toggleLanguage()" style="flex:1;justify-content:center">
-          <i class="fa-solid fa-globe"></i>
-          <span id="auth-lang-label">English</span>
-        </button>
-        <button type="button" id="auth-submit-btn" class="btn-create-shop" onclick="SuperAdmin.verifyMasterAuth()" style="flex:2;justify-content:center;padding:12px">
-          <i class="fa-solid fa-lock-open"></i>
-          <span id="auth-btn-text">دخول لوحة التحكم</span>
-        </button>
-      </div>
-      <div id="auth-error-msg" style="color:var(--brand-red);font-size:0.82rem;font-weight:700;margin-top:14px;display:none">
-        رمز الدخول الرئيسي غير صحيح
-      </div>
+      <div id="auth-error-msg" class="login-err"></div>
     </div>
   </div>
 
-  <!-- TOP NAVBAR -->
-  <header class="master-nav">
-    <div class="brand-group">
-      <div class="brand-logo-badge">
-        <i class="fa-solid fa-network-wired"></i>
-      </div>
-      <div class="brand-titles">
-        <h1>
-          RedShark Master Portal
-          <span class="master-tag" id="t-master-tag">SuperAdmin</span>
-        </h1>
-        <p id="t-subheading">مركز القيادة ومراقبة شبكة السحاب والفروع المتصلة</p>
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><i class="fa-solid fa-network-wired"></i></div>
+      <div style="min-width:0">
+        <h1>RedShark Master Portal</h1>
+        <p id="t-subheading"></p>
       </div>
     </div>
-
-    <div class="nav-actions">
-      <!-- Language Switcher Button -->
-      <button class="lang-toggle-btn" onclick="SuperAdmin.toggleLanguage()" title="Switch Language / تبديل اللغة">
-        <i class="fa-solid fa-globe" style="color:var(--brand-cyan)"></i>
-        <span id="lang-btn-text">English</span>
-      </button>
-
-      <!-- Refresh Button -->
-      <button class="lang-toggle-btn" onclick="SuperAdmin.loadShops()" title="Refresh Data / تحديث">
-        <i class="fa-solid fa-arrows-rotate"></i>
-        <span id="t-refresh-btn">تحديث</span>
-      </button>
-
-      <!-- New Shop Button -->
-      <button class="btn-create-shop" onclick="SuperAdmin.openNewShopModal()">
-        <i class="fa-solid fa-plus"></i>
-        <span id="t-new-shop-btn">إنشاء متجر جديد</span>
-      </button>
+    <div class="topbar-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" id="shop-search-input" oninput="SuperAdmin.filterShops(this.value)">
+    </div>
+    <div class="topbar-actions">
+      <button type="button" class="btn" onclick="SuperAdmin.toggleLanguage()" title="Language / اللغة"><i class="fa-solid fa-globe"></i><span class="t-lang"></span></button>
+      <button type="button" class="btn" onclick="SuperAdmin.loadShops()" id="btn-refresh"><i class="fa-solid fa-arrows-rotate"></i><span id="t-refresh"></span></button>
+      <button type="button" class="btn btn-primary" onclick="SuperAdmin.openNewShopModal()"><i class="fa-solid fa-plus"></i><span id="t-new-shop"></span></button>
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
-  <main class="super-container">
+  <main class="page">
+    <section class="kpis" id="kpis"></section>
 
-    <!-- METRICS GRID -->
-    <div class="metrics-grid">
-      <!-- Card 1: Total Shops -->
-      <div class="metric-card" style="--card-glow:#6366f1">
-        <div class="metric-info">
-          <h3 id="t-stat-total-title">إجمالي المتاجر</h3>
-          <div class="metric-num" id="stat-total-shops">0</div>
-          <p id="t-stat-total-desc">المتاجر المسجلة في السحاب</p>
-        </div>
-        <div class="metric-icon-box" style="background:rgba(99, 102, 241, 0.15);color:#818cf8">
-          <i class="fa-solid fa-store"></i>
-        </div>
+    <section class="panel">
+      <div class="panel-head">
+        <div class="segmented" id="filters"></div>
+        <div class="panel-meta"><span id="t-latest"></span><span id="latest-version" class="chip none mono">—</span><span id="last-refresh"></span></div>
       </div>
-
-      <!-- Card 2: Active Shops -->
-      <div class="metric-card" style="--card-glow:#10b981">
-        <div class="metric-info">
-          <h3 id="t-stat-active-title">المتاجر النشطة</h3>
-          <div class="metric-num" id="stat-active-shops">0</div>
-          <p id="t-stat-active-desc">متاجر تعمل ومتاحة للبيع</p>
-        </div>
-        <div class="metric-icon-box" style="background:rgba(16, 185, 129, 0.15);color:#34d399">
-          <i class="fa-solid fa-circle-check"></i>
-        </div>
+      <div class="table-wrap">
+        <table class="shops">
+          <thead>
+            <tr>
+              <th id="th-shop"></th>
+              <th id="th-devices"></th>
+              <th id="th-version"></th>
+              <th id="th-license"></th>
+              <th id="th-backup"></th>
+              <th id="th-status"></th>
+              <th style="text-align:end"></th>
+            </tr>
+          </thead>
+          <tbody id="shops-table-body">
+            <tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><span id="t-loading"></span></div></td></tr>
+          </tbody>
+        </table>
       </div>
-
-      <!-- Card 3: Connected Branches -->
-      <div class="metric-card" style="--card-glow:#06b6d4">
-        <div class="metric-info">
-          <h3 id="t-stat-branches-title">إجمالي الفروع والأجهزة</h3>
-          <div class="metric-num" id="stat-total-branches">0</div>
-          <p id="t-stat-branches-desc">نقاط POS وفروع سحابية مرتبطة</p>
-        </div>
-        <div class="metric-icon-box" style="background:rgba(6, 182, 212, 0.15);color:#38bdf8">
-          <i class="fa-solid fa-code-branch"></i>
-        </div>
-      </div>
-
-      <!-- Card 4: Online Now Nodes -->
-      <div class="metric-card" style="--card-glow:#10b981">
-        <div class="metric-info">
-          <h3 id="t-stat-online-title">الأجهزة المتصلة حالياً</h3>
-          <div class="metric-num" id="stat-online-nodes" style="color:#34d399">0</div>
-          <p id="t-stat-online-desc">إرسال نبضات Heartbeat الآن 🟢</p>
-        </div>
-        <div class="metric-icon-box" style="background:rgba(16, 185, 129, 0.2);color:#34d399">
-          <i class="fa-solid fa-satellite-dish"></i>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONTROLS PANEL (SEARCH & FILTERS) -->
-    <div class="controls-panel">
-      <div class="search-box-wrapper">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="shop-search-input" class="search-input" placeholder="بحث بالاسم، الـ Slug، أو رقم الهاتف..." oninput="SuperAdmin.filterShops(this.value)">
-      </div>
-
-      <div class="filter-chips">
-        <button class="filter-chip active" id="chip-all" onclick="SuperAdmin.setFilter('all')">
-          <i class="fa-solid fa-layer-group"></i>
-          <span id="t-filter-all">الكل</span>
-        </button>
-        <button class="filter-chip" id="chip-branches" onclick="SuperAdmin.setFilter('branches')">
-          <i class="fa-solid fa-network-wired"></i>
-          <span id="t-filter-branches">لديها فروع</span>
-        </button>
-        <button class="filter-chip" id="chip-online" onclick="SuperAdmin.setFilter('online')">
-          <span class="live-dot green" style="width:7px;height:7px"></span>
-          <span id="t-filter-online">فروع متصلة (Online)</span>
-        </button>
-        <button class="filter-chip" id="chip-active" onclick="SuperAdmin.setFilter('active')">
-          <i class="fa-solid fa-check"></i>
-          <span id="t-filter-active">نشط فقط</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- SHOPS TABLE -->
-    <div class="table-container">
-      <table class="shops-table">
-        <thead>
-          <tr>
-            <th id="th-shop">المتجر والمجال</th>
-            <th id="th-slug">معرّف الرابط (Slug)</th>
-            <th id="th-branches">الفروع المتصلة (Branches Status)</th>
-            <th id="th-password">كلمة مرور الإدارة</th>
-            <th id="th-phone">الهاتف</th>
-            <th id="th-status">الحالة</th>
-            <th id="th-actions" style="text-align:center">الإجراءات السريعة</th>
-          </tr>
-        </thead>
-        <tbody id="shops-table-body">
-          <tr>
-            <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
-              <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:8px"></i>
-              <div>جاري تحميل بيانات المتاجر والفروع من السحاب...</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
+    </section>
   </main>
 
-  <!-- ─── BRANCHES INSPECTOR MODAL ─────────────────────────────────────────── -->
-  <div id="modal-branches" class="pro-modal-overlay">
-    <div class="pro-modal-box" style="max-width:680px">
+  <!-- DEVICES MODAL -->
+  <div id="modal-branches" class="overlay" onclick="if(event.target===this)SuperAdmin.closeBranchesModal()">
+    <div class="modal wide">
       <div class="modal-head">
-        <h3>
-          <i class="fa-solid fa-network-wired" style="color:var(--brand-cyan)"></i>
-          <span id="branch-modal-title">تفاصيل الفروع والأجهزة المتصلة</span>
-        </h3>
-        <button type="button" class="btn-close-modal" onclick="SuperAdmin.closeBranchesModal()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <h3><i class="fa-solid fa-network-wired tone-info"></i><span id="t-devices-title"></span></h3>
+        <button type="button" class="btn btn-ghost btn-sm btn-icon" onclick="SuperAdmin.closeBranchesModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="modal-body">
-        <div id="branch-modal-shop-info" style="margin-bottom:18px;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:12px;font-size:0.88rem">
-          <!-- Filled dynamically -->
-        </div>
-
-        <div id="branch-cards-list">
-          <!-- Filled dynamically -->
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="lang-toggle-btn" onclick="SuperAdmin.closeBranchesModal()" id="t-modal-close-branches">إغلاق</button>
-      </div>
+      <div class="modal-body" id="branches-body"></div>
+      <div class="modal-foot"><button type="button" class="btn" onclick="SuperAdmin.closeBranchesModal()"><span class="t-close-txt"></span></button></div>
     </div>
   </div>
 
-  <!-- ─── CREATE / EDIT SHOP MODAL ─────────────────────────────────────────── -->
-  <div id="modal-shop" class="pro-modal-overlay">
-    <div class="pro-modal-box">
+  <!-- BACKUP MODAL -->
+  <div id="modal-backup" class="overlay" onclick="if(event.target===this)SuperAdmin.closeBackupModal()">
+    <div class="modal wide">
       <div class="modal-head">
-        <h3 id="modal-shop-title">
-          <i class="fa-solid fa-store" style="color:var(--brand-red)"></i>
-          <span>إنشاء متجر جديد</span>
-        </h3>
-        <button type="button" class="btn-close-modal" onclick="SuperAdmin.closeShopModal()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <h3><i class="fa-solid fa-cloud-arrow-down tone-accent"></i><span id="t-backup-title"></span></h3>
+        <button type="button" class="btn btn-ghost btn-sm btn-icon" onclick="SuperAdmin.closeBackupModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
+      <div class="modal-body" id="backup-body"></div>
+      <div class="modal-foot"><button type="button" class="btn" onclick="SuperAdmin.closeBackupModal()"><span class="t-close-txt"></span></button></div>
+    </div>
+  </div>
 
+  <!-- CREATE / EDIT SHOP MODAL -->
+  <div id="modal-shop" class="overlay" onclick="if(event.target===this)SuperAdmin.closeShopModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modal-shop-title"></h3>
+        <button type="button" class="btn btn-ghost btn-sm btn-icon" onclick="SuperAdmin.closeShopModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
       <div class="modal-body">
         <input type="hidden" id="edit-shop-id">
-
-        <div class="form-group-grid">
-          <div class="form-group-full">
-            <label class="input-label" id="lbl-shop-name">اسم المتجر / الشركة *</label>
-            <input type="text" id="shop-name-input" class="pro-input" placeholder="مثال: Bob Market Katelbi">
+        <div class="form-grid">
+          <div class="full">
+            <label class="label" id="lbl-shop-name" for="shop-name-input"></label>
+            <input type="text" id="shop-name-input" class="input" placeholder="Bob Market">
           </div>
-
-          <div class="form-group-full">
-            <label class="input-label" id="lbl-shop-slug">المعرّف الرابطي (Slug) *</label>
-            <input type="text" id="shop-slug-input" class="pro-input" placeholder="مثال: bobmarket" style="font-family:var(--font-mono)">
-            <p id="lbl-shop-slug-hint" style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">سيكون الرابط: shop.redshark-ai.com/?shop=slug (لا يمكن تغييره بعد الإنشاء)</p>
+          <div class="full">
+            <label class="label" id="lbl-shop-slug" for="shop-slug-input"></label>
+            <input type="text" id="shop-slug-input" class="input mono" placeholder="bobmarket">
+            <div class="hint" id="lbl-shop-slug-hint"></div>
           </div>
-
           <div>
-            <label class="input-label" id="lbl-shop-pwd">كلمة مرور الإدارة *</label>
-            <input type="text" id="shop-pwd-input" class="pro-input" value="1234" style="font-family:var(--font-mono)">
+            <label class="label" id="lbl-shop-pwd" for="shop-pwd-input"></label>
+            <input type="text" id="shop-pwd-input" class="input mono" value="1234">
           </div>
-
           <div>
-            <label class="input-label" id="lbl-shop-phone">رقم الواتساب / الهاتف</label>
-            <input type="text" id="shop-phone-input" class="pro-input" placeholder="مثال: 96170123456">
+            <label class="label" id="lbl-shop-phone" for="shop-phone-input"></label>
+            <input type="text" id="shop-phone-input" class="input" placeholder="96170123456">
           </div>
-
           <div>
-            <label class="input-label" id="lbl-shop-delivery">أجرة التوصيل الافتراضية ($)</label>
-            <input type="number" step="0.5" id="shop-delivery-input" class="pro-input" value="2">
+            <label class="label" id="lbl-shop-delivery" for="shop-delivery-input"></label>
+            <input type="number" step="0.5" id="shop-delivery-input" class="input" value="2">
           </div>
-
           <div>
-            <label class="input-label" id="lbl-shop-lbp">سعر صرف الدولار (LBP)</label>
-            <input type="number" id="shop-lbp-input" class="pro-input" value="89500">
+            <label class="label" id="lbl-shop-lbp" for="shop-lbp-input"></label>
+            <input type="number" id="shop-lbp-input" class="input" value="89500">
           </div>
         </div>
       </div>
-
-      <div class="modal-footer">
-        <button type="button" class="lang-toggle-btn" onclick="SuperAdmin.closeShopModal()" id="t-cancel-btn">إلغاء</button>
-        <button type="button" class="btn-create-shop" onclick="SuperAdmin.saveShop()">
-          <i class="fa-solid fa-floppy-disk"></i>
-          <span id="btn-save-shop-text">حفظ المتجر</span>
-        </button>
+      <div class="modal-foot">
+        <button type="button" class="btn" onclick="SuperAdmin.closeShopModal()"><span id="t-cancel"></span></button>
+        <button type="button" class="btn btn-primary" onclick="SuperAdmin.saveShop()"><i class="fa-solid fa-floppy-disk"></i><span id="btn-save-shop-text"></span></button>
       </div>
     </div>
   </div>
 
-  
-
   <script>
-    // ══════════════════════════════════════════════════════════════════════════════
-    // BILINGUAL & MULTI-BRANCH SUPERADMIN CONTROLLER
-    // ══════════════════════════════════════════════════════════════════════════════
     const SuperAdmin = (() => {
-      // SHA-256 of the master password (the password itself is no longer in the page source).
+      // SHA-256 of the master password (the password itself is never in the page).
+      // <RS_MASTER_HASH> (set by POSSoftware/tools/setup_cloud_backup_key.js)
       const MASTER_HASH = 'c77935bbc3af73511d9a04150d719cd27117ccc38faa6ebc8b62c99e3df3df03';
-      async function _sha256Hex(text) {
-        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-      }
+      // </RS_MASTER_HASH>
+      // Private key that opens the shops' cloud backups, LOCKED with the master password.
+      // <RS_BACKUP_PRIVATE_KEY> (set by POSSoftware/tools/setup_cloud_backup_key.js)
+      const BACKUP_KEY_WRAPPED = null;
+      // </RS_BACKUP_PRIVATE_KEY>
+
       const SUPABASE_URL = 'https://mcebwpiswvwqcdwjpagy.supabase.co';
       const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jZWJ3cGlzd3Z3cWNkd2pwYWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4ODg5ODAsImV4cCI6MjEwMjQ2NDk4MH0.yCS4QNC4ovg_KT_GSFh2NdTN94jvFXg9la1uHlmq3yg';
+      const BACKUP_BUCKET = 'pos-backups';
+      const HEARTBEAT_THRESHOLD_MS = 5 * 60 * 1000;
+      const LICENSE_WARN_DAYS = 30;
+      const BACKUP_WARN_HOURS = 48;
 
       let _allTenants = [];
+      let _rows = [];
       let _currentFilter = 'all';
       let _currentSearch = '';
       let _lang = localStorage.getItem('rs_superadmin_lang') || 'ar';
+      let _latest = null;           // { version, build } published on this site
+      let _backupKey = null;        // CryptoKey, only in memory after the master password
+      let _backupModalShop = null;
+      let _menuEl = null;
+      let _lastRefreshAt = null;
 
-      // ─── TRANSLATION DICTIONARY ──────────────────────────────────────────
+      // ─── Translations ──────────────────────────────────────────────────
       const I18N = {
         ar: {
-          appTitle: 'RedShark POS & Cloud — بوابة الإدارة المركزية',
-          masterTag: 'SuperAdmin',
-          subheading: 'مركز القيادة ومراقبة شبكة السحاب والفروع المتصلة',
-          authTitle: 'RedShark Master Portal',
-          authSubtitle: 'منظومة إدارة المتاجر المركزية وشبكة الفروع المتصلة عبر السحاب.',
-          authBtn: 'دخول لوحة التحكم',
-          authErr: 'رمز الدخول الرئيسي غير صحيح!',
-          langToggleLabel: 'English',
-          refreshBtn: 'تحديث',
-          newShopBtn: 'إنشاء متجر جديد',
-          
-          statTotalTitle: 'إجمالي المتاجر',
-          statTotalDesc: 'المتاجر المسجلة في السحاب',
-          statActiveTitle: 'المتاجر النشطة',
-          statActiveDesc: 'متاجر تعمل ومتاحة للبيع',
-          statBranchesTitle: 'إجمالي الفروع والأجهزة',
-          statBranchesDesc: 'نقاط POS وفروع سحابية مرتبطة',
-          statOnlineTitle: 'الأجهزة المتصلة حالياً',
-          statOnlineDesc: 'إرسال نبضات Heartbeat الآن 🟢',
+          loginSub: 'لوحة إدارة المتاجر والفروع المتصلة بالسحاب',
+          loginBtn: 'دخول',
+          authErr: 'كلمة المرور غير صحيحة',
+          lang: 'English',
+          subheading: 'المتاجر، الأجهزة، الإصدارات، التراخيص والنسخ الاحتياطية',
+          search: 'بحث بالاسم، المعرّف أو الهاتف…',
+          refresh: 'تحديث',
+          newShop: 'متجر جديد',
+          loading: 'جاري التحميل…',
+          latest: 'آخر إصدار:',
+          updatedAt: 'آخر تحديث',
 
-          searchPlaceholder: 'بحث بالاسم، الـ Slug، أو رقم الهاتف...',
-          filterAll: 'الكل',
-          filterBranches: 'لديها فروع',
-          filterOnline: 'متصلة (Online)',
-          filterActive: 'نشط فقط',
+          kShops: 'المتاجر', kShopsSub: '{n} نشط',
+          kOnline: 'أجهزة متصلة الآن', kOnlineSub: 'من أصل {n} جهاز',
+          kUpdate: 'تحتاج تحديث', kUpdateSub: 'إصدار أقدم من الأخير',
+          kLicense: 'تراخيص تحتاج انتباه', kLicenseSub: 'منتهية أو تنتهي خلال {n} يوم',
+          kBackup: 'نسخ احتياطية قديمة', kBackupSub: 'لا نسخة تلقائية منذ يومين',
 
-          thShop: 'المتجر والمجال',
-          thSlug: 'معرّف الرابط (Slug)',
-          thBranches: 'الفروع المتصلة (Branches)',
-          thPassword: 'كلمة مرور الإدارة',
-          thPhone: 'الهاتف',
-          thStatus: 'الحالة',
-          thActions: 'الإجراءات السريعة',
+          fAll: 'الكل', fOnline: 'متصل', fUpdate: 'يحتاج تحديث', fLicense: 'الترخيص', fBackup: 'النسخ الاحتياطي', fInactive: 'معطّل',
 
-          noShopsFound: 'لم يتم العثور على متاجر مطابقة',
-          noBranchesConnected: 'لا توجد فروع مسجلة',
-          branchSingle: 'فرع',
-          branchPlural: 'فروع',
-          online: 'متصل',
-          offline: 'غير متصل',
-          lastSeenJustNow: 'متصل الآن (منذ لحظات)',
-          lastSeenAgo: 'نشط منذ',
-          neverSeen: 'لم يسجل نشاطاً مؤخراً',
+          thShop: 'المتجر', thDevices: 'الأجهزة', thVersion: 'الإصدار', thLicense: 'الترخيص', thBackup: 'النسخ الاحتياطي', thStatus: 'المتجر الإلكتروني',
 
-          serverRole: 'الجهاز الرئيسي (Server POS)',
-          branchRole: 'نقطة بيع فرعية (Remote Branch)',
+          noShops: 'لا توجد متاجر مطابقة',
+          noDevices: 'لا أجهزة',
+          devicesN: '{n} أجهزة', device1: 'جهاز واحد',
+          onlineN: '{n} متصل', offline: 'غير متصل', online: 'متصل',
+          justNow: 'الآن', minAgo: 'منذ {n} د', hourAgo: 'منذ {n} س', dayAgo: 'منذ {n} يوم', never: 'لم يتصل',
+          upToDate: 'محدّث', updateAvail: 'يوجد تحديث', buildN: 'بناء {n}', mixed: 'إصدارات مختلفة',
+          licActive: 'حتى {d}', licDaysLeft: 'باقي {n} يوم', licExpired: 'منتهي', licExpiredOn: 'انتهى {d}',
+          licDemo: 'تجريبي حتى {d}', licDemoExpired: 'انتهت التجربة', licNone: 'غير مرخّص', licInvalid: 'ترخيص غير صالح',
+          needsNewVersion: 'يظهر بعد تحديث المتجر للإصدار الجديد',
+          autoBackup: 'تلقائي', noAutoBackup: 'لا نسخة تلقائية', cloudCopy: 'سحابي',
+          active: 'نشط', inactive: 'معطّل',
 
-          btnStore: 'المتجر',
-          btnAdmin: 'الإدارة',
-          btnEdit: 'تعديل',
-          btnReset: 'تصفير البيانات',
-          btnDelete: 'حذف نهائي',
-          btnInspectBranches: 'فحص الفروع',
+          open: 'فتح المتجر', admin: 'لوحة المتجر', backup: 'نسخة احتياطية', more: 'المزيد',
+          edit: 'تعديل البيانات', devices: 'الأجهزة المتصلة', copyPwd: 'نسخ كلمة مرور المتجر', reset: 'تصفير بيانات المتجر الإلكتروني', del: 'حذف المتجر نهائياً',
+          showPwd: 'إظهار', copied: 'تم النسخ',
 
-          modalShopTitleNew: 'إنشاء متجر سحابي جديد',
-          modalShopTitleEdit: 'تعديل بيانات المتجر: ',
-          btnSaveShopNew: 'حفظ وإنشاء المتجر',
-          btnSaveShopEdit: 'حفظ التعديلات',
-          cancelBtn: 'إلغاء',
-          closeBtn: 'إغلاق',
+          devicesTitle: 'الأجهزة المتصلة', serverRole: 'الجهاز الرئيسي', branchRole: 'جهاز فرعي',
+          remove: 'إزالة', removeConfirm: 'إزالة الجهاز ({n}) من القائمة؟', nodeRemoved: 'تمت إزالة الجهاز',
+          lastSeen: 'آخر اتصال', version: 'الإصدار', license: 'الترخيص', lastAuto: 'آخر نسخة تلقائية',
 
-          lblShopName: 'اسم المتجر / الشركة *',
-          lblShopSlug: 'المعرّف الرابطي (Slug) *',
-          lblShopSlugHint: 'سيكون الرابط: shop.redshark-ai.com/?shop=slug (لا يمكن تغييره بعد الإنشاء)',
-          lblShopPwd: 'كلمة مرور الإدارة *',
-          lblShopPhone: 'رقم الواتساب / الهاتف',
-          lblShopDelivery: 'أجرة التوصيل الافتراضية ($)',
-          lblShopLbp: 'سعر صرف الدولار (LBP)',
+          backupTitle: 'النسخ الاحتياطي', close: 'إغلاق',
+          bkIntro: 'النسخة تُشفَّر على جهاز الزبون قبل رفعها، ولا يفتحها إلا كلمة المرور الرئيسية.',
+          bkNotSetup: 'النسخ السحابي غير مفعّل بعد. شغّل أداة المفتاح مرة واحدة: node tools/setup_cloud_backup_key.js',
+          bkRequest: 'طلب نسخة احتياطية الآن', bkRequested: 'تم إرسال الطلب. سيرفع جهاز المتجر النسخة خلال دقائق عندما يكون متصلاً.',
+          bkWaiting: 'بانتظار المتجر… (طُلب {t})', bkPreparing: 'المتجر يجهّز النسخة…', bkDone: 'وصلت النسخة ✓',
+          bkOldVersion: 'أجهزة هذا المتجر تعمل بإصدار قديم لا يدعم النسخ السحابي. حدّثها أولاً.',
+          bkOffline: 'لا يوجد جهاز متصل الآن. سيُنفَّذ الطلب عند اتصال المتجر (خلال 24 ساعة).',
+          bkNoKeyOnShop: 'لم يصل مفتاح التشفير إلى المتجر بعد. شغّل أداة المفتاح ثم انشر الموقع (يصل خلال 30 دقيقة).',
+          bkError: 'آخر خطأ من المتجر: {e}',
+          bkCloudList: 'النسخ المحفوظة في السحاب', bkNone: 'لا توجد نسخ في السحاب بعد',
+          bkStorageMissing: 'مساحة التخزين السحابية غير مجهّزة (pos-backups). نفّذ أوامر SQL مرة واحدة في Supabase.',
+          bkDownload: 'تنزيل', bkLive: 'نسخة مباشرة', bkDaily: 'نسخة تلقائية {d}',
+          bkUnlock: 'أدخل كلمة المرور الرئيسية لفتح النسخ', bkUnlockBtn: 'فتح', bkWrongPwd: 'كلمة المرور غير صحيحة',
+          bkDecrypting: 'جاري التنزيل وفك التشفير…', bkSaved: 'تم حفظ النسخة على جهازك',
+          bkDevices: 'حالة الأجهزة', bkRestoreHint: 'الملف المحمّل هو نسخة احتياطية عادية (.json) تُستعاد من زر الاستعادة في البرنامج.',
 
-          copiedPwd: 'تم نسخ كلمة المرور إلى الحافظة!',
-          nodeRemovedSuccess: 'تم حذف الفرع من السحاب بنجاح!'
+          modalNew: 'متجر جديد', modalEdit: 'تعديل: ', saveNew: 'إنشاء المتجر', saveEdit: 'حفظ', cancel: 'إلغاء',
+          lblName: 'اسم المتجر *', lblSlug: 'المعرّف (Slug) *', lblSlugHint: 'الرابط: shop.redshark-ai.com/?shop=slug (لا يتغير بعد الإنشاء)',
+          lblPwd: 'كلمة مرور لوحة المتجر *', lblPhone: 'واتساب / هاتف', lblDelivery: 'أجرة التوصيل ($)', lblLbp: 'سعر الدولار (LBP)',
+          needName: 'أدخل اسم المتجر', needSlug: 'أدخل المعرّف', slugTaken: 'هذا المعرّف مستخدم',
+          created: 'تم إنشاء المتجر', updated: 'تم حفظ التعديلات', error: 'خطأ: ',
+          resetConfirm: 'تصفير بيانات المتجر الإلكتروني ({s}) في السحاب؟\n\nسيُحذف: المنتجات، الأقسام، طلبات الزبائن.\nبيانات برنامج POS على جهاز الزبون لا تتأثر.',
+          resetDone: 'تم تصفير بيانات المتجر الإلكتروني ({s})',
+          deleteConfirm: 'حذف المتجر ({s}) نهائياً من السحاب؟\n\nللتأكيد اكتب المعرّف بالضبط:\n{s}',
+          deleteAbort: 'أُلغي الحذف: المعرّف غير مطابق', deleteDone: 'تم حذف المتجر ({s})',
+          loadErr: 'تعذر تحميل البيانات: '
         },
         en: {
-          appTitle: 'RedShark POS & Cloud — SuperAdmin Master Portal',
-          masterTag: 'SuperAdmin',
-          subheading: 'Master Command Center & Cloud Branch Network Monitor',
-          authTitle: 'RedShark Master Portal',
-          authSubtitle: 'Central cloud shop management & live connected branch presence monitor.',
-          authBtn: 'Authorize & Enter',
-          authErr: 'Invalid master authorization key!',
-          langToggleLabel: 'العربية',
-          refreshBtn: 'Refresh',
-          newShopBtn: 'Create New Shop',
+          loginSub: 'Cloud shops and connected devices console',
+          loginBtn: 'Sign in',
+          authErr: 'Wrong password',
+          lang: 'العربية',
+          subheading: 'Shops, devices, versions, licences and backups',
+          search: 'Search by name, slug or phone…',
+          refresh: 'Refresh',
+          newShop: 'New shop',
+          loading: 'Loading…',
+          latest: 'Latest release:',
+          updatedAt: 'Updated',
 
-          statTotalTitle: 'Total Shops',
-          statTotalDesc: 'Registered cloud storefronts',
-          statActiveTitle: 'Active Shops',
-          statActiveDesc: 'Live storefronts available for commerce',
-          statBranchesTitle: 'Branches & POS Nodes',
-          statBranchesDesc: 'Synced terminals & remote locations',
-          statOnlineTitle: 'Live Online Nodes',
-          statOnlineDesc: 'Active heartbeats received now 🟢',
+          kShops: 'Shops', kShopsSub: '{n} active',
+          kOnline: 'Devices online', kOnlineSub: 'of {n} devices',
+          kUpdate: 'Need update', kUpdateSub: 'older than the latest release',
+          kLicense: 'Licences to check', kLicenseSub: 'expired or ending within {n} days',
+          kBackup: 'Old backups', kBackupSub: 'no automatic backup for 2 days',
 
-          searchPlaceholder: 'Search by shop name, slug, or phone...',
-          filterAll: 'All',
-          filterBranches: 'Has Branches',
-          filterOnline: 'Live Online Only',
-          filterActive: 'Active Only',
+          fAll: 'All', fOnline: 'Online', fUpdate: 'Needs update', fLicense: 'Licence', fBackup: 'Backup', fInactive: 'Inactive',
 
-          thShop: 'Store & Currency',
-          thSlug: 'Slug Identifier',
-          thBranches: 'Connected Branches & Status',
-          thPassword: 'Admin Password',
-          thPhone: 'Contact Phone',
-          thStatus: 'Status',
-          thActions: 'Quick Actions',
+          thShop: 'Shop', thDevices: 'Devices', thVersion: 'Version', thLicense: 'Licence', thBackup: 'Backup', thStatus: 'Online store',
 
-          noShopsFound: 'No matching shops found',
-          noBranchesConnected: 'No branches connected',
-          branchSingle: 'branch',
-          branchPlural: 'branches',
-          online: 'Online',
-          offline: 'Offline',
-          lastSeenJustNow: 'Online (Just now)',
-          lastSeenAgo: 'Active',
-          neverSeen: 'No recent activity',
+          noShops: 'No matching shops',
+          noDevices: 'No devices',
+          devicesN: '{n} devices', device1: '1 device',
+          onlineN: '{n} online', offline: 'Offline', online: 'Online',
+          justNow: 'just now', minAgo: '{n} min ago', hourAgo: '{n} h ago', dayAgo: '{n} d ago', never: 'never seen',
+          upToDate: 'Up to date', updateAvail: 'Update available', buildN: 'build {n}', mixed: 'mixed versions',
+          licActive: 'until {d}', licDaysLeft: '{n} days left', licExpired: 'Expired', licExpiredOn: 'ended {d}',
+          licDemo: 'Demo until {d}', licDemoExpired: 'Demo ended', licNone: 'Not licensed', licInvalid: 'Invalid licence',
+          needsNewVersion: 'Shown once the shop updates to the new version',
+          autoBackup: 'Auto', noAutoBackup: 'No auto backup', cloudCopy: 'Cloud',
+          active: 'Active', inactive: 'Inactive',
 
-          serverRole: 'Master POS Terminal (Server)',
-          branchRole: 'Remote Branch Terminal',
+          open: 'Open store', admin: 'Store admin', backup: 'Backup', more: 'More',
+          edit: 'Edit details', devices: 'Connected devices', copyPwd: 'Copy store password', reset: 'Reset online-store data', del: 'Delete shop',
+          showPwd: 'Show', copied: 'Copied',
 
-          btnStore: 'Store',
-          btnAdmin: 'Admin',
-          btnEdit: 'Edit',
-          btnReset: 'Reset Data',
-          btnDelete: 'Delete Shop',
-          btnInspectBranches: 'Inspect Branches',
+          devicesTitle: 'Connected devices', serverRole: 'Main server', branchRole: 'Branch device',
+          remove: 'Remove', removeConfirm: 'Remove device ({n}) from the list?', nodeRemoved: 'Device removed',
+          lastSeen: 'Last seen', version: 'Version', license: 'Licence', lastAuto: 'Last automatic backup',
 
-          modalShopTitleNew: 'Create New Cloud Shop',
-          modalShopTitleEdit: 'Edit Shop Settings: ',
-          btnSaveShopNew: 'Create & Provision Shop',
-          btnSaveShopEdit: 'Save Changes',
-          cancelBtn: 'Cancel',
-          closeBtn: 'Close',
+          backupTitle: 'Backup', close: 'Close',
+          bkIntro: 'The backup is encrypted on the customer\'s PC before upload; only the master password can open it.',
+          bkNotSetup: 'Cloud backup is not set up yet. Run the key tool once: node tools/setup_cloud_backup_key.js',
+          bkRequest: 'Request a backup now', bkRequested: 'Request sent. The shop\'s PC uploads the backup within minutes while it is online.',
+          bkWaiting: 'Waiting for the shop… (requested {t})', bkPreparing: 'The shop is preparing the backup…', bkDone: 'Backup received ✓',
+          bkOldVersion: 'This shop\'s devices run an older version without cloud backup. Update them first.',
+          bkOffline: 'No device is online now. The request runs when the shop comes online (within 24 h).',
+          bkNoKeyOnShop: 'The backup key has not reached the shop yet. Run the key tool, then publish the site (it arrives within 30 min).',
+          bkError: 'Last error from the shop: {e}',
+          bkCloudList: 'Backups stored in the cloud', bkNone: 'No cloud backups yet',
+          bkStorageMissing: 'Cloud storage (pos-backups) is not set up. Run the SQL once in Supabase.',
+          bkDownload: 'Download', bkLive: 'Live backup', bkDaily: 'Daily auto backup {d}',
+          bkUnlock: 'Enter the master password to open backups', bkUnlockBtn: 'Unlock', bkWrongPwd: 'Wrong password',
+          bkDecrypting: 'Downloading and decrypting…', bkSaved: 'Backup saved on your PC',
+          bkDevices: 'Devices', bkRestoreHint: 'The downloaded file is a normal backup (.json) that restores with the Restore button in the POS.',
 
-          lblShopName: 'Shop / Business Name *',
-          lblShopSlug: 'Slug URL Identifier *',
-          lblShopSlugHint: 'Accessible via: shop.redshark-ai.com/?shop=slug (Permanent)',
-          lblShopPwd: 'Admin Password *',
-          lblShopPhone: 'WhatsApp / Contact Phone',
-          lblShopDelivery: 'Default Delivery Fee ($)',
-          lblShopLbp: 'USD / LBP Exchange Rate',
-
-          copiedPwd: 'Password copied to clipboard!',
-          nodeRemovedSuccess: 'Branch node successfully removed from cloud!'
+          modalNew: 'New shop', modalEdit: 'Edit: ', saveNew: 'Create shop', saveEdit: 'Save', cancel: 'Cancel',
+          lblName: 'Shop name *', lblSlug: 'Slug *', lblSlugHint: 'Link: shop.redshark-ai.com/?shop=slug (cannot change later)',
+          lblPwd: 'Store admin password *', lblPhone: 'WhatsApp / phone', lblDelivery: 'Delivery fee ($)', lblLbp: 'USD rate (LBP)',
+          needName: 'Enter the shop name', needSlug: 'Enter the slug', slugTaken: 'This slug is already used',
+          created: 'Shop created', updated: 'Changes saved', error: 'Error: ',
+          resetConfirm: 'Reset the online-store data of ({s}) in the cloud?\n\nDeletes: products, categories, customer orders.\nThe POS data on the customer\'s PC is not touched.',
+          resetDone: 'Online-store data of ({s}) reset',
+          deleteConfirm: 'Permanently delete shop ({s}) from the cloud?\n\nTo confirm, type the slug exactly:\n{s}',
+          deleteAbort: 'Deletion cancelled: slug did not match', deleteDone: 'Shop ({s}) deleted',
+          loadErr: 'Could not load data: '
         }
       };
+      const tr = (k, vars) => {
+        let s = (I18N[_lang] && I18N[_lang][k]) || I18N.en[k] || k;
+        if (vars) for (const [a, b] of Object.entries(vars)) s = s.split('{' + a + '}').join(b);
+        return s;
+      };
+      const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const headers = (extra) => Object.assign({ 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }, extra || {});
 
-      function tr(key) {
-        return I18N[_lang]?.[key] || I18N['en']?.[key] || key;
+      function toast(msg) {
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 2600);
       }
 
+      function ago(iso) {
+        const ms = iso ? Date.now() - new Date(iso).getTime() : NaN;
+        if (!isFinite(ms)) return tr('never');
+        if (ms < 60000) return tr('justNow');
+        const m = Math.floor(ms / 60000);
+        if (m < 60) return tr('minAgo', { n: m });
+        const h = Math.floor(m / 60);
+        if (h < 48) return tr('hourAgo', { n: h });
+        return tr('dayAgo', { n: Math.floor(h / 24) });
+      }
+      const fmtSize = (b) => !b ? '' : b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+      const fmtDateTime = (d) => { try { return new Date(d).toLocaleString(_lang === 'ar' ? 'ar-LB' : 'en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return String(d); } };
+
+      // ─── Language ──────────────────────────────────────────────────────
       function applyLanguage(lang) {
         _lang = lang || _lang;
-        localStorage.setItem('rs_superadmin_lang', _lang);
+        try { localStorage.setItem('rs_superadmin_lang', _lang); } catch (e) { }
         document.documentElement.lang = _lang;
         document.documentElement.dir = _lang === 'ar' ? 'rtl' : 'ltr';
-
-        document.title = tr('appTitle');
-        const setTxt = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = tr(key); };
-        
-        setTxt('t-master-tag', 'masterTag');
-        setTxt('t-subheading', 'subheading');
-        setTxt('auth-title', 'authTitle');
-        setTxt('auth-subtitle', 'authSubtitle');
-        setTxt('auth-btn-text', 'authBtn');
-        setTxt('auth-error-msg', 'authErr');
-        setTxt('auth-lang-label', 'langToggleLabel');
-        setTxt('lang-btn-text', 'langToggleLabel');
-        setTxt('t-refresh-btn', 'refreshBtn');
-        setTxt('t-new-shop-btn', 'newShopBtn');
-
-        setTxt('t-stat-total-title', 'statTotalTitle');
-        setTxt('t-stat-total-desc', 'statTotalDesc');
-        setTxt('t-stat-active-title', 'statActiveTitle');
-        setTxt('t-stat-active-desc', 'statActiveDesc');
-        setTxt('t-stat-branches-title', 'statBranchesTitle');
-        setTxt('t-stat-branches-desc', 'statBranchesDesc');
-        setTxt('t-stat-online-title', 'statOnlineTitle');
-        setTxt('t-stat-online-desc', 'statOnlineDesc');
-
-        const searchInput = document.getElementById('shop-search-input');
-        if (searchInput) searchInput.placeholder = tr('searchPlaceholder');
-
-        setTxt('t-filter-all', 'filterAll');
-        setTxt('t-filter-branches', 'filterBranches');
-        setTxt('t-filter-online', 'filterOnline');
-        setTxt('t-filter-active', 'filterActive');
-
-        setTxt('th-shop', 'thShop');
-        setTxt('th-slug', 'thSlug');
-        setTxt('th-branches', 'thBranches');
-        setTxt('th-password', 'thPassword');
-        setTxt('th-phone', 'thPhone');
-        setTxt('th-status', 'thStatus');
-        setTxt('th-actions', 'thActions');
-
-        setTxt('lbl-shop-name', 'lblShopName');
-        setTxt('lbl-shop-slug', 'lblShopSlug');
-        setTxt('lbl-shop-slug-hint', 'lblShopSlugHint');
-        setTxt('lbl-shop-pwd', 'lblShopPwd');
-        setTxt('lbl-shop-phone', 'lblShopPhone');
-        setTxt('lbl-shop-delivery', 'lblShopDelivery');
-        setTxt('lbl-shop-lbp', 'lblShopLbp');
-        setTxt('t-cancel-btn', 'cancelBtn');
-        setTxt('t-modal-close-branches', 'closeBtn');
-
-        filterShops(_currentSearch);
+        const set = (id, k) => { const el = document.getElementById(id); if (el) el.textContent = tr(k); };
+        set('t-login-sub', 'loginSub'); set('t-login-btn', 'loginBtn'); set('t-subheading', 'subheading');
+        set('t-refresh', 'refresh'); set('t-new-shop', 'newShop'); set('t-loading', 'loading'); set('t-latest', 'latest');
+        set('th-shop', 'thShop'); set('th-devices', 'thDevices'); set('th-version', 'thVersion'); set('th-license', 'thLicense'); set('th-backup', 'thBackup'); set('th-status', 'thStatus');
+        set('t-devices-title', 'devicesTitle'); set('t-backup-title', 'backupTitle'); set('t-cancel', 'cancel');
+        set('lbl-shop-name', 'lblName'); set('lbl-shop-slug', 'lblSlug'); set('lbl-shop-slug-hint', 'lblSlugHint');
+        set('lbl-shop-pwd', 'lblPwd'); set('lbl-shop-phone', 'lblPhone'); set('lbl-shop-delivery', 'lblDelivery'); set('lbl-shop-lbp', 'lblLbp');
+        document.querySelectorAll('.t-lang').forEach(el => el.textContent = tr('lang'));
+        document.querySelectorAll('.t-close-txt').forEach(el => el.textContent = tr('close'));
+        const s = document.getElementById('shop-search-input'); if (s) s.placeholder = tr('search');
+        const errEl = document.getElementById('auth-error-msg'); if (errEl && errEl.textContent) errEl.textContent = tr('authErr');
+        renderAll();
+        if (_backupModalShop && document.getElementById('modal-backup').classList.contains('open')) renderBackupModal();
       }
+      function toggleLanguage() { applyLanguage(_lang === 'ar' ? 'en' : 'ar'); }
 
-      function toggleLanguage() {
-        const nextLang = _lang === 'ar' ? 'en' : 'ar';
-        applyLanguage(nextLang);
+      // ─── Login ─────────────────────────────────────────────────────────
+      async function sha256Hex(text) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
       }
-
-      // ─── MASTER PIN AUTH ──────────────────────────────────────────────────
       async function verifyMasterAuth() {
         const input = document.getElementById('master-key-input');
         const err = document.getElementById('auth-error-msg');
-        const entered = (input?.value || '').trim();
-
-        let enteredHash = '';
-        try { enteredHash = entered ? await _sha256Hex(entered) : ''; } catch (e) { enteredHash = ''; }
-        if (enteredHash && enteredHash === MASTER_HASH) {
+        const entered = (input.value || '').trim();
+        let h = '';
+        try { h = entered ? await sha256Hex(entered) : ''; } catch (e) { }
+        if (h && h === MASTER_HASH) {
           sessionStorage.setItem('rs_master_auth', 'true');
-          const modal = document.getElementById('master-auth-modal');
-          if (modal) {
-            modal.style.display = 'none';
-            modal.style.visibility = 'hidden';
-          }
-          if (err) err.style.display = 'none';
+          document.getElementById('login').classList.add('hidden');
+          err.textContent = '';
+          if (BACKUP_KEY_WRAPPED) { unlockBackupKey(entered).catch(() => { }); }
+          input.value = '';
           loadShops();
         } else {
-          if (err) err.style.display = 'block';
-          if (input) {
-            input.value = '';
-            input.focus();
-          }
+          err.textContent = tr('authErr');
+          input.value = '';
+          input.focus();
         }
       }
 
-      // ─── BRANCHES EXTRACTION & ONLINE DETECTION ────────────────────────────
-      const HEARTBEAT_THRESHOLD_MS = 300 * 1000; // 5 minutes
+      // ─── Data ──────────────────────────────────────────────────────────
+      function parseBanner(t) {
+        if (!t || !t.banner_url) return {};
+        try { return (typeof t.banner_url === 'string' ? JSON.parse(t.banner_url) : t.banner_url) || {}; } catch (e) { return {}; }
+      }
+      function getShopPassword(t) { return parseBanner(t).admin_password || '1234'; }
 
-      function getShopBranches(tenantObj) {
-        if (!tenantObj || !tenantObj.banner_url) return [];
-        let b = {};
-        try {
-          b = typeof tenantObj.banner_url === 'string' ? JSON.parse(tenantObj.banner_url) : tenantObj.banner_url;
-        } catch (e) {
-          return [];
-        }
-        const rawBranches = b.connected_branches || b.pos_branches || b.branches || [];
-        if (!Array.isArray(rawBranches)) return [];
+      function getShopBranches(t) {
+        const b = parseBanner(t);
+        const raw = b.connected_branches || b.pos_branches || b.branches || [];
+        if (!Array.isArray(raw)) return [];
         const now = Date.now();
-
-        return rawBranches.map(item => {
+        return raw.map(item => {
           const lastSeenMs = item.lastSeen ? new Date(item.lastSeen).getTime() : 0;
-          const diffMs = now - lastSeenMs;
-          const isOnline = lastSeenMs > 0 && diffMs <= HEARTBEAT_THRESHOLD_MS && item.isOnline !== false;
-
-          let timeAgoText = '';
-          if (lastSeenMs === 0) {
-            timeAgoText = tr('neverSeen');
-          } else if (diffMs < 60000) {
-            timeAgoText = tr('lastSeenJustNow');
-          } else {
-            const minutes = Math.floor(diffMs / 60000);
-            if (minutes < 60) {
-              timeAgoText = `${minutes} ${_lang === 'ar' ? 'دقيقة' : 'mins ago'}`;
-            } else {
-              const hours = Math.floor(minutes / 60);
-              timeAgoText = `${hours} ${_lang === 'ar' ? 'ساعة' : 'hours ago'}`;
-            }
-          }
-
-          return {
+          return Object.assign({}, item, {
             nodeId: item.nodeId || item.id || 'pos-node',
             name: item.name || item.nodeName || item.nodeId || 'Terminal',
             branchId: item.branchId || item.branch || 'main',
             role: item.role || 'branch',
-            lastSeen: item.lastSeen,
             lastSeenMs,
-            isOnline,
-            timeAgoText
-          };
+            isOnline: lastSeenMs > 0 && now - lastSeenMs <= HEARTBEAT_THRESHOLD_MS && item.isOnline !== false
+          });
         });
       }
 
-      function getShopPassword(tenantObj) {
-        if (!tenantObj || !tenantObj.banner_url) return '1234';
-        try {
-          const obj = typeof tenantObj.banner_url === 'string' ? JSON.parse(tenantObj.banner_url) : tenantObj.banner_url;
-          return obj.admin_password || '1234';
-        } catch(e) {
-          return '1234';
-        }
+      function daysLeft(dateStr) {
+        if (!dateStr) return null;
+        const end = new Date(String(dateStr).slice(0, 10) + 'T23:59:59').getTime();
+        return isFinite(end) ? Math.ceil((end - Date.now()) / 86400000) : null;
       }
 
-      // ─── DATA LOADING & STATS ─────────────────────────────────────────────
-      async function loadShops() {
+      // One summary per shop: worst version, licence of the main device, newest backup.
+      function summarize(t) {
+        const devices = getShopBranches(t);
+        const banner = parseBanner(t);
+        const online = devices.filter(d => d.isOnline);
+        const main = devices.find(d => d.role === 'server') || devices[0] || null;
+
+        const builds = devices.map(d => Number(d.appBuild) || 0).filter(Boolean);
+        const minBuild = builds.length ? Math.min(...builds) : 0;
+        const lowest = devices.filter(d => Number(d.appBuild) === minBuild)[0];
+        const version = { build: minBuild, label: lowest && lowest.appVersion ? 'v' + lowest.appVersion : (minBuild ? tr('buildN', { n: minBuild }) : ''), mixed: new Set(builds).size > 1 };
+        version.outdated = !!(_latest && minBuild && minBuild < _latest.build);
+
+        const licDev = (main && main.license) ? main : devices.find(d => d.license);
+        const lic = licDev ? licDev.license : null;
+        let licState = 'unknown';
+        let licDays = null;
+        if (lic) {
+          licDays = daysLeft(lic.expiry);
+          if (lic.status === 'active') licState = licDays != null && licDays <= LICENSE_WARN_DAYS ? 'soon' : 'ok';
+          else if (lic.status === 'demo') licState = 'demo';
+          else if (lic.status === 'expired' || lic.status === 'demo_expired') licState = 'expired';
+          else if (lic.status === 'invalid') licState = 'invalid';
+          else licState = 'none';
+        }
+
+        const autoTimes = devices.map(d => d.localBackup && d.localBackup.at).filter(Boolean).sort();
+        const lastAuto = autoTimes.length ? autoTimes[autoTimes.length - 1] : null;
+        const cloudTimes = devices.map(d => d.cloudBackup && d.cloudBackup.last && d.cloudBackup.last.at).filter(Boolean).sort();
+        const lastCloud = cloudTimes.length ? cloudTimes[cloudTimes.length - 1] : null;
+        const supportsBackup = devices.some(d => d.cloudBackup);
+        const autoAgeH = lastAuto ? (Date.now() - new Date(lastAuto).getTime()) / 3600000 : null;
+        const backupStale = supportsBackup && (autoAgeH == null || autoAgeH > BACKUP_WARN_HOURS);
+
+        return {
+          t, devices, online, main, banner, version, lic, licState, licDays,
+          lastAuto, lastCloud, supportsBackup, backupStale, autoAgeH,
+          active: t.is_active !== false,
+          needsLicense: licState === 'soon' || licState === 'expired' || licState === 'invalid'
+        };
+      }
+
+      async function loadLatestVersion() {
         try {
-          const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants?select=*&order=created_at.desc`, {
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_KEY
-            }
-          });
+          const r = await fetch('version.json?ts=' + Date.now(), { cache: 'no-store' });
+          if (r.ok) { const v = await r.json(); _latest = { version: v.version, build: Number(v.build) || 0 }; }
+        } catch (e) { }
+        const el = document.getElementById('latest-version');
+        if (el) el.textContent = _latest ? 'v' + _latest.version : '—';
+      }
 
-          if (!resp.ok) throw new Error('Failed to load tenants: ' + resp.status);
+      async function loadShops() {
+        const btn = document.getElementById('btn-refresh');
+        if (btn) btn.querySelector('i').classList.add('fa-spin');
+        try {
+          await loadLatestVersion();
+          const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants?select=*&order=created_at.desc`, { headers: headers() });
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
           _allTenants = await resp.json();
-
-          updateStats();
-          filterShops(_currentSearch);
+          _rows = _allTenants.map(summarize);
+          _lastRefreshAt = new Date();
+          showLastRefresh();
+          if (!_menuEl) renderAll();
+          // Refresh the open backup window too, unless the password field is being typed in.
+          const typing = document.activeElement && document.activeElement.id === 'bk-unlock-pwd';
+          if (_backupModalShop && !typing && document.getElementById('modal-backup').classList.contains('open')) renderBackupModal(true);
         } catch (e) {
           console.error(e);
-          alert((_lang === 'ar' ? 'حدث خطأ في تحميل البيانات: ' : 'Failed to load shops: ') + e.message);
+          toast(tr('loadErr') + e.message);
+        } finally {
+          if (btn) btn.querySelector('i').classList.remove('fa-spin');
         }
       }
 
-      function updateStats() {
-        let totalBranches = 0;
-        let onlineBranches = 0;
+      // ─── KPIs, filters, table ──────────────────────────────────────────
+      const FILTERS = [
+        ['all', 'fAll', () => true],
+        ['online', 'fOnline', r => r.online.length > 0],
+        ['update', 'fUpdate', r => r.version.outdated],
+        ['license', 'fLicense', r => r.needsLicense],
+        ['backup', 'fBackup', r => r.backupStale],
+        ['inactive', 'fInactive', r => !r.active]
+      ];
 
-        _allTenants.forEach(tenantItem => {
-          const branches = getShopBranches(tenantItem);
-          totalBranches += branches.length;
-          onlineBranches += branches.filter(b => b.isOnline).length;
-        });
-
-        const elTotal = document.getElementById('stat-total-shops');
-        const elActive = document.getElementById('stat-active-shops');
-        const elBranches = document.getElementById('stat-total-branches');
-        const elOnline = document.getElementById('stat-online-nodes');
-
-        if (elTotal) elTotal.textContent = _allTenants.length;
-        if (elActive) elActive.textContent = _allTenants.filter(t => t.is_active !== false).length;
-        if (elBranches) elBranches.textContent = totalBranches;
-        if (elOnline) elOnline.textContent = onlineBranches;
+      function showLastRefresh() {
+        const lr = document.getElementById('last-refresh');
+        if (lr && _lastRefreshAt) lr.textContent = '· ' + _lastRefreshAt.toLocaleTimeString(_lang === 'ar' ? 'ar-LB' : 'en-GB', { hour: '2-digit', minute: '2-digit' });
       }
 
-      // ─── FILTER & RENDER SHOPS ────────────────────────────────────────────
-      function setFilter(type) {
-        _currentFilter = type;
-        ['all', 'branches', 'online', 'active'].forEach(f => {
-          const btn = document.getElementById('chip-' + f);
-          if (btn) btn.classList.toggle('active', f === type);
-        });
+      function renderAll() {
+        showLastRefresh();
+        _rows = _allTenants.map(summarize);
+        renderKpis();
+        renderFilters();
+        filterShops(_currentSearch);
+      }
+
+      function renderKpis() {
+        const el = document.getElementById('kpis');
+        if (!el) return;
+        const devices = _rows.reduce((n, r) => n + r.devices.length, 0);
+        const online = _rows.reduce((n, r) => n + r.online.length, 0);
+        const cards = [
+          ['all', 'kShops', _rows.length, tr('kShopsSub', { n: _rows.filter(r => r.active).length }), 'fa-store', 'accent'],
+          ['online', 'kOnline', online, tr('kOnlineSub', { n: devices }), 'fa-satellite-dish', 'ok'],
+          ['update', 'kUpdate', _rows.filter(r => r.version.outdated).length, tr('kUpdateSub'), 'fa-arrow-up-from-bracket', 'info'],
+          ['license', 'kLicense', _rows.filter(r => r.needsLicense).length, tr('kLicenseSub', { n: LICENSE_WARN_DAYS }), 'fa-id-card', 'warn'],
+          ['backup', 'kBackup', _rows.filter(r => r.backupStale).length, tr('kBackupSub'), 'fa-database', 'bad']
+        ];
+        el.innerHTML = cards.map(([f, label, val, sub, icon, tone]) => `
+          <div class="kpi ${_currentFilter === f && f !== 'all' ? 'active' : ''}" onclick="SuperAdmin.setFilter('${f}')" role="button" tabindex="0">
+            <div style="min-width:0">
+              <div class="kpi-label">${esc(tr(label))}</div>
+              <div class="kpi-value ${val && f !== 'all' && f !== 'online' ? 'tone-' + tone : ''}">${val}</div>
+              <div class="kpi-sub">${esc(sub)}</div>
+            </div>
+            <div class="kpi-icon bg-${tone} tone-${tone}"><i class="fa-solid ${icon}"></i></div>
+          </div>`).join('');
+      }
+
+      function renderFilters() {
+        const el = document.getElementById('filters');
+        if (!el) return;
+        el.innerHTML = FILTERS.map(([key, label, fn]) => {
+          const n = _rows.filter(fn).length;
+          return `<button type="button" class="seg ${_currentFilter === key ? 'active' : ''}" onclick="SuperAdmin.setFilter('${key}')">${esc(tr(label))}<span class="count">${n}</span></button>`;
+        }).join('');
+      }
+
+      function setFilter(key) {
+        _currentFilter = key;
+        renderKpis();
+        renderFilters();
         filterShops(_currentSearch);
       }
 
       function filterShops(query) {
         _currentSearch = (query || '').toLowerCase().trim();
-        
-        let filtered = _allTenants.filter(tenantItem => {
-          const matchesQuery = !_currentSearch || 
-            (tenantItem.shop_name && tenantItem.shop_name.toLowerCase().includes(_currentSearch)) ||
-            (tenantItem.slug && tenantItem.slug.toLowerCase().includes(_currentSearch)) ||
-            (tenantItem.owner_phone && tenantItem.owner_phone.includes(_currentSearch)) ||
-            (tenantItem.whatsapp_phone && tenantItem.whatsapp_phone.includes(_currentSearch));
-
-          if (!matchesQuery) return false;
-
-          const branches = getShopBranches(tenantItem);
-          if (_currentFilter === 'branches') {
-            return branches.length > 0;
-          }
-          if (_currentFilter === 'online') {
-            return branches.some(b => b.isOnline);
-          }
-          if (_currentFilter === 'active') {
-            return tenantItem.is_active !== false;
-          }
-
-          return true;
+        const fn = (FILTERS.find(f => f[0] === _currentFilter) || FILTERS[0])[2];
+        const list = _rows.filter(r => {
+          const t = r.t;
+          const q = _currentSearch;
+          const hit = !q || [t.shop_name, t.slug, t.owner_phone, t.whatsapp_phone, r.lic && r.lic.client].some(v => v && String(v).toLowerCase().includes(q));
+          return hit && fn(r);
         });
+        renderShops(list);
+      }
 
-        renderShops(filtered);
+      const AVATAR_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#0ea5e9', '#6366f1', '#a855f7', '#ec4899'];
+      function avatarColor(s) { let h = 0; for (const c of String(s || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return AVATAR_COLORS[h % AVATAR_COLORS.length]; }
+
+      function devicesCell(r) {
+        if (!r.devices.length) return `<span class="chip none">${esc(tr('noDevices'))}</span>`;
+        const label = r.devices.length === 1 ? tr('device1') : tr('devicesN', { n: r.devices.length });
+        const on = r.online.length;
+        const newest = Math.max(...r.devices.map(d => d.lastSeenMs || 0));
+        return `<div class="cell-stack">
+          <button type="button" class="chip ${on ? 'ok' : 'warn'}" onclick="SuperAdmin.openBranchesModal('${esc(r.t.id)}')">
+            <span class="dot ${on ? 'live' : ''}"></span>${esc(on ? tr('onlineN', { n: on }) : tr('offline'))}
+          </button>
+          <span class="cell-note">${esc(label)} · ${esc(on ? tr('online') : ago(newest ? new Date(newest).toISOString() : null))}</span>
+        </div>`;
+      }
+
+      function versionCell(r) {
+        const v = r.version;
+        if (!v.build) return `<span class="chip none">—</span>`;
+        if (!_latest) return `<span class="chip none mono">${esc(v.label)}</span>`;
+        const cls = v.outdated ? 'warn' : 'ok';
+        const icon = v.outdated ? 'fa-arrow-up' : 'fa-check';
+        return `<div class="cell-stack">
+          <span class="chip ${cls} mono"><i class="fa-solid ${icon}" style="font-size:.65rem"></i>${esc(v.label)}</span>
+          <span class="cell-note">${esc(v.outdated ? tr('updateAvail') : tr('upToDate'))}${v.mixed ? ' · ' + esc(tr('mixed')) : ''}</span>
+        </div>`;
+      }
+
+      function licenseCell(r) {
+        const lic = r.lic;
+        if (!lic) return r.devices.length ? `<span class="chip none" title="${esc(tr('needsNewVersion'))}">—</span>` : `<span class="chip none">—</span>`;
+        const d = lic.expiry || '';
+        let chip, note = lic.client || '';
+        switch (r.licState) {
+          case 'ok': chip = `<span class="chip ok"><i class="fa-solid fa-circle-check" style="font-size:.7rem"></i>${esc(tr('licActive', { d }))}</span>`; note = tr('licDaysLeft', { n: r.licDays }) + (lic.client ? ' · ' + lic.client : ''); break;
+          case 'soon': chip = `<span class="chip warn"><i class="fa-solid fa-hourglass-half" style="font-size:.7rem"></i>${esc(tr('licDaysLeft', { n: Math.max(0, r.licDays) }))}</span>`; note = tr('licActive', { d }) + (lic.client ? ' · ' + lic.client : ''); break;
+          case 'expired': chip = `<span class="chip bad"><i class="fa-solid fa-circle-xmark" style="font-size:.7rem"></i>${esc(lic.status === 'demo_expired' ? tr('licDemoExpired') : tr('licExpired'))}</span>`; note = d ? tr('licExpiredOn', { d }) : ''; break;
+          case 'demo': chip = `<span class="chip info"><i class="fa-solid fa-flask" style="font-size:.7rem"></i>${esc(tr('licDemo', { d }))}</span>`; note = r.licDays != null ? tr('licDaysLeft', { n: Math.max(0, r.licDays) }) : ''; break;
+          case 'invalid': chip = `<span class="chip bad">${esc(tr('licInvalid'))}</span>`; break;
+          default: chip = `<span class="chip none">${esc(tr('licNone'))}</span>`;
+        }
+        return `<div class="cell-stack">${chip}${note ? `<span class="cell-note">${esc(note)}</span>` : ''}</div>`;
+      }
+
+      function backupCell(r) {
+        if (!r.supportsBackup) {
+          return `<button type="button" class="chip none" onclick="SuperAdmin.openBackupModal('${esc(r.t.id)}')" title="${esc(tr('needsNewVersion'))}"><i class="fa-solid fa-cloud" style="font-size:.7rem"></i>—</button>`;
+        }
+        const cls = r.autoAgeH == null ? 'bad' : r.autoAgeH > BACKUP_WARN_HOURS ? (r.autoAgeH > 24 * 7 ? 'bad' : 'warn') : 'ok';
+        return `<div class="cell-stack">
+          <button type="button" class="chip ${cls}" onclick="SuperAdmin.openBackupModal('${esc(r.t.id)}')">
+            <i class="fa-solid fa-database" style="font-size:.7rem"></i>${esc(r.lastAuto ? tr('autoBackup') + ' · ' + ago(r.lastAuto) : tr('noAutoBackup'))}
+          </button>
+          <span class="cell-note"><i class="fa-solid fa-cloud" style="font-size:.65rem"></i> ${esc(r.lastCloud ? tr('cloudCopy') + ' · ' + ago(r.lastCloud) : tr('cloudCopy') + ' · —')}</span>
+        </div>`;
       }
 
       function renderShops(list) {
         const tbody = document.getElementById('shops-table-body');
         if (!tbody) return;
-
-        if (list.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
-                <i class="fa-regular fa-folder-open" style="font-size:2rem;margin-bottom:10px;display:block"></i>
-                <div>${tr('noShopsFound')}</div>
-              </td>
-            </tr>
-          `;
+        if (!list.length) {
+          tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fa-regular fa-folder-open"></i>${esc(tr('noShops'))}</div></td></tr>`;
           return;
         }
-
-        tbody.innerHTML = list.map(tData => {
-          const pwd = getShopPassword(tData);
-          const branches = getShopBranches(tData);
-          const onlineCount = branches.filter(b => b.isOnline).length;
-          const hasBranches = branches.length > 0;
-          const hasOnline = onlineCount > 0;
-
-          let branchBadgeHtml = '';
-          if (!hasBranches) {
-            branchBadgeHtml = `
-              <span class="branch-pill empty">
-                <span class="live-dot gray"></span>
-                <span>${tr('noBranchesConnected')}</span>
-              </span>
-            `;
-          } else {
-            const statusClass = hasOnline ? 'online' : 'offline';
-            const dotClass = hasOnline ? 'green' : 'amber';
-            const labelText = branches.length === 1 ? `1 ${tr('branchSingle')}` : `${branches.length} ${tr('branchPlural')}`;
-            const onlineText = hasOnline ? `(${onlineCount} ${tr('online')})` : `(${tr('offline')})`;
-
-            branchBadgeHtml = `
-              <button type="button" class="branch-pill ${statusClass}" onclick="SuperAdmin.openBranchesModal('${tData.id}')" title="${tr('btnInspectBranches')}">
-                <span class="live-dot ${dotClass}"></span>
-                <span style="font-weight:800">${labelText}</span>
-                <span style="font-size:0.75rem;opacity:0.85">${onlineText}</span>
-                <i class="fa-solid fa-chevron-right" style="font-size:0.65rem;margin-inline-start:4px"></i>
-              </button>
-            `;
-          }
-
-          return `
-            <tr>
-              <td>
-                <div style="font-weight:800;color:#fff;font-size:0.96rem">${tData.shop_name || 'Untitled Shop'}</div>
-                <div style="font-size:0.76rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-top:2px">
-                  <span>${tData.business_type || 'retail'}</span>
-                  <span>•</span>
-                  <span>${tData.currency || 'USD'}</span>
+        tbody.innerHTML = list.map(r => {
+          const t = r.t;
+          const id = esc(t.id);
+          const name = t.shop_name || 'Untitled';
+          const phone = t.whatsapp_phone || t.owner_phone || '';
+          return `<tr class="${r.active ? '' : 'is-inactive'}">
+            <td class="td-shop">
+              <div class="shop-cell">
+                <div class="avatar" style="background:${avatarColor(t.slug || name)}">${esc(name.trim().charAt(0).toUpperCase() || '?')}</div>
+                <div style="min-width:0">
+                  <div class="shop-name">${esc(name)}</div>
+                  <div class="shop-sub">
+                    <span class="slug">${esc(t.slug)}</span>
+                    ${phone ? `<span class="mono">${esc(phone)}</span>` : ''}
+                    <span class="pwd" title="${esc(tr('lblPwd'))}"><i class="fa-solid fa-key" style="font-size:.62rem"></i><span id="pwd-val-${id}">••••</span>
+                      <button type="button" onclick="SuperAdmin.togglePwdDisplay('${id}')" title="${esc(tr('showPwd'))}"><i class="fa-regular fa-eye" id="pwd-icon-${id}"></i></button>
+                    </span>
+                  </div>
                 </div>
-              </td>
-              <td>
-                <span class="slug-badge">
-                  <i class="fa-solid fa-link" style="font-size:0.7rem"></i>
-                  ${tData.slug}
-                </span>
-              </td>
-              <td>
-                ${branchBadgeHtml}
-              </td>
-              <td>
-                <div class="pwd-cell-box">
-                  <span class="pwd-text" id="pwd-val-${tData.id}">••••••••</span>
-                  <button type="button" class="pwd-action-btn" onclick="SuperAdmin.togglePwdDisplay('${tData.id}', '${pwd}')" title="Show / Hide">
-                    <i class="fa-regular fa-eye" id="pwd-icon-${tData.id}"></i>
-                  </button>
-                  <button type="button" class="pwd-action-btn" onclick="navigator.clipboard.writeText('${pwd}');alert('${tr('copiedPwd')}')" title="Copy">
-                    <i class="fa-regular fa-copy"></i>
-                  </button>
-                </div>
-              </td>
-              <td>
-                <span style="font-size:0.84rem;color:var(--text-secondary);font-family:var(--font-mono)">
-                  ${tData.whatsapp_phone || tData.owner_phone || '-'}
-                </span>
-              </td>
-              <td>
-                <span style="background:${tData.is_active !== false ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'};color:${tData.is_active !== false ? '#34d399' : '#f87171'};border:1px solid ${tData.is_active !== false ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'};padding:3px 10px;border-radius:9999px;font-size:0.74rem;font-weight:800;display:inline-flex;align-items:center;gap:5px">
-                  <span style="width:6px;height:6px;border-radius:50%;background:${tData.is_active !== false ? '#10b981' : '#ef4444'}"></span>
-                  ${tData.is_active !== false ? (_lang === 'ar' ? 'متجر نشط' : 'Active') : (_lang === 'ar' ? 'معطّل' : 'Inactive')}
-                </span>
-              </td>
-              <td>
-                <div class="actions-cluster">
-                  <a href="index.html?shop=${tData.slug}" target="_blank" class="btn-action-pro btn-store" title="Open Storefront">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                    <span>${tr('btnStore')}</span>
-                  </a>
-                  <a href="admin.html?shop=${tData.slug}" target="_blank" class="btn-action-pro btn-admin" title="Open Admin Panel">
-                    <i class="fa-solid fa-gauge-high"></i>
-                    <span>${tr('btnAdmin')}</span>
-                  </a>
-                  <button type="button" class="btn-action-pro btn-edit" onclick="SuperAdmin.openEditShopModal('${tData.id}')" title="Edit Settings">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                    <span>${tr('btnEdit')}</span>
-                  </button>
-                  <button type="button" class="btn-action-pro btn-reset" onclick="SuperAdmin.resetShopData('${tData.id}', '${tData.slug}')" title="Reset Products, Categories, Orders">
-                    <i class="fa-solid fa-arrows-rotate"></i>
-                    <span>${tr('btnReset')}</span>
-                  </button>
-                  <button type="button" class="btn-action-pro btn-danger" onclick="SuperAdmin.deleteShopTotally('${tData.id}', '${tData.slug}')" title="Permanently Delete Shop">
-                    <i class="fa-solid fa-trash-can"></i>
-                    <span>${tr('btnDelete')}</span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          `;
+              </div>
+            </td>
+            <td data-label="${esc(tr('thDevices'))}">${devicesCell(r)}</td>
+            <td data-label="${esc(tr('thVersion'))}">${versionCell(r)}</td>
+            <td data-label="${esc(tr('thLicense'))}">${licenseCell(r)}</td>
+            <td data-label="${esc(tr('thBackup'))}">${backupCell(r)}</td>
+            <td data-label="${esc(tr('thStatus'))}"><span class="chip ${r.active ? 'ok' : 'bad'}"><span class="dot"></span>${esc(r.active ? tr('active') : tr('inactive'))}</span></td>
+            <td class="td-actions">
+              <div class="row-actions">
+                <a class="btn btn-sm" href="index.html?shop=${encodeURIComponent(t.slug || '')}" target="_blank" rel="noopener" title="${esc(tr('open'))}"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                <a class="btn btn-sm" href="admin.html?shop=${encodeURIComponent(t.slug || '')}" target="_blank" rel="noopener" title="${esc(tr('admin'))}"><i class="fa-solid fa-gauge-high"></i></a>
+                <button type="button" class="btn btn-sm btn-accent" onclick="SuperAdmin.openBackupModal('${id}')"><i class="fa-solid fa-cloud-arrow-down"></i><span>${esc(tr('backup'))}</span></button>
+                <button type="button" class="btn btn-sm btn-icon btn-ghost" onclick="SuperAdmin.openRowMenu('${id}', this)" title="${esc(tr('more'))}"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+              </div>
+            </td>
+          </tr>`;
         }).join('');
       }
 
-      function togglePwdDisplay(id, realPwd) {
+      function togglePwdDisplay(id) {
+        const t = _allTenants.find(x => x.id === id);
         const textEl = document.getElementById('pwd-val-' + id);
         const iconEl = document.getElementById('pwd-icon-' + id);
-        if (!textEl) return;
-        if (textEl.textContent === '••••••••') {
-          textEl.textContent = realPwd;
-          if (iconEl) iconEl.className = 'fa-regular fa-eye-slash';
-        } else {
-          textEl.textContent = '••••••••';
-          if (iconEl) iconEl.className = 'fa-regular fa-eye';
-        }
+        if (!t || !textEl) return;
+        const hidden = textEl.textContent === '••••';
+        textEl.textContent = hidden ? getShopPassword(t) : '••••';
+        if (iconEl) iconEl.className = hidden ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
       }
 
-      // ─── BRANCH INSPECTOR MODAL ─────────────────────────────────────────────
+      // ─── Row menu ──────────────────────────────────────────────────────
+      function closeRowMenu() {
+        if (_menuEl) { _menuEl.remove(); _menuEl = null; }
+      }
+      function openRowMenu(id, btn) {
+        const wasOpen = _menuEl && _menuEl.dataset.id === id;
+        closeRowMenu();
+        if (wasOpen) return;
+        const t = _allTenants.find(x => x.id === id);
+        if (!t) return;
+        const m = document.createElement('div');
+        m.className = 'menu';
+        m.dataset.id = id;
+        m.innerHTML = `
+          <button type="button" data-act="edit"><i class="fa-solid fa-pen-to-square"></i>${esc(tr('edit'))}</button>
+          <button type="button" data-act="devices"><i class="fa-solid fa-network-wired"></i>${esc(tr('devices'))}</button>
+          <button type="button" data-act="copy"><i class="fa-regular fa-copy"></i>${esc(tr('copyPwd'))}</button>
+          <div class="sep"></div>
+          <button type="button" data-act="reset"><i class="fa-solid fa-rotate-left"></i>${esc(tr('reset'))}</button>
+          <button type="button" data-act="delete" class="danger"><i class="fa-solid fa-trash-can"></i>${esc(tr('del'))}</button>`;
+        m.addEventListener('click', (e) => {
+          const b = e.target.closest('button[data-act]');
+          if (!b) return;
+          const act = b.dataset.act;
+          closeRowMenu();
+          if (act === 'edit') openEditShopModal(id);
+          else if (act === 'devices') openBranchesModal(id);
+          else if (act === 'copy') { navigator.clipboard.writeText(getShopPassword(t)).then(() => toast(tr('copied'))).catch(() => { }); }
+          else if (act === 'reset') resetShopData(id, t.slug);
+          else if (act === 'delete') deleteShopTotally(id, t.slug);
+        });
+        document.body.appendChild(m);
+        _menuEl = m;
+        const rc = btn.getBoundingClientRect();
+        const mw = m.offsetWidth, mh = m.offsetHeight;
+        let left = document.documentElement.dir === 'rtl' ? rc.left : rc.right - mw;
+        left = Math.max(8, Math.min(left, window.innerWidth - mw - 8));
+        let top = rc.bottom + 6;
+        if (top + mh > window.innerHeight - 8) top = Math.max(8, rc.top - mh - 6);
+        m.style.left = left + 'px';
+        m.style.top = top + 'px';
+      }
+      document.addEventListener('click', (e) => {
+        if (_menuEl && !e.target.closest('.menu') && !e.target.closest('[onclick*="openRowMenu"]')) { closeRowMenu(); renderAll(); }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        closeRowMenu();
+        ['modal-branches', 'modal-backup', 'modal-shop'].forEach(i => document.getElementById(i).classList.remove('open'));
+        _backupModalShop = null;
+      });
+      window.addEventListener('scroll', () => { if (_menuEl) { closeRowMenu(); renderAll(); } }, true);
+
+      // ─── Devices modal ─────────────────────────────────────────────────
+      function licText(lic) {
+        if (!lic) return '—';
+        const d = lic.expiry || '';
+        if (lic.status === 'active') return tr('licActive', { d });
+        if (lic.status === 'demo') return tr('licDemo', { d });
+        if (lic.status === 'expired') return tr('licExpiredOn', { d });
+        if (lic.status === 'demo_expired') return tr('licDemoExpired');
+        if (lic.status === 'invalid') return tr('licInvalid');
+        return tr('licNone');
+      }
+
       function openBranchesModal(shopId) {
-        const shop = _allTenants.find(x => x.id === shopId);
-        if (!shop) return;
-
-        const branches = getShopBranches(shop);
-        const modal = document.getElementById('modal-branches');
-        const infoEl = document.getElementById('branch-modal-shop-info');
-        const listEl = document.getElementById('branch-cards-list');
-
-        infoEl.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-            <div>
-              <span style="font-weight:900;font-size:1.05rem;color:#fff">${shop.shop_name}</span>
-              <span class="slug-badge" style="margin-inline-start:8px">${shop.slug}</span>
-            </div>
-            <div style="font-size:0.8rem;color:var(--text-secondary)">
-              ${_lang === 'ar' ? 'إجمالي الأجهزة:' : 'Total Terminals:'} <strong style="color:#fff">${branches.length}</strong>
-            </div>
+        const t = _allTenants.find(x => x.id === shopId);
+        if (!t) return;
+        const devices = getShopBranches(t);
+        const body = document.getElementById('branches-body');
+        body.innerHTML = `
+          <div class="info-bar" style="margin-bottom:14px">
+            <div><strong>${esc(t.shop_name)}</strong> <span class="slug" style="margin-inline-start:8px">${esc(t.slug)}</span></div>
+            <span class="chip none">${esc(devices.length === 1 ? tr('device1') : tr('devicesN', { n: devices.length }))}</span>
           </div>
-        `;
-
-        if (branches.length === 0) {
-          listEl.innerHTML = `
-            <div style="text-align:center;padding:30px;color:var(--text-muted)">
-              <i class="fa-solid fa-network-wired" style="font-size:2rem;margin-bottom:10px;display:block"></i>
-              ${tr('noBranchesConnected')}
-            </div>
-          `;
-        } else {
-          listEl.innerHTML = branches.map(b => {
-            const isServer = b.role === 'server' || b.branchId === 'main';
-            const statusColor = b.isOnline ? '#34d399' : '#f87171';
-            const statusBg = b.isOnline ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
-            const statusBorder = b.isOnline ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)';
-
-            return `
-              <div class="branch-node-card">
-                <div class="node-meta">
-                  <h4>
-                    <span class="live-dot ${b.isOnline ? 'green' : 'amber'}"></span>
-                    <span>${b.name}</span>
-                    <span style="font-size:0.72rem;background:${isServer ? 'rgba(99, 102, 241, 0.15)' : 'rgba(6, 182, 212, 0.15)'};color:${isServer ? '#a5b4fc' : '#38bdf8'};border:1px solid ${isServer ? 'rgba(99, 102, 241, 0.3)' : 'rgba(6, 182, 212, 0.3)'};padding:2px 8px;border-radius:6px;font-weight:700">
-                      ${isServer ? tr('serverRole') : tr('branchRole')}
-                    </span>
-                  </h4>
-                  <p>
-                    <span><i class="fa-solid fa-microchip"></i> Node ID: <code style="font-family:var(--font-mono);color:#e2e8f0">${b.nodeId}</code></span>
-                    <span><i class="fa-solid fa-code-branch"></i> Branch: ${b.branchId}</span>
-                  </p>
-                  <p style="margin-top:6px;font-size:0.75rem">
-                    <span style="background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};padding:2px 8px;border-radius:6px;font-weight:800">
-                      ${b.isOnline ? tr('online') : tr('offline')}
-                    </span>
-                    <span style="color:var(--text-muted)">
-                      <i class="fa-regular fa-clock"></i> ${b.timeAgoText}
-                    </span>
-                  </p>
+          ${!devices.length ? `<div class="empty-state"><i class="fa-solid fa-network-wired"></i>${esc(tr('noDevices'))}</div>` : `<div class="list">${devices.map(d => {
+            const isServer = d.role === 'server';
+            return `<div class="list-row">
+              <div style="min-width:0">
+                <div class="title">
+                  <span class="chip ${d.isOnline ? 'ok' : 'warn'}" style="height:22px"><span class="dot ${d.isOnline ? 'live' : ''}"></span>${esc(d.isOnline ? tr('online') : tr('offline'))}</span>
+                  ${esc(d.name)}
+                  <span class="chip ${isServer ? 'info' : 'none'}" style="height:22px">${esc(isServer ? tr('serverRole') : tr('branchRole'))}</span>
                 </div>
-                <div>
-                  <button type="button" class="btn-action-pro btn-danger" onclick="SuperAdmin.removeBranchNode('${shop.id}', '${b.nodeId}')" title="Remove stale node from cloud">
-                    <i class="fa-solid fa-trash-can"></i>
-                    <span>${_lang === 'ar' ? 'حذف الجهاز' : 'Remove'}</span>
-                  </button>
+                <div class="meta">
+                  <span><i class="fa-solid fa-microchip"></i> <span class="mono">${esc(d.nodeId)}</span></span>
+                  <span><i class="fa-regular fa-clock"></i> ${esc(tr('lastSeen'))}: ${esc(ago(d.lastSeen))}</span>
+                  <span><i class="fa-solid fa-code-branch"></i> ${esc(tr('version'))}: <span class="mono">${esc(d.appVersion ? 'v' + d.appVersion : (d.appBuild ? tr('buildN', { n: d.appBuild }) : '—'))}</span></span>
+                  <span><i class="fa-solid fa-id-card"></i> ${esc(tr('license'))}: ${esc(licText(d.license))}</span>
+                  <span><i class="fa-solid fa-database"></i> ${esc(tr('lastAuto'))}: ${esc(d.localBackup ? ago(d.localBackup.at) : '—')}</span>
                 </div>
               </div>
-            `;
-          }).join('');
-        }
-
-        modal.style.display = 'flex';
+              <button type="button" class="btn btn-sm btn-danger" onclick="SuperAdmin.removeBranchNode('${esc(t.id)}', '${esc(d.nodeId)}')"><i class="fa-solid fa-trash-can"></i><span>${esc(tr('remove'))}</span></button>
+            </div>`;
+          }).join('')}</div>`}`;
+        document.getElementById('modal-branches').classList.add('open');
       }
+      function closeBranchesModal() { document.getElementById('modal-branches').classList.remove('open'); }
 
-      function closeBranchesModal() {
-        document.getElementById('modal-branches').style.display = 'none';
+      // Re-read the shop just before writing, so a heartbeat written a moment ago is not lost.
+      async function fetchTenant(shopId) {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${encodeURIComponent(shopId)}&select=*`, { headers: headers() });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const rows = await r.json();
+        if (!rows[0]) throw new Error('Shop not found');
+        return rows[0];
+      }
+      async function patchBanner(shopId, banner) {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${encodeURIComponent(shopId)}`, {
+          method: 'PATCH', headers: headers({ 'Content-Type': 'application/json' }), body: JSON.stringify({ banner_url: JSON.stringify(banner) })
+        });
+        if (!r.ok) throw new Error(await r.text());
       }
 
       async function removeBranchNode(shopId, nodeId) {
-        if (!confirm(_lang === 'ar' ? `هل أنت متأكد من إزالة الجهاز (${nodeId}) من السحاب؟` : `Are you sure you want to remove node (${nodeId}) from cloud?`)) {
-          return;
-        }
-
+        if (!confirm(tr('removeConfirm', { n: nodeId }))) return;
         try {
-          const shop = _allTenants.find(x => x.id === shopId);
-          if (!shop) return;
-          let b = {};
-          try {
-            b = typeof shop.banner_url === 'string' ? JSON.parse(shop.banner_url) : (shop.banner_url || {});
-          } catch(e){}
-
-          if (Array.isArray(b.connected_branches)) {
-            b.connected_branches = b.connected_branches.filter(item => item.nodeId !== nodeId);
-          }
-          if (Array.isArray(b.pos_branches)) {
-            b.pos_branches = b.pos_branches.filter(item => item.nodeId !== nodeId);
-          }
-
-          const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${shopId}`, {
-            method: 'PATCH',
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_KEY,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ banner_url: JSON.stringify(b) })
-          });
-
-          if (!resp.ok) throw new Error(await resp.text());
-          alert(tr('nodeRemovedSuccess'));
+          const b = parseBanner(await fetchTenant(shopId));
+          if (Array.isArray(b.connected_branches)) b.connected_branches = b.connected_branches.filter(i => i.nodeId !== nodeId);
+          if (Array.isArray(b.pos_branches)) b.pos_branches = b.pos_branches.filter(i => i.nodeId !== nodeId);
+          await patchBanner(shopId, b);
+          toast(tr('nodeRemoved'));
           await loadShops();
           openBranchesModal(shopId);
+        } catch (e) { alert(tr('error') + e.message); }
+      }
+
+      // ─── Backup: crypto helpers ────────────────────────────────────────
+      const b64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+      async function unlockBackupKey(password) {
+        const w = BACKUP_KEY_WRAPPED;
+        if (!w) throw new Error('no key');
+        const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+        const aes = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64(w.salt), iterations: w.iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+        const pkcs8 = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(w.iv) }, aes, b64(w.data));
+        _backupKey = await crypto.subtle.importKey('pkcs8', pkcs8, { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['decrypt']);
+        return _backupKey;
+      }
+      // "RSBK1" | uint16 len | RSA-OAEP wrapped AES key | 12-byte IV | AES-GCM(gzip JSON)
+      async function decryptBackup(buf) {
+        const u = new Uint8Array(buf);
+        if (String.fromCharCode(...u.slice(0, 5)) !== 'RSBK1') throw new Error('Not a Red Shark cloud backup');
+        const len = (u[5] << 8) | u[6];
+        const wrapped = u.slice(7, 7 + len);
+        const iv = u.slice(7 + len, 19 + len);
+        const data = u.slice(19 + len);
+        const raw = await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, _backupKey, wrapped);
+        const aes = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+        const gz = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aes, data);
+        return new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+      }
+
+      // ─── Backup modal ──────────────────────────────────────────────────
+      let _cloudList = { shopId: null, items: null, error: null };
+
+      async function loadCloudList(shopId) {
+        _cloudList = { shopId, items: null, error: null };
+        try {
+          const r = await fetch(`${SUPABASE_URL}/storage/v1/object/list/${BACKUP_BUCKET}`, {
+            method: 'POST', headers: headers({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ prefix: shopId, limit: 100, offset: 0, sortBy: { column: 'name', order: 'desc' } })
+          });
+          if (!r.ok) throw new Error(r.status === 400 || r.status === 404 ? 'storage-missing' : 'HTTP ' + r.status);
+          const items = (await r.json()).filter(i => i && i.name && /\.rsbk$/.test(i.name));
+          _cloudList = { shopId, items, error: null };
         } catch (e) {
-          alert('Error removing node: ' + e.message);
+          _cloudList = { shopId, items: [], error: e.message };
         }
       }
 
-      // ─── SHOP CREATION & EDIT MODAL ─────────────────────────────────────────
+      function parseBackupName(name) {
+        // 20261120_143015__POS-01-RedSharkPOS_default__live.rsbk  (time in UTC)
+        const m = /^(\d{8})_(\d{6})__(.+?)__(.+)\.rsbk$/.exec(name);
+        if (!m) return { at: null, node: name, source: '' };
+        const at = new Date(`${m[1].slice(0, 4)}-${m[1].slice(4, 6)}-${m[1].slice(6, 8)}T${m[2].slice(0, 2)}:${m[2].slice(2, 4)}:${m[2].slice(4, 6)}Z`);
+        return { at, node: m[3], source: m[4] };
+      }
+
+      async function openBackupModal(shopId) {
+        _backupModalShop = shopId;
+        document.getElementById('modal-backup').classList.add('open');
+        _cloudList = { shopId, items: null, error: null };
+        renderBackupModal();
+        await loadCloudList(shopId);
+        if (_backupModalShop === shopId) renderBackupModal();
+      }
+      function closeBackupModal() {
+        _backupModalShop = null;
+        document.getElementById('modal-backup').classList.remove('open');
+      }
+
+      function backupRequestState(r) {
+        const req = r.banner.backup_request;
+        if (!req || !req.id) return null;
+        const done = r.devices.some(d => d.cloudBackup && d.cloudBackup.last && d.cloudBackup.last.req === req.id);
+        const preparing = r.devices.some(d => d.cloudBackup && d.cloudBackup.pendingReq === req.id);
+        const ageH = (Date.now() - new Date(req.at).getTime()) / 3600000;
+        if (done) return { cls: 'ok', text: tr('bkDone') };
+        if (ageH > 24) return null;
+        if (preparing) return { cls: 'info', text: tr('bkPreparing') };
+        return { cls: 'warn', text: tr('bkWaiting', { t: ago(req.at) }) };
+      }
+
+      function renderBackupModal(refreshListToo) {
+        const r = _rows.find(x => x.t.id === _backupModalShop);
+        const body = document.getElementById('backup-body');
+        if (!r || !body) return;
+        if (refreshListToo) loadCloudList(r.t.id).then(() => { if (_backupModalShop === r.t.id) renderBackupModal(); });
+        const notices = [];
+        if (!BACKUP_KEY_WRAPPED) notices.push(`<div class="notice warn"><i class="fa-solid fa-key"></i> ${esc(tr('bkNotSetup'))}</div>`);
+        if (r.devices.length && !r.supportsBackup) notices.push(`<div class="notice warn"><i class="fa-solid fa-arrow-up"></i> ${esc(tr('bkOldVersion'))}</div>`);
+        if (r.supportsBackup && !r.devices.some(d => d.cloudBackup && d.cloudBackup.ready)) notices.push(`<div class="notice warn"><i class="fa-solid fa-key"></i> ${esc(tr('bkNoKeyOnShop'))}</div>`);
+        const errDev = r.devices.find(d => d.cloudBackup && d.cloudBackup.error);
+        if (errDev) notices.push(`<div class="notice bad"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(tr('bkError', { e: errDev.cloudBackup.error }))} <span class="muted">(${esc(ago(errDev.cloudBackup.errorAt))})</span></div>`);
+        const st = backupRequestState(r);
+        if (st && !r.online.length && st.cls === 'warn') notices.push(`<div class="notice"><i class="fa-solid fa-plug-circle-xmark"></i> ${esc(tr('bkOffline'))}</div>`);
+
+        const canRequest = r.supportsBackup && !!BACKUP_KEY_WRAPPED;
+
+        let listHtml;
+        if (_cloudList.items === null) listHtml = `<div class="empty-state" style="padding:28px"><i class="fa-solid fa-spinner fa-spin"></i></div>`;
+        else if (_cloudList.error === 'storage-missing') listHtml = `<div class="notice warn">${esc(tr('bkStorageMissing'))}</div>`;
+        else if (_cloudList.error) listHtml = `<div class="notice bad">${esc(tr('error') + _cloudList.error)}</div>`;
+        else if (!_cloudList.items.length) listHtml = `<div class="empty-state" style="padding:28px"><i class="fa-solid fa-cloud"></i>${esc(tr('bkNone'))}</div>`;
+        else listHtml = `<div class="list">${_cloudList.items.map(it => {
+          const p = parseBackupName(it.name);
+          const size = it.metadata && it.metadata.size;
+          const kind = p.source === 'live' ? tr('bkLive') : (p.source.startsWith('daily-') ? tr('bkDaily', { d: p.source.slice(6) }) : p.source);
+          return `<div class="list-row">
+            <div style="min-width:0">
+              <div class="title"><i class="fa-solid fa-file-shield tone-accent"></i>${esc(p.at ? fmtDateTime(p.at) : it.name)}</div>
+              <div class="meta"><span class="mono">${esc(p.node)}</span><span>${esc(kind)}</span>${size ? `<span>${esc(fmtSize(size))}</span>` : ''}</div>
+            </div>
+            <button type="button" class="btn btn-sm btn-accent" onclick="SuperAdmin.downloadBackup(this, '${esc(r.t.id)}', '${esc(it.name)}')" ${BACKUP_KEY_WRAPPED ? '' : 'disabled'}><i class="fa-solid fa-download"></i><span>${esc(tr('bkDownload'))}</span></button>
+          </div>`;
+        }).join('')}</div>`;
+
+        const unlockHtml = (BACKUP_KEY_WRAPPED && !_backupKey) ? `
+          <div class="section-title"><i class="fa-solid fa-lock"></i>${esc(tr('bkUnlock'))}</div>
+          <div style="display:flex;gap:8px">
+            <input type="password" id="bk-unlock-pwd" class="input" style="flex:1" autocomplete="current-password" onkeydown="if(event.key==='Enter')SuperAdmin.unlockFromModal()">
+            <button type="button" class="btn btn-accent" onclick="SuperAdmin.unlockFromModal()"><i class="fa-solid fa-lock-open"></i><span>${esc(tr('bkUnlockBtn'))}</span></button>
+          </div>
+          <div id="bk-unlock-err" class="hint" style="color:#fda4af"></div>` : '';
+
+        body.innerHTML = `
+          <div class="info-bar" style="margin-bottom:14px">
+            <div><strong>${esc(r.t.shop_name)}</strong> <span class="slug" style="margin-inline-start:8px">${esc(r.t.slug)}</span></div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              ${st ? `<span class="chip ${st.cls}">${esc(st.text)}</span>` : ''}
+              <button type="button" class="btn btn-sm btn-primary" onclick="SuperAdmin.requestBackup('${esc(r.t.id)}')" ${canRequest ? '' : 'disabled'}><i class="fa-solid fa-cloud-arrow-up"></i><span>${esc(tr('bkRequest'))}</span></button>
+            </div>
+          </div>
+          <div class="notice" style="margin-bottom:12px"><i class="fa-solid fa-shield-halved"></i> ${esc(tr('bkIntro'))} ${esc(tr('bkRestoreHint'))}</div>
+          ${notices.length ? `<div style="display:grid;gap:8px;margin-bottom:12px">${notices.join('')}</div>` : ''}
+          <div class="section-title"><i class="fa-solid fa-desktop"></i>${esc(tr('bkDevices'))}</div>
+          ${r.devices.length ? `<div class="list">${r.devices.map(d => `
+            <div class="list-row">
+              <div style="min-width:0">
+                <div class="title"><span class="dot ${d.isOnline ? 'live tone-ok' : 'tone-warn'}"></span>${esc(d.name)} <span class="mono muted" style="font-size:.74rem">${esc(d.nodeId)}</span></div>
+                <div class="meta">
+                  <span><i class="fa-solid fa-database"></i> ${esc(tr('lastAuto'))}: ${esc(d.localBackup ? ago(d.localBackup.at) + ' · ' + fmtSize(d.localBackup.size) : '—')}</span>
+                  <span><i class="fa-solid fa-cloud"></i> ${esc(tr('cloudCopy'))}: ${esc(d.cloudBackup && d.cloudBackup.last ? ago(d.cloudBackup.last.at) : '—')}</span>
+                </div>
+              </div>
+            </div>`).join('')}</div>` : `<div class="empty-state" style="padding:20px">${esc(tr('noDevices'))}</div>`}
+          ${unlockHtml}
+          <div class="section-title"><i class="fa-solid fa-cloud"></i>${esc(tr('bkCloudList'))}</div>
+          ${listHtml}`;
+      }
+
+      async function unlockFromModal() {
+        const input = document.getElementById('bk-unlock-pwd');
+        const err = document.getElementById('bk-unlock-err');
+        try {
+          await unlockBackupKey((input.value || '').trim());
+          renderBackupModal();
+        } catch (e) {
+          if (err) err.textContent = tr('bkWrongPwd');
+          if (input) { input.value = ''; input.focus(); }
+        }
+      }
+
+      async function requestBackup(shopId) {
+        try {
+          const b = parseBanner(await fetchTenant(shopId));
+          b.backup_request = { id: 'REQ-' + Date.now().toString(36).toUpperCase(), at: new Date().toISOString() };
+          await patchBanner(shopId, b);
+          toast(tr('bkRequested'));
+          await loadShops();
+          if (_backupModalShop === shopId) renderBackupModal();
+        } catch (e) { alert(tr('error') + e.message); }
+      }
+
+      async function downloadBackup(btn, shopId, name) {
+        if (!_backupKey) {
+          const input = document.getElementById('bk-unlock-pwd');
+          if (input) input.focus();
+          toast(tr('bkUnlock'));
+          return;
+        }
+        const old = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>${esc(tr('bkDecrypting'))}</span>`;
+        try {
+          const r = await fetch(`${SUPABASE_URL}/storage/v1/object/authenticated/${BACKUP_BUCKET}/${encodeURIComponent(shopId)}/${encodeURIComponent(name)}`, { headers: headers() });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          const json = await decryptBackup(await r.arrayBuffer());
+          const t = _allTenants.find(x => x.id === shopId);
+          const p = parseBackupName(name);
+          const stamp = p.at ? new Date(p.at.getTime() - p.at.getTimezoneOffset() * 60000).toISOString().slice(0, 16).replace('T', '_').replace(':', '') : 'backup';
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+          a.download = `redshark_backup_${(t && t.slug) || 'shop'}_${stamp}_${p.node}.json`.replace(/[^A-Za-z0-9._-]+/g, '-');
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+          toast(tr('bkSaved'));
+        } catch (e) {
+          alert(tr('error') + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = old;
+        }
+      }
+
+      // ─── Create / edit shop ────────────────────────────────────────────
       function openNewShopModal() {
         document.getElementById('edit-shop-id').value = '';
-        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-store" style="color:var(--brand-red)"></i> <span>${tr('modalShopTitleNew')}</span>`;
-        document.getElementById('btn-save-shop-text').textContent = tr('btnSaveShopNew');
-        
+        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-store tone-bad"></i><span>${esc(tr('modalNew'))}</span>`;
+        document.getElementById('btn-save-shop-text').textContent = tr('saveNew');
         document.getElementById('shop-name-input').value = '';
         document.getElementById('shop-slug-input').value = '';
         document.getElementById('shop-slug-input').disabled = false;
@@ -1655,32 +1304,26 @@
         document.getElementById('shop-phone-input').value = '';
         document.getElementById('shop-delivery-input').value = '2';
         document.getElementById('shop-lbp-input').value = '89500';
-
-        document.getElementById('modal-shop').style.display = 'flex';
+        document.getElementById('modal-shop').classList.add('open');
+        setTimeout(() => document.getElementById('shop-name-input').focus(), 50);
       }
 
       function openEditShopModal(id) {
-        const tData = _allTenants.find(x => x.id === id);
-        if (!tData) return;
-
-        document.getElementById('edit-shop-id').value = tData.id;
-        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-pen-to-square" style="color:var(--brand-indigo)"></i> <span>${tr('modalShopTitleEdit')}${tData.shop_name}</span>`;
-        document.getElementById('btn-save-shop-text').textContent = tr('btnSaveShopEdit');
-
-        document.getElementById('shop-name-input').value = tData.shop_name || '';
-        document.getElementById('shop-slug-input').value = tData.slug || '';
+        const t = _allTenants.find(x => x.id === id);
+        if (!t) return;
+        document.getElementById('edit-shop-id').value = t.id;
+        document.getElementById('modal-shop-title').innerHTML = `<i class="fa-solid fa-pen-to-square tone-accent"></i><span>${esc(tr('modalEdit') + (t.shop_name || ''))}</span>`;
+        document.getElementById('btn-save-shop-text').textContent = tr('saveEdit');
+        document.getElementById('shop-name-input').value = t.shop_name || '';
+        document.getElementById('shop-slug-input').value = t.slug || '';
         document.getElementById('shop-slug-input').disabled = true;
-        document.getElementById('shop-pwd-input').value = getShopPassword(tData);
-        document.getElementById('shop-phone-input').value = tData.whatsapp_phone || tData.owner_phone || '';
-        document.getElementById('shop-delivery-input').value = tData.delivery_fee || 2;
-        document.getElementById('shop-lbp-input').value = tData.currency_lbp_rate || 89500;
-
-        document.getElementById('modal-shop').style.display = 'flex';
+        document.getElementById('shop-pwd-input').value = getShopPassword(t);
+        document.getElementById('shop-phone-input').value = t.whatsapp_phone || t.owner_phone || '';
+        document.getElementById('shop-delivery-input').value = t.delivery_fee || 2;
+        document.getElementById('shop-lbp-input').value = t.currency_lbp_rate || 89500;
+        document.getElementById('modal-shop').classList.add('open');
       }
-
-      function closeShopModal() {
-        document.getElementById('modal-shop').style.display = 'none';
-      }
+      function closeShopModal() { document.getElementById('modal-shop').classList.remove('open'); }
 
       async function saveShop() {
         const id = document.getElementById('edit-shop-id').value;
@@ -1690,139 +1333,69 @@
         const phone = document.getElementById('shop-phone-input').value.trim();
         const delivery = parseFloat(document.getElementById('shop-delivery-input').value) || 2;
         const lbp = parseInt(document.getElementById('shop-lbp-input').value, 10) || 89500;
-
-        if (!name) {
-          alert(_lang === 'ar' ? 'يرجى إدخال اسم المتجر' : 'Please enter shop name');
-          return;
-        }
-
+        if (!name) return alert(tr('needName'));
         try {
           if (!id) {
-            if (!slug) {
-              alert(_lang === 'ar' ? 'يرجى إدخال المعرف الرابطي Slug' : 'Please enter slug identifier');
-              return;
-            }
-            if (_allTenants.some(t => t.slug === slug)) {
-              alert(_lang === 'ar' ? 'هذا المعرّف (Slug) مستخدم بالفعل! اختر اسماً آخر.' : 'This slug is already taken! Choose another.');
-              return;
-            }
-
+            if (!slug) return alert(tr('needSlug'));
+            if (_allTenants.some(t => t.slug === slug)) return alert(tr('slugTaken'));
             const initialBanner = {
               admin_password: pwd,
               active: true,
-              slides: [
-                {
-                  active: true,
-                  title: 'أهلاً بكم في متجرنا الإلكتروني!',
-                  subtitle: 'أفضل العروض والمنتجات بأفضل الأسعار وأسرع خدمة توصيل',
-                  badge: 'متجر رسمي معتمد',
-                  image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80'
-                }
-              ],
+              slides: [{
+                active: true,
+                title: 'أهلاً بكم في متجرنا الإلكتروني!',
+                subtitle: 'أفضل العروض والمنتجات بأفضل الأسعار وأسرع خدمة توصيل',
+                badge: 'متجر رسمي معتمد',
+                image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80'
+              }],
               connected_branches: []
             };
-
             const payload = {
-              shop_name: name,
-              slug: slug,
-              whatsapp_phone: phone,
-              owner_phone: phone,
-              delivery_fee: delivery,
-              currency_lbp_rate: lbp,
-              currency: 'USD',
-              is_active: true,
-              link_pos_stock: true,
-              allow_out_of_stock: false,
+              shop_name: name, slug, whatsapp_phone: phone, owner_phone: phone,
+              delivery_fee: delivery, currency_lbp_rate: lbp, currency: 'USD',
+              is_active: true, link_pos_stock: true, allow_out_of_stock: false,
               banner_url: JSON.stringify(initialBanner)
             };
-
             const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants`, {
-              method: 'POST',
-              headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': 'Bearer ' + SUPABASE_KEY,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-              },
-              body: JSON.stringify(payload)
+              method: 'POST', headers: headers({ 'Content-Type': 'application/json', 'Prefer': 'return=representation' }), body: JSON.stringify(payload)
             });
-
             if (!resp.ok) throw new Error(await resp.text());
-            alert(_lang === 'ar' ? 'تم إنشاء المتجر وتفعيله بنجاح!' : 'Shop created and activated successfully!');
+            toast(tr('created'));
           } else {
-            const existing = _allTenants.find(t => t.id === id);
-            let bannerObj = {};
-            try {
-              bannerObj = typeof existing?.banner_url === 'string' ? JSON.parse(existing.banner_url) : (existing?.banner_url || {});
-            } catch(e){}
+            const bannerObj = parseBanner(await fetchTenant(id));
             bannerObj.admin_password = pwd;
-
-            const payload = {
-              shop_name: name,
-              whatsapp_phone: phone,
-              delivery_fee: delivery,
-              currency_lbp_rate: lbp,
-              banner_url: JSON.stringify(bannerObj)
-            };
-
-            const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${id}`, {
-              method: 'PATCH',
-              headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': 'Bearer ' + SUPABASE_KEY,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-              },
-              body: JSON.stringify(payload)
+            const payload = { shop_name: name, whatsapp_phone: phone, delivery_fee: delivery, currency_lbp_rate: lbp, banner_url: JSON.stringify(bannerObj) };
+            const resp = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${encodeURIComponent(id)}`, {
+              method: 'PATCH', headers: headers({ 'Content-Type': 'application/json', 'Prefer': 'return=representation' }), body: JSON.stringify(payload)
             });
-
             if (!resp.ok) throw new Error(await resp.text());
-            alert(_lang === 'ar' ? 'تم تحديث بيانات المتجر بنجاح!' : 'Shop updated successfully!');
+            toast(tr('updated'));
           }
-
           closeShopModal();
           await loadShops();
-        } catch(e) {
-          alert((_lang === 'ar' ? 'حدث خطأ: ' : 'Error: ') + e.message);
-        }
+        } catch (e) { alert(tr('error') + e.message); }
       }
 
-      // ─── RESET CLOUD DATA ───────────────────────────────────────────────────
-      async function resetShopData(shopId, slug) {
-        const msg = _lang === 'ar'
-          ? `هل أنت متأكد تماماً من تصفير ومسح كافة بيانات المتجر (${slug}) من السحاب؟\n\nسيتم حذف:\n- كافة المنتجات (Products)\n- كافة الأقسام (Categories)\n- كافة طلبات الزبائن (Orders)\n- تصفير تسلسل المزامنة السحابية`
-          : `Are you sure you want to reset and wipe cloud data for (${slug})?\n\nThis will delete:\n- All Products\n- All Categories\n- All Customer Orders\n- Reset Cloud Sync Sequence`;
-
-        if (!confirm(msg)) return;
-
-        const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
-
-        try {
-          const ordersRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
-          if (ordersRes.ok) {
-            const orders = await ordersRes.json();
-            if (orders && orders.length > 0) {
-              const oIds = orders.map(o => o.id);
-              for (let i = 0; i < oIds.length; i += 50) {
-                const chunk = oIds.slice(i, i + 50);
-                await fetch(`${SUPABASE_URL}/rest/v1/order_items?order_id=in.(${chunk.join(',')})`, {
-                  method: 'DELETE',
-                  headers
-                });
-              }
-            }
+      // ─── Reset online-store data ───────────────────────────────────────
+      async function deleteStoreRows(shopId) {
+        const h = headers();
+        const ordersRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers: h });
+        if (ordersRes.ok) {
+          const ids = (await ordersRes.json() || []).map(o => o.id);
+          for (let i = 0; i < ids.length; i += 50) {
+            await fetch(`${SUPABASE_URL}/rest/v1/order_items?order_id=in.(${ids.slice(i, i + 50).join(',')})`, { method: 'DELETE', headers: h });
           }
+        }
+        await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}`, { method: 'DELETE', headers: h });
+        await fetch(`${SUPABASE_URL}/rest/v1/products?shop_id=eq.${shopId}`, { method: 'DELETE', headers: h });
+        await fetch(`${SUPABASE_URL}/rest/v1/categories?shop_id=eq.${shopId}`, { method: 'DELETE', headers: h });
+      }
 
-          await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
-          await fetch(`${SUPABASE_URL}/rest/v1/products?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
-          await fetch(`${SUPABASE_URL}/rest/v1/categories?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
-
-          const existing = _allTenants.find(t => t.id === shopId);
-          let bannerObj = {};
-          try {
-            bannerObj = typeof existing?.banner_url === 'string' ? JSON.parse(existing.banner_url) : (existing?.banner_url || {});
-          } catch(e) {}
-
+      async function resetShopData(shopId, slug) {
+        if (!confirm(tr('resetConfirm', { s: slug }))) return;
+        try {
+          await deleteStoreRows(shopId);
+          const bannerObj = parseBanner(await fetchTenant(shopId));
           const cleanBanner = {
             admin_password: bannerObj.admin_password || '1234',
             active: true,
@@ -1833,118 +1406,50 @@
             last_change_time: new Date().toISOString(),
             connected_branches: bannerObj.connected_branches || []
           };
-
-          await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${shopId}`, {
-            method: 'PATCH',
-            headers: { ...headers, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ banner_url: JSON.stringify(cleanBanner) })
-          });
-
-          alert(_lang === 'ar' ? `تم مسح وتصفير كافة بيانات المتجر (${slug}) بنجاح!` : `Cloud data for (${slug}) reset successfully!`);
+          if (bannerObj.backup_request) cleanBanner.backup_request = bannerObj.backup_request;
+          await patchBanner(shopId, cleanBanner);
+          toast(tr('resetDone', { s: slug }));
           await loadShops();
-        } catch(err) {
-          alert('Reset Error: ' + err.message);
-        }
+        } catch (e) { alert(tr('error') + e.message); }
       }
 
-      // ─── PERMANENTLY DELETE SHOP ─────────────────────────────────────────────
+      // ─── Delete shop ───────────────────────────────────────────────────
       async function deleteShopTotally(shopId, slug) {
-        const promptMsg = _lang === 'ar'
-          ? `تحذير أمني خطير: هل ترغب بحذف المتجر (${slug}) نهائياً من قاعدة البيانات السحابية؟\n\nسيتم مسح المتجر وكافة حساباته وطلباته وفروعه بشكل دائم.\n\nللتأكيد، اكتب اسم الـ Slug بالضبط:\n${slug}`
-          : `CRITICAL WARNING: Are you sure you want to permanently delete shop (${slug})?\n\nThis will destroy the shop record, all products, categories, orders, and branch connections.\n\nTo confirm, type the exact slug below:\n${slug}`;
-
-        const confirmSlug = prompt(promptMsg);
-        if (!confirmSlug || confirmSlug.trim().toLowerCase() !== slug.toLowerCase()) {
-          if (confirmSlug !== null) {
-            alert(_lang === 'ar' ? 'تم إلغاء الحذف: الاسم المدخل غير مطابق.' : 'Deletion aborted: Slug did not match.');
-          }
+        const typed = prompt(tr('deleteConfirm', { s: slug }));
+        if (!typed || typed.trim().toLowerCase() !== String(slug).toLowerCase()) {
+          if (typed !== null) alert(tr('deleteAbort'));
           return;
         }
-
-        const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
-
         try {
-          const ordersRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}&select=id`, { headers });
-          if (ordersRes.ok) {
-            const orders = await ordersRes.json();
-            if (orders && orders.length > 0) {
-              const oIds = orders.map(o => o.id);
-              for (let i = 0; i < oIds.length; i += 50) {
-                const chunk = oIds.slice(i, i + 50);
-                await fetch(`${SUPABASE_URL}/rest/v1/order_items?order_id=in.(${chunk.join(',')})`, { method: 'DELETE', headers });
-              }
-            }
-          }
-
-          await fetch(`${SUPABASE_URL}/rest/v1/orders?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
-          await fetch(`${SUPABASE_URL}/rest/v1/products?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
-          await fetch(`${SUPABASE_URL}/rest/v1/categories?shop_id=eq.${shopId}`, { method: 'DELETE', headers });
-
-          const tenantDel = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${shopId}`, {
-            method: 'DELETE',
-            headers
-          });
-
-          if (!tenantDel.ok) throw new Error(await tenantDel.text());
-
-          alert(_lang === 'ar' ? `تم حذف المتجر (${slug}) نهائياً من السحاب!` : `Shop (${slug}) deleted permanently from cloud!`);
+          await deleteStoreRows(shopId);
+          const del = await fetch(`${SUPABASE_URL}/rest/v1/tenants?id=eq.${shopId}`, { method: 'DELETE', headers: headers() });
+          if (!del.ok) throw new Error(await del.text());
+          toast(tr('deleteDone', { s: slug }));
           await loadShops();
-        } catch(err) {
-          alert('Delete Error: ' + err.message);
-        }
+        } catch (e) { alert(tr('error') + e.message); }
       }
 
-      // Auto-refresh heartbeats every 30 seconds
-      setInterval(() => {
-        if (sessionStorage.getItem('rs_master_auth') === 'true') {
-          loadShops();
-        }
-      }, 30000);
+      // Live refresh every 30 s (paused while a menu is open)
+      setInterval(() => { if (sessionStorage.getItem('rs_master_auth') === 'true' && !_menuEl) loadShops(); }, 30000);
 
-      // ─── INITIALIZATION ────────────────────────────────────────────────────
       function init() {
         applyLanguage(_lang);
-
-        const modal = document.getElementById('master-auth-modal');
+        const login = document.getElementById('login');
         const input = document.getElementById('master-key-input');
-
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') verifyMasterAuth(); });
         if (sessionStorage.getItem('rs_master_auth') === 'true') {
-          if (modal) {
-            modal.style.display = 'none';
-            modal.style.visibility = 'hidden';
-          }
+          login.classList.add('hidden');
           loadShops();
         } else {
-          if (modal) {
-            modal.style.display = 'flex';
-            modal.style.visibility = 'visible';
-          }
-          if (input) {
-            input.focus();
-            input.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter') verifyMasterAuth();
-            });
-          }
+          input.focus();
         }
       }
 
       return {
-        init,
-        toggleLanguage,
-        verifyMasterAuth,
-        loadShops,
-        filterShops,
-        setFilter,
-        togglePwdDisplay,
-        openBranchesModal,
-        closeBranchesModal,
-        removeBranchNode,
-        openNewShopModal,
-        openEditShopModal,
-        closeShopModal,
-        saveShop,
-        resetShopData,
-        deleteShopTotally
+        init, toggleLanguage, verifyMasterAuth, loadShops, filterShops, setFilter, togglePwdDisplay,
+        openRowMenu, openBranchesModal, closeBranchesModal, removeBranchNode,
+        openBackupModal, closeBackupModal, requestBackup, downloadBackup, unlockFromModal,
+        openNewShopModal, openEditShopModal, closeShopModal, saveShop, resetShopData, deleteShopTotally
       };
     })();
 
