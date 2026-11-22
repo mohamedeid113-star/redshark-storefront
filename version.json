@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.149",
-  "build": 237,
+  "version": "1.4.150",
+  "build": 238,
   "releaseDate": "2026-11-22",
-  "description": "Owner phone app: new Today screen (sales, profit, cash boxes, low stock, best sellers), Online Orders tab (accept, out for delivery, WhatsApp the customer) and alerts for new orders while the app is open.",
+  "description": "Faster switching between pages. New: Restart server in the profile menu; Phone Price Checker button in the top bar (switch it on in Settings > General); show/hide switches for the Price & Cost + Stock and Deliveries buttons; the Camera Scan switch now controls the camera button of the customer price checker.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
