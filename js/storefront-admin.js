@@ -743,6 +743,9 @@ const Admin = (() => {
             document.getElementById('admin-carousel-active').checked = parsed.active;
             updateBannerStatusBadge(parsed.active);
           }
+          _zones = Array.isArray(parsed.delivery_zones) ? parsed.delivery_zones.map(z => ({ name: z.name || '', fee: z.fee ?? '', min: z.min ?? '' })) : [];
+          const pk = document.getElementById('admin-allow-pickup'); if (pk) pk.checked = parsed.allow_pickup === true;
+          if (parsed.opening_hours && typeof parsed.opening_hours === 'object') _hours = parsed.opening_hours;
         } catch(e) {}
       } else if (trimmed.startsWith('http')) {
         _slides = [{ active: true, image_url: trimmed }];
@@ -750,7 +753,44 @@ const Admin = (() => {
     }
 
     renderSlidesList();
+    const he = document.getElementById('admin-hours-enabled'); if (he) he.checked = !!(_hours && _hours.enabled);
+    renderZones(); renderHours();
   }
+
+  // ── Delivery zones & opening hours ──
+  let _zones = [];
+  const DAY_NAMES = [['الأحد', 'Sun'], ['الاثنين', 'Mon'], ['الثلاثاء', 'Tue'], ['الأربعاء', 'Wed'], ['الخميس', 'Thu'], ['الجمعة', 'Fri'], ['السبت', 'Sat']];
+  let _hours = null;
+  function _defaultHours() { const days = {}; for (let i = 0; i < 7; i++) days[i] = { open: '09:00', close: '22:00', closed: false }; return { enabled: false, tz: 'Asia/Beirut', days }; }
+  function _escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+  function renderZones() {
+    const box = document.getElementById('admin-zones'); if (!box) return;
+    if (!_zones.length) { box.innerHTML = '<div style="font-size:.8rem;opacity:.6;padding:6px 0">— لا توجد مناطق · No zones —</div>'; return; }
+    box.innerHTML = '<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;font-size:.75rem;font-weight:800;opacity:.7;margin-bottom:4px"><span>المنطقة · Zone</span><span>التوصيل $ · Fee</span><span>الحد الأدنى $ · Min</span><span></span></div>' +
+      _zones.map((z, i) => `<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-bottom:6px">
+        <input class="field-input" value="${_escAttr(z.name)}" placeholder="الحمرا / Hamra" oninput="Admin.setZone(${i},'name',this.value)">
+        <input class="field-input" type="number" step="0.5" min="0" value="${_escAttr(z.fee)}" placeholder="2" oninput="Admin.setZone(${i},'fee',this.value)">
+        <input class="field-input" type="number" step="1" min="0" value="${_escAttr(z.min)}" placeholder="0" oninput="Admin.setZone(${i},'min',this.value)">
+        <button type="button" class="btn btn-secondary" onclick="Admin.removeZone(${i})" title="حذف">🗑️</button></div>`).join('');
+  }
+  function addZone() { _zones.push({ name: '', fee: '', min: '' }); renderZones(); }
+  function setZone(i, k, v) { if (_zones[i]) _zones[i][k] = v; }
+  function removeZone(i) { _zones.splice(i, 1); renderZones(); }
+  function renderHours() {
+    const box = document.getElementById('admin-hours'); if (!box) return;
+    if (!_hours || !_hours.days) _hours = _defaultHours();
+    const on = document.getElementById('admin-hours-enabled')?.checked;
+    _hours.enabled = !!on;
+    box.style.opacity = on ? '1' : '.5';
+    box.innerHTML = DAY_NAMES.map(([ar, en], i) => { const d = _hours.days[i] || { open: '09:00', close: '22:00', closed: false };
+      return `<div style="display:grid;grid-template-columns:120px auto 1fr 1fr;gap:8px;align-items:center;margin-bottom:6px">
+        <b style="font-size:.85rem">${ar} · ${en}</b>
+        <label style="display:flex;gap:4px;align-items:center;font-size:.8rem"><input type="checkbox" ${d.closed ? 'checked' : ''} onchange="Admin.setDay(${i},'closed',this.checked)"> مغلق · Closed</label>
+        <input class="field-input" type="time" value="${_escAttr(d.open)}" ${d.closed ? 'disabled' : ''} onchange="Admin.setDay(${i},'open',this.value)">
+        <input class="field-input" type="time" value="${_escAttr(d.close)}" ${d.closed ? 'disabled' : ''} onchange="Admin.setDay(${i},'close',this.value)"></div>`; }).join('') +
+      '<div style="font-size:.75rem;opacity:.65">إذا كان وقت الإغلاق بعد منتصف الليل (مثلاً 18:00 → 02:00) يُحسب لليوم نفسه. · A closing time after midnight counts for the same day. Times are Lebanon time.</div>';
+  }
+  function setDay(i, k, v) { if (!_hours) _hours = _defaultHours(); _hours.days[i] = { ...(_hours.days[i] || {}), [k]: v }; if (k === 'closed') renderHours(); }
 
   function updateBannerStatusBadge(isChecked) {
     const badge = document.getElementById('banner-active-badge');
@@ -1357,11 +1397,27 @@ const Admin = (() => {
     localStorage.setItem('rs_admin_pin', pin);
 
     const isCarouselActive = document.getElementById('admin-carousel-active')?.checked ?? true;
+    // Re-read the stored settings and merge: the same field also holds other data (manager
+    // password, branch status, cash boxes) that a plain overwrite would erase.
+    let currentBanner = {};
+    try {
+      const fresh = await StorefrontAPI.fetchTenant(_tenant.slug);
+      const raw = fresh && fresh.banner_url;
+      if (raw && String(raw).trim().startsWith('{')) currentBanner = JSON.parse(raw);
+    } catch (e) { currentBanner = {}; }
+    if (!currentBanner || typeof currentBanner !== 'object') currentBanner = {};
+    const zones = _zones.map(z => ({ name: String(z.name || '').trim(), fee: Math.max(0, parseFloat(z.fee) || 0), min: Math.max(0, parseFloat(z.min) || 0) })).filter(z => z.name);
+    if (_hours) _hours.enabled = !!document.getElementById('admin-hours-enabled')?.checked;
     const bannerPayload = {
+      ...currentBanner,
       active: isCarouselActive,
       slides: _slides,
-      category_images: _categoryImages
+      category_images: _categoryImages,
+      delivery_zones: zones,
+      allow_pickup: !!document.getElementById('admin-allow-pickup')?.checked,
+      opening_hours: _hours || _defaultHours()
     };
+    // (everything else already stored, e.g. cash-box status from the POS, is kept as it is)
 
     const payload = {
       shop_name: document.getElementById('admin-shop-name').value.trim(),
@@ -1550,7 +1606,7 @@ const Admin = (() => {
       const btn = document.getElementById('btn-confirm-pos-sync');
       if (btn) btn.disabled = false;
       const btnTxt = document.getElementById('btn-confirm-sync-text');
-      if (btnTxt) btnTxt.textContent = _currentLang === 'ar' ? 'إرسال المزامنة للكاشير الآن' : 'Push Sync to POS Now';
+      if (btnTxt) btnTxt.textContent = _lang === 'ar' ? 'إرسال المزامنة للكاشير الآن' : 'Push Sync to POS Now';
     }
   }
 
@@ -1560,7 +1616,7 @@ const Admin = (() => {
   }
 
   async function triggerPosSync() {
-    const isAR = _currentLang === 'ar';
+    const isAR = _lang === 'ar';
     const btn = document.getElementById('btn-confirm-pos-sync');
     const btnTxt = document.getElementById('btn-confirm-sync-text');
     const msg = document.getElementById('pos-sync-status-msg');
@@ -1932,6 +1988,7 @@ function closeMobileAppModal() {
 
 
   return {
+    addZone, setZone, removeZone, renderHours, setDay,
     openStorefront,
     init,
     verifyCredentials,

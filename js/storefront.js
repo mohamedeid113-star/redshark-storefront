@@ -278,6 +278,7 @@ const Storefront = (() => {
         return;
       }
       applyDynamicManifest(_tenant, _tenant.slug || slug);
+      try { setupCheckoutOptions(); } catch (e) { console.warn('[Storefront] checkout options', e); }
 
       document.title = _tenant.shop_name || document.title;
       _saveBrandCache(_tenant);
@@ -392,8 +393,9 @@ const Storefront = (() => {
     if (stockText) stockText.textContent = isLiveStock ? t('liveStockBadge') : t('menuModeBadge');
     if (stockPill) stockPill.className = 'header-pill ' + (isLiveStock ? 'pos-live' : '');
 
-    const deliveryFee = (parseFloat(_tenant.delivery_fee) || 0).toFixed(2);
-    if (delText) delText.textContent = `${t('deliveryFee')}: $${deliveryFee}`;
+    const cfgZ = storeCfg().zones;
+    const deliveryFee = cfgZ.length ? Math.min(...cfgZ.map(z => z.fee)).toFixed(2) : (parseFloat(_tenant.delivery_fee) || 0).toFixed(2);
+    if (delText) delText.textContent = `${t('deliveryFee')}: ${cfgZ.length ? (_currentLang === 'ar' ? 'من ' : 'from ') : ''}$${deliveryFee}`;
 
     if (_tenant.address && addrPill && addrText) {
       addrText.textContent = _tenant.address;
@@ -927,7 +929,7 @@ const Storefront = (() => {
   function updateLiveCart() {
     const totalCount = _cart.reduce((sum, it) => sum + it.quantity, 0);
     const subtotal = _cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
-    const deliveryFee = parseFloat(_tenant?.delivery_fee) || 0;
+    const deliveryFee = currentDeliveryFee();
     const grandTotal = totalCount > 0 ? (subtotal + deliveryFee) : 0;
     const lbpRate = parseFloat(_tenant?.currency_lbp_rate) || 89500;
     const totalLBP = Math.round(grandTotal * lbpRate).toLocaleString();
@@ -941,6 +943,7 @@ const Storefront = (() => {
     const sideLbp = document.getElementById('side-grand-lbp');
 
     if (sideBadge) sideBadge.textContent = totalCount;
+    showMinOrderNotes(subtotal);
     if (sideSubtotal) sideSubtotal.textContent = `$${subtotal.toFixed(2)}`;
     if (sideDelivery) sideDelivery.textContent = `$${deliveryFee.toFixed(2)}`;
     if (sideGrand) sideGrand.textContent = `$${grandTotal.toFixed(2)}`;
@@ -1020,6 +1023,140 @@ const Storefront = (() => {
     if (m) m.classList.remove('open');
   }
 
+  // ── Delivery zones, pickup, minimum order and opening hours (set in the store admin) ──
+  let _cfgCache = { raw: null, cfg: null };
+  function storeCfg() {
+    const raw = _tenant ? _tenant.banner_url : null;
+    if (_cfgCache.raw === raw && _cfgCache.cfg) return _cfgCache.cfg;
+    let b = {};
+    try { b = raw && String(raw).trim().startsWith('{') ? JSON.parse(raw) : {}; } catch (e) { b = {}; }
+    const zones = (Array.isArray(b.delivery_zones) ? b.delivery_zones : []).filter(z => z && z.name)
+      .map(z => ({ name: String(z.name), fee: Math.max(0, parseFloat(z.fee) || 0), min: Math.max(0, parseFloat(z.min) || 0) }));
+    const cfg = { zones, pickup: b.allow_pickup === true, hours: (b.opening_hours && b.opening_hours.enabled) ? b.opening_hours : null };
+    _cfgCache = { raw, cfg };
+    return cfg;
+  }
+  const PICKUP = '__pickup__';
+  function selectedZoneKey() { try { return localStorage.getItem('rs_sf_zone_' + (_tenant && _tenant.id)) || ''; } catch (e) { return ''; } }
+  function isPickup() { return storeCfg().pickup && selectedZoneKey() === PICKUP; }
+  function selectedZone() { const k = selectedZoneKey(); return storeCfg().zones.find(z => z.name === k) || null; }
+  function hasChoices() { const c = storeCfg(); return c.zones.length > 0 || c.pickup; }
+  function currentDeliveryFee() {
+    if (isPickup()) return 0;
+    const z = selectedZone();
+    if (z) return z.fee;
+    return parseFloat(_tenant?.delivery_fee) || 0;
+  }
+  function currentMinOrder() {
+    const z = selectedZone();
+    if (z && z.min) return z.min;
+    return parseFloat(_tenant?.min_order) || 0;
+  }
+  function addressWithZone(address) {
+    if (isPickup()) return (_currentLang === 'ar' ? '[استلام من المحل / Pickup] ' : '[Pickup / استلام من المحل] ') + String(address || '').trim();
+    const z = selectedZone();
+    return z ? `[${z.name}] ${String(address || '').trim()}` : address;
+  }
+  // shop's local time (Lebanon by default)
+  function shopClock(tz) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz || 'Asia/Beirut', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+      const g = k => (parts.find(p => p.type === k) || {}).value;
+      const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(g('weekday'));
+      return { day: day < 0 ? new Date().getDay() : day, min: ((parseInt(g('hour'), 10) || 0) % 24) * 60 + (parseInt(g('minute'), 10) || 0) };
+    } catch (e) { const n = new Date(); return { day: n.getDay(), min: n.getHours() * 60 + n.getMinutes() }; }
+  }
+  const _toMin = s => { const m = /^(\d{1,2}):(\d{2})/.exec(String(s || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+  function isOpenNow() {
+    const h = storeCfg().hours; if (!h || !h.days) return true;
+    const { day, min } = shopClock(h.tz);
+    const today = h.days[day] || h.days[String(day)], yest = h.days[(day + 6) % 7] || h.days[String((day + 6) % 7)];
+    const inDay = (d, part) => {
+      if (!d || d.closed) return false;
+      const o = _toMin(d.open), c = _toMin(d.close); if (o == null || c == null) return true;
+      if (o === c) return true;                      // open all day
+      if (o < c) return part === 'today' && min >= o && min < c;
+      return part === 'today' ? min >= o : min < c; // closes after midnight
+    };
+    return inDay(today, 'today') || inDay(yest, 'yesterday');
+  }
+  function nextOpeningText() {
+    const h = storeCfg().hours; if (!h || !h.days) return '';
+    const { day, min } = shopClock(h.tz);
+    const names = _currentLang === 'ar' ? ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'] : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    for (let i = 0; i < 8; i++) {
+      const dd = (day + i) % 7, d = h.days[dd] || h.days[String(dd)];
+      if (!d || d.closed) continue;
+      const o = _toMin(d.open); if (o == null) continue;
+      if (i === 0 && o <= min) continue;
+      const when = i === 0 ? (_currentLang === 'ar' ? 'اليوم' : 'today') : (i === 1 ? (_currentLang === 'ar' ? 'غداً' : 'tomorrow') : names[dd]);
+      return _currentLang === 'ar' ? `يفتح ${when} الساعة ${d.open}` : `Opens ${when} at ${d.open}`;
+    }
+    return '';
+  }
+  function orderBlockReason(subtotal) {
+    const ar = _currentLang === 'ar';
+    if (!isOpenNow()) return (ar ? '🕒 المتجر مغلق الآن ولا يستقبل الطلبات. ' : '🕒 The store is closed and not taking orders right now. ') + nextOpeningText();
+    if (hasChoices() && !isPickup() && !selectedZone() && storeCfg().zones.length) return ar ? 'يرجى اختيار منطقة التوصيل' : 'Please choose your delivery area';
+    const min = currentMinOrder();
+    if (min > 0 && subtotal < min) return ar ? `الحد الأدنى للطلب $${min.toFixed(2)} — أضف $${(min - subtotal).toFixed(2)} بعد` : `Minimum order is $${min.toFixed(2)} — add $${(min - subtotal).toFixed(2)} more`;
+    return null;
+  }
+  function showMinOrderNotes(subtotal) {
+    const min = currentMinOrder();
+    const txt = (min > 0 && subtotal > 0 && subtotal < min)
+      ? (_currentLang === 'ar' ? `⚠️ الحد الأدنى للطلب $${min.toFixed(2)} — أضف $${(min - subtotal).toFixed(2)}` : `⚠️ Minimum order $${min.toFixed(2)} — add $${(min - subtotal).toFixed(2)}`) : '';
+    ['side', 'modal'].forEach(p => {
+      const grand = document.getElementById(p + '-grand-total'); if (!grand) return;
+      let el = document.getElementById(p + '-min-note');
+      if (!el) {
+        el = document.createElement('div'); el.id = p + '-min-note';
+        el.style.cssText = 'font-size:.78rem;font-weight:800;color:#b45309;margin-top:6px';
+        const box = grand.parentElement && grand.parentElement.parentElement; (box || grand.parentElement).appendChild(el);
+      }
+      el.textContent = txt; el.style.display = txt ? 'block' : 'none';
+    });
+  }
+  function onZoneChange(val) {
+    try { localStorage.setItem('rs_sf_zone_' + (_tenant && _tenant.id), val || ''); } catch (e) { }
+    document.querySelectorAll('.sf-zone-select').forEach(s => { if (s.value !== val) s.value = val; });
+    const pick = val === PICKUP;
+    ['side', 'modal'].forEach(p => { const a = document.getElementById(p + '-checkout-address'); if (a) a.placeholder = pick ? (_currentLang === 'ar' ? 'اختياري عند الاستلام' : 'Optional for pickup') : (_currentLang === 'ar' ? 'المدينة، الشارع، البناية...' : 'City, street, building...'); });
+    updateLiveCart();
+  }
+  function setupCheckoutOptions() {
+    const cfg = storeCfg(), ar = _currentLang === 'ar';
+    // zone / pickup selector above the address
+    if (hasChoices()) {
+      const cur = selectedZoneKey();
+      const validCur = (cur === PICKUP && cfg.pickup) || cfg.zones.some(z => z.name === cur);
+      if (!validCur) { try { localStorage.removeItem('rs_sf_zone_' + _tenant.id); } catch (e) { } }
+      const opts = `<option value="">${ar ? '— اختر منطقة التوصيل —' : '— Choose your area —'}</option>` +
+        cfg.zones.map(z => `<option value="${String(z.name).replace(/"/g, '&quot;')}">${String(z.name).replace(/</g, '&lt;')} — $${z.fee.toFixed(2)}${z.min ? (ar ? ` (حد أدنى $${z.min})` : ` (min $${z.min})`) : ''}</option>`).join('') +
+        (cfg.pickup ? `<option value="${PICKUP}">🏬 ${ar ? 'استلام من المحل — بدون توصيل' : 'Pickup from the shop — no delivery fee'}</option>` : '');
+      ['side', 'modal'].forEach(p => {
+        const addr = document.getElementById(p + '-checkout-address');
+        if (!addr || document.getElementById(p + '-checkout-zone')) return;
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `<label class="field-label">${cfg.zones.length ? (ar ? 'منطقة التوصيل *' : 'Delivery area *') : (ar ? 'طريقة الاستلام' : 'Delivery or pickup')}</label>
+          <select id="${p}-checkout-zone" class="field-input sf-zone-select" onchange="Storefront.onZoneChange(this.value)">${cfg.zones.length ? opts : `<option value="">🛵 ${ar ? 'توصيل' : 'Delivery'}</option><option value="${PICKUP}">🏬 ${ar ? 'استلام من المحل' : 'Pickup'}</option>`}</select>`;
+        const group = addr.parentElement; group.parentElement.insertBefore(wrap, group);
+        const sel = wrap.querySelector('select'); if (validCur) sel.value = cur;
+      });
+    }
+    // opening hours: say so, ordering is blocked while closed
+    if (cfg.hours && !isOpenNow()) {
+      const main = document.getElementById('main-content');
+      if (main && !document.getElementById('sf-closed-bar')) {
+        const bar = document.createElement('div'); bar.id = 'sf-closed-bar';
+        bar.style.cssText = 'margin:12px auto 0;max-width:1200px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;font-weight:800;text-align:center';
+        bar.textContent = (ar ? '🕒 المتجر مغلق الآن — يمكنك التصفح، والطلب متاح عند الفتح. ' : '🕒 The store is closed now — you can browse; ordering opens when we open. ') + nextOpeningText();
+        main.parentElement.insertBefore(bar, main);
+      }
+    }
+    updateLiveCart();
+  }
+
   async function submitOrderPayload(name, phone, address, notes, btnEl) {
     if (_cart.length === 0) {
       alert(_currentLang === 'ar' ? 'سلة المشتريات فارغة' : 'Your cart is empty');
@@ -1033,11 +1170,18 @@ const Storefront = (() => {
       alert(_currentLang === 'ar' ? 'يرجى إدخال رقم الهاتف' : 'Please enter your phone number');
       return;
     }
+    if (!isPickup() && !address.trim()) {
+      alert(_currentLang === 'ar' ? 'يرجى كتابة عنوان التوصيل' : 'Please enter the delivery address');
+      return;
+    }
 
     const subtotal = _cart.reduce((s, it) => s + (it.price * it.quantity), 0);
-    const deliveryFee = parseFloat(_tenant?.delivery_fee) || 0;
+    const block = orderBlockReason(subtotal);
+    if (block) { alert(block); return; }
+    const deliveryFee = currentDeliveryFee();
     const grandTotal = subtotal + deliveryFee;
     const orderNumber = 'RS-' + Math.floor(100000 + Math.random() * 900000);
+    address = addressWithZone(address);
 
     const payload = {
       shop_id: _tenant.id,
@@ -1124,7 +1268,10 @@ const Storefront = (() => {
 
     const targetPhone = (_tenant?.whatsapp_phone || _tenant?.owner_phone || '+96170123456').replace(/[^0-9+]/g, '');
     const subtotal = _cart.reduce((s, it) => s + (it.price * it.quantity), 0);
-    const deliveryFee = parseFloat(_tenant?.delivery_fee) || 0;
+    const block = orderBlockReason(subtotal);
+    if (block) { alert(block); return; }
+    address = addressWithZone(address);
+    const deliveryFee = currentDeliveryFee();
     const grandTotal = subtotal + deliveryFee;
 
     let msg = `*طلب جديد من المتجر الإلكتروني:*\n`;
@@ -1640,6 +1787,7 @@ const Storefront = (() => {
   }
 
   return {
+    onZoneChange,
     copyDirectAppLink,
     openTrackOrderModal,
     closeTrackOrderModal,

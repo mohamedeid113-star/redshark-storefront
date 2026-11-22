@@ -188,6 +188,22 @@
           <input type="number" step="1" id="admin-min-order" class="field-input" placeholder="5.00">
         </div>
 
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="field-label">🗺️ مناطق التوصيل <span style="opacity:.7;font-weight:600">Delivery zones (optional)</span></label>
+          <div style="font-size:.78rem;opacity:.75;margin-bottom:8px">إن أضفت مناطق، يختار الزبون منطقته ويُحسب سعر التوصيل والحد الأدنى حسبها. بدون مناطق تُستخدم أجور التوصيل أعلاه. · If you add zones, the customer picks one and its fee and minimum apply.</div>
+          <div id="admin-zones"></div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px">
+            <button type="button" class="btn btn-secondary" onclick="Admin.addZone()" style="font-weight:800">➕ إضافة منطقة · Add zone</button>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:.85rem"><input type="checkbox" id="admin-allow-pickup"> 🏬 السماح بالاستلام من المحل (بدون توصيل) · Allow pickup</label>
+          </div>
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="field-label">🕒 أوقات العمل <span style="opacity:.7;font-weight:600">Opening hours</span></label>
+          <label style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:.85rem;margin-bottom:8px"><input type="checkbox" id="admin-hours-enabled" onchange="Admin.renderHours()"> إيقاف استقبال الطلبات تلقائياً خارج أوقات العمل · Stop taking orders outside opening hours</label>
+          <div id="admin-hours"></div>
+        </div>
+
         <div class="form-group">
           <label class="field-label" id="lbl-lbp-rate">سعر صرف الليرة مقابل الدولار (LBP)</label>
           <input type="number" id="admin-lbp-rate" class="field-input" placeholder="89500">
