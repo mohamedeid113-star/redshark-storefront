@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.148",
-  "build": 236,
+  "version": "1.4.149",
+  "build": 237,
   "releaseDate": "2026-11-22",
-  "description": "Online orders: new orders keep alerting until accepted (flashing tab, banner on every page, Windows alerts), one-tap WhatsApp updates to the customer. Online store: delivery areas with their own fee and minimum, pickup option, opening hours.",
+  "description": "Owner phone app: new Today screen (sales, profit, cash boxes, low stock, best sellers), Online Orders tab (accept, out for delivery, WhatsApp the customer) and alerts for new orders while the app is open.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
