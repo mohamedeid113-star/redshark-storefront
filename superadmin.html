@@ -106,7 +106,12 @@
     /* ─── Page ────────────────────────────────────────────────────────────── */
     .page { max-width: 1520px; margin: 0 auto; padding: 22px 24px 60px; }
 
-    .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .lic-actions { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 2px; }
+    .chip.fmt2 { background: rgba(34,197,94,.12); color: #4ade80; border-color: rgba(34,197,94,.3); }
+    .chip.fmt1 { background: rgba(148,163,184,.12); color: #cbd5e1; border-color: rgba(148,163,184,.3); }
+    a.chip.wa { background: rgba(37,211,102,.14); color: #25d366; border-color: rgba(37,211,102,.35); text-decoration: none; cursor: pointer; }
+    @media (max-width: 1400px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     .kpi {
       background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
       padding: 16px 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
@@ -480,7 +485,12 @@
           kLicense: 'تراخيص تحتاج انتباه', kLicenseSub: 'منتهية أو تنتهي خلال {n} يوم',
           kBackup: 'نسخ احتياطية قديمة', kBackupSub: 'لا نسخة تلقائية منذ يومين',
 
-          fAll: 'الكل', fOnline: 'متصل', fUpdate: 'يحتاج تحديث', fLicense: 'الترخيص', fBackup: 'النسخ الاحتياطي', fInactive: 'معطّل',
+          fAll: 'الكل', fOnline: 'متصل', fUpdate: 'يحتاج تحديث', fLicense: 'الترخيص', fBackup: 'النسخ الاحتياطي', fInactive: 'معطّل', fOldFmt: 'صيغة قديمة',
+          kOldFmt: 'تراخيص بالصيغة القديمة', kOldFmtSub: 'تُستبدل بالصيغة الجديدة عند التجديد',
+          fmt2: 'الصيغة 2', fmt1: 'الصيغة 1 (قديمة)', renewWa: 'تذكير بالتجديد', trialWa: 'متابعة التجربة',
+          waRenew: 'مرحباً {name}، ترخيص برنامج Red Shark POS لديكم ينتهي بتاريخ {d}. يسعدنا تجديده لكم — تواصلوا معنا للتجديد. شكراً لكم.',
+          waExpired: 'مرحباً {name}، انتهى ترخيص برنامج Red Shark POS لديكم بتاريخ {d}. تواصلوا معنا لتجديده واستمرار العمل. شكراً لكم.',
+          waTrial: 'مرحباً {name}، الفترة التجريبية لبرنامج Red Shark POS لديكم تنتهي بتاريخ {d}. هل ترغبون بتفعيل النسخة الكاملة؟ يسعدنا مساعدتكم.',
 
           thShop: 'المتجر', thDevices: 'الأجهزة', thVersion: 'الإصدار', thLicense: 'الترخيص', thBackup: 'النسخ الاحتياطي', thStatus: 'المتجر الإلكتروني',
 
@@ -551,7 +561,12 @@
           kLicense: 'Licences to check', kLicenseSub: 'expired or ending within {n} days',
           kBackup: 'Old backups', kBackupSub: 'no automatic backup for 2 days',
 
-          fAll: 'All', fOnline: 'Online', fUpdate: 'Needs update', fLicense: 'Licence', fBackup: 'Backup', fInactive: 'Inactive',
+          fAll: 'All', fOnline: 'Online', fUpdate: 'Needs update', fLicense: 'Licence', fBackup: 'Backup', fInactive: 'Inactive', fOldFmt: 'Old format',
+          kOldFmt: 'Old-format licences', kOldFmtSub: 'replace with the new format at renewal',
+          fmt2: 'Format 2', fmt1: 'Format 1 (old)', renewWa: 'Renewal reminder', trialWa: 'Trial follow-up',
+          waRenew: 'Hello {name}, your Red Shark POS licence expires on {d}. We would be happy to renew it for you — please contact us. Thank you.',
+          waExpired: 'Hello {name}, your Red Shark POS licence expired on {d}. Please contact us to renew it and keep working. Thank you.',
+          waTrial: 'Hello {name}, your Red Shark POS trial ends on {d}. Would you like to activate the full version? We are happy to help.',
 
           thShop: 'Shop', thDevices: 'Devices', thVersion: 'Version', thLicense: 'Licence', thBackup: 'Backup', thStatus: 'Online store',
 
@@ -756,7 +771,8 @@
           t, devices, online, main, banner, version, lic, licState, licDays,
           lastAuto, lastCloud, supportsBackup, backupStale, autoAgeH,
           active: t.is_active !== false,
-          needsLicense: licState === 'soon' || licState === 'expired' || licState === 'invalid'
+          needsLicense: licState === 'soon' || licState === 'expired' || licState === 'invalid' || (licState === 'demo' && licDays != null && licDays <= LICENSE_WARN_DAYS),
+          licFormat: lic && (lic.status === 'active' || lic.status === 'expired') ? (Number(lic.format) === 2 ? 2 : 1) : null
         };
       }
 
@@ -814,6 +830,7 @@
         ['online', 'fOnline', r => r.online.length > 0],
         ['update', 'fUpdate', r => r.version.outdated],
         ['license', 'fLicense', r => r.needsLicense],
+        ['oldfmt', 'fOldFmt', r => r.licFormat === 1],
         ['backup', 'fBackup', r => r.backupStale],
         ['inactive', 'fInactive', r => !r.active]
       ];
@@ -843,7 +860,8 @@
           ['online', 'kOnline', online, tr('kOnlineSub', { n: devices }), 'fa-satellite-dish', 'ok'],
           ['update', 'kUpdate', _rows.filter(r => r.version.outdated).length, tr('kUpdateSub'), 'fa-arrow-up-from-bracket', 'info'],
           ['license', 'kLicense', _rows.filter(r => r.needsLicense).length, tr('kLicenseSub', { n: LICENSE_WARN_DAYS }), 'fa-id-card', 'warn'],
-          ['backup', 'kBackup', _rows.filter(r => r.backupStale).length, tr('kBackupSub'), 'fa-database', 'bad']
+          ['backup', 'kBackup', _rows.filter(r => r.backupStale).length, tr('kBackupSub'), 'fa-database', 'bad'],
+          ['oldfmt', 'kOldFmt', _rows.filter(r => r.licFormat === 1).length, tr('kOldFmtSub'), 'fa-key', 'info']
         ];
         el.innerHTML = cards.map(([f, label, val, sub, icon, tone]) => `
           <div class="kpi ${_currentFilter === f && f !== 'all' ? 'active' : ''}" onclick="SuperAdmin.setFilter('${f}')" role="button" tabindex="0">
@@ -925,7 +943,23 @@
           case 'invalid': chip = `<span class="chip bad">${esc(tr('licInvalid'))}</span>`; break;
           default: chip = `<span class="chip none">${esc(tr('licNone'))}</span>`;
         }
-        return `<div class="cell-stack">${chip}${note ? `<span class="cell-note">${esc(note)}</span>` : ''}</div>`;
+        const extras = [];
+        if (r.licFormat) extras.push(`<span class="chip ${r.licFormat === 2 ? 'fmt2' : 'fmt1'}" style="font-size:.68rem;padding:1px 7px">${esc(tr(r.licFormat === 2 ? 'fmt2' : 'fmt1'))}</span>`);
+        const wa = renewalWhatsApp(r);
+        if (wa) extras.push(wa);
+        return `<div class="cell-stack">${chip}${note ? `<span class="cell-note">${esc(note)}</span>` : ''}${extras.length ? `<div class="lic-actions">${extras.join('')}</div>` : ''}</div>`;
+      }
+
+      // WhatsApp message to the shop for licences / trials that end soon or ended.
+      function renewalWhatsApp(r) {
+        if (!r.needsLicense || r.licState === 'invalid') return '';
+        const phone = String(r.t.whatsapp_phone || r.t.owner_phone || '').replace(/[^0-9]/g, '');
+        if (!phone) return '';
+        const lic = r.lic || {};
+        const name = r.t.shop_name || lic.client || '';
+        const key = r.licState === 'demo' ? 'waTrial' : (r.licState === 'expired' ? 'waExpired' : 'waRenew');
+        const msg = tr(key, { name, d: lic.expiry || '' });
+        return `<a class="chip wa" style="font-size:.68rem;padding:1px 7px" href="https://wa.me/${phone}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${esc(tr(r.licState === 'demo' ? 'trialWa' : 'renewWa'))}</a>`;
       }
 
       function backupCell(r) {
