@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.151",
-  "build": 239,
+  "version": "1.4.152",
+  "build": 240,
   "releaseDate": "2026-11-24",
-  "description": "Customers: new Payment Due column with colours (overdue, due this week, within terms, no balance), filter cards and a Days to Pay setting per customer. Sales Orders page: summary cards, proper titles and statuses, working status and date filters, saved currency kept on edit, correct printed titles (Sales Order, Delivery Note, Sales Return), better export. Analytics & Graphs: charts now work without internet, show all payment methods and a clear message when there are no sales.",
+  "description": "Correct rounding: prices ending in 5 now round up ($0.145 sells as $0.15, it was $0.14), also for online store orders. The LL total now uses the exact dollar price (1 x $0.145 = 12,978 LL at 89,500, it was 13,425).",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
