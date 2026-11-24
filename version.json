@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.150",
-  "build": 238,
-  "releaseDate": "2026-11-22",
-  "description": "Faster switching between pages. New: Restart server in the profile menu; Phone Price Checker button in the top bar (switch it on in Settings > General); show/hide switches for the Price & Cost + Stock and Deliveries buttons; the Camera Scan switch now controls the camera button of the customer price checker.",
+  "version": "1.4.151",
+  "build": 239,
+  "releaseDate": "2026-11-24",
+  "description": "Customers: new Payment Due column with colours (overdue, due this week, within terms, no balance), filter cards and a Days to Pay setting per customer. Sales Orders page: summary cards, proper titles and statuses, working status and date filters, saved currency kept on edit, correct printed titles (Sales Order, Delivery Note, Sales Return), better export. Analytics & Graphs: charts now work without internet, show all payment methods and a clear message when there are no sales.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
