@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.152",
-  "build": 240,
-  "releaseDate": "2026-11-24",
-  "description": "Correct rounding: prices ending in 5 now round up ($0.145 sells as $0.15, it was $0.14), also for online store orders. The LL total now uses the exact dollar price (1 x $0.145 = 12,978 LL at 89,500, it was 13,425).",
+  "version": "1.4.153",
+  "build": 241,
+  "releaseDate": "2026-11-25",
+  "description": "Purchase returns: return items from a purchase invoice (stock and supplier balance updated, refund or deduct from balance). Download customer and supplier statements as PDF or Excel. Server sales no longer appear in branch reports on the server. Excel import/export now works offline.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
