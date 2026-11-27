@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.155",
-  "build": 243,
+  "version": "1.4.156",
+  "build": 244,
   "releaseDate": "2026-11-27",
-  "description": "Purchasing: draft invoices no longer change stock or money until received; editing an invoice keeps stock correct when the warehouse, quantity, status or stock option changes; purchase orders and goods receipts no longer record payments; new 🧾 button creates the purchase invoice from a goods receipt without adding the stock twice; deleting a goods receipt removes its stock.",
+  "description": "Branches now send card / transfer / cheque payments to the server (supplier balances on the server were too high). Deleting a purchase invoice, return or supplier payment on a branch now also removes it from the server. Fixed: on a branch, supplier and customer statements could hide payments made at that branch.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
