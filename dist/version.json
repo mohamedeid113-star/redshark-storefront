@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.156",
-  "build": 244,
+  "version": "1.4.157",
+  "build": 245,
   "releaseDate": "2026-11-27",
-  "description": "Branches now send card / transfer / cheque payments to the server (supplier balances on the server were too high). Deleting a purchase invoice, return or supplier payment on a branch now also removes it from the server. Fixed: on a branch, supplier and customer statements could hide payments made at that branch.",
+  "description": "Big update: sales invoices, returns and delivery orders now keep stock, customer balance and cash correct (drafts and cancelled do nothing, cash refunds no longer also credit the customer, partial payments, choose the warehouse, invoice a delivery without taking stock twice). Proper VAT return. Payroll records salaries and deducts absences. New: cheque register, debt aging with WhatsApp reminders, installment plans, gift cards (usable at the POS), smart reorder, expiry control, L.L. rate history, loss-prevention alerts on the owner phone. New admin permissions for sensitive actions.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
