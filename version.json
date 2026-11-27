@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.153",
-  "build": 241,
-  "releaseDate": "2026-11-25",
-  "description": "Purchase returns: return items from a purchase invoice (stock and supplier balance updated, refund or deduct from balance). Download customer and supplier statements as PDF or Excel. Server sales no longer appear in branch reports on the server. Excel import/export now works offline.",
+  "version": "1.4.154",
+  "build": 242,
+  "releaseDate": "2026-11-27",
+  "description": "Purchase invoice: readable in dark mode; choose where the payment comes from (main cash, cashier drawer shift, bank, or on credit); paid amount follows the total; a paid invoice shows once in the supplier statement; server purchases no longer appear in branch statements; deleting an invoice reverses its payment, drawer cash and stock.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
