@@ -1,884 +1,643 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة التحكم | Red Shark Storefront Admin</title>
+  <title>Store Manager</title>
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" id="admin-favicon" href="icons/icon-192.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand: #dc2626;
+      --brand-ink: #ffffff;
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --line: #e3e8ef;
+      --line-strong: #cfd7e3;
+      --text: #0f172a;
+      --muted: #5b6b82;
+      --subtle: #8394ab;
+      --ok: #059669; --ok-bg: #e7f7ef;
+      --warn: #b45309; --warn-bg: #fff6e5;
+      --bad: #dc2626; --bad-bg: #fdecec;
+      --info: #2563eb; --info-bg: #eaf1fe;
+      --violet: #7c3aed; --violet-bg: #f1ebfe;
+      --side: #0f172a; --side-text: #cbd5e1; --side-active: rgba(255,255,255,.08);
+      --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.06);
+      --radius: 14px;
+      --font: 'Plus Jakarta Sans', 'Cairo', system-ui, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0b1120; --surface: #121a2b; --surface-2: #0f1626; --line: #22304a; --line-strong: #2d3d5c;
+        --text: #eef2f8; --muted: #a3b1c6; --subtle: #7b8ba3;
+        --ok-bg: rgba(5,150,105,.16); --warn-bg: rgba(180,83,9,.18); --bad-bg: rgba(220,38,38,.16); --info-bg: rgba(37,99,235,.16); --violet-bg: rgba(124,58,237,.18);
+        --side: #070c18; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0b1120; --surface: #121a2b; --surface-2: #0f1626; --line: #22304a; --line-strong: #2d3d5c;
+      --text: #eef2f8; --muted: #a3b1c6; --subtle: #7b8ba3;
+      --ok-bg: rgba(5,150,105,.16); --warn-bg: rgba(180,83,9,.18); --bad-bg: rgba(220,38,38,.16); --info-bg: rgba(37,99,235,.16); --violet-bg: rgba(124,58,237,.18);
+      --side: #070c18; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.5; }
+    [dir="rtl"] body { font-family: 'Cairo', 'Plus Jakarta Sans', system-ui, sans-serif; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    a { color: inherit; }
+    img { max-width: 100%; }
+    .hidden { display: none !important; }
 
-  <meta name="theme-color" content="#09101d">
-  <link rel="stylesheet" href="css/storefront.css">
+    /* ── Login ── */
+    #login { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px;
+      background: radial-gradient(1200px 600px at 10% -10%, color-mix(in srgb, var(--brand) 18%, transparent), transparent), var(--bg); }
+    .login-card { width: 100%; max-width: 400px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 28px 24px 18px; text-align: center; }
+    .login-logo { width: 76px; height: 76px; border-radius: 20px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900;
+      background: color-mix(in srgb, var(--brand) 12%, var(--surface)); color: var(--brand); overflow: hidden; border: 1px solid var(--line); }
+    .login-logo img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+    .login-card h1 { font-size: 1.3rem; font-weight: 900; }
+    .login-card p.sub { color: var(--muted); font-size: .88rem; margin: 4px 0 18px; }
+    .login-card .field { text-align: start; margin-bottom: 12px; }
+    .login-err { color: var(--bad); font-weight: 700; font-size: .85rem; min-height: 1.2em; margin: 4px 0 6px; }
+    .powered { margin-top: 16px; font-size: .72rem; color: var(--subtle); display: inline-flex; align-items: center; gap: 5px; }
+    .powered b { color: var(--muted); }
+
+    /* ── Shell ── */
+    .shell { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+    .side { background: var(--side); color: var(--side-text); padding: 18px 12px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .side-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 16px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 8px; }
+    .side-logo { width: 42px; height: 42px; border-radius: 12px; flex: none; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; background: var(--brand); overflow: hidden; }
+    .side-logo img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+    .side-name { font-weight: 800; color: #fff; font-size: .98rem; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .side-sub { font-size: .72rem; color: #8b9ab3; }
+    .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: transparent; color: var(--side-text); padding: 10px 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: .9rem; text-align: start; }
+    .nav-btn:hover { background: rgba(255,255,255,.05); color: #fff; }
+    .nav-btn.active { background: var(--side-active); color: #fff; box-shadow: inset 3px 0 0 var(--brand); }
+    [dir="rtl"] .nav-btn.active { box-shadow: inset -3px 0 0 var(--brand); }
+    .nav-btn .ico { width: 22px; text-align: center; font-size: 1.05rem; }
+    .nav-btn .count { margin-inline-start: auto; background: var(--brand); color: #fff; border-radius: 99px; font-size: .72rem; padding: 1px 8px; font-weight: 800; }
+    .side-foot { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid rgba(255,255,255,.08); font-size: .72rem; color: #7d8ca5; display: flex; align-items: center; gap: 6px; }
+    .main { min-width: 0; display: flex; flex-direction: column; }
+    .topbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding: 10px 22px; display: flex; align-items: center; gap: 10px; }
+    .topbar h2 { font-size: 1.15rem; font-weight: 900; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .btn.menu-toggle { display: none; }
+    .grid.top { align-items: start; }
+    .content { padding: 22px; max-width: 1180px; width: 100%; margin: 0 auto; }
+    .section { display: none; }
+    .section.active { display: block; animation: fade .18s ease; }
+    @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    /* ── Building blocks ── */
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; margin-bottom: 16px; }
+    .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+    .card-head h3 { font-size: 1.02rem; font-weight: 800; }
+    .card-head p { color: var(--muted); font-size: .84rem; margin-top: 2px; }
+    .grid { display: grid; gap: 14px; }
+    .g2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .g3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .g4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .span2 { grid-column: span 2; }
+    .full { grid-column: 1 / -1; }
+    .field label, .lbl { display: block; font-size: .8rem; font-weight: 800; color: var(--muted); margin-bottom: 5px; }
+    .hint { font-size: .76rem; color: var(--subtle); margin-top: 4px; }
+    .input, select.input, textarea.input { width: 100%; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 10px; padding: 9px 12px; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent); background: var(--surface); }
+    .input[readonly] { opacity: .75; cursor: not-allowed; }
+    textarea.input { resize: vertical; min-height: 70px; }
+    .ltr { direction: ltr; text-align: left; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: .86rem; white-space: nowrap; text-decoration: none; transition: filter .15s, background .15s; }
+    .btn:hover { filter: brightness(.97); background: var(--surface-2); }
+    .btn:disabled { opacity: .55; cursor: wait; }
+    .btn-primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+    .btn-primary:hover { background: var(--brand); filter: brightness(.93); }
+    .btn-danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 35%, transparent); background: var(--bad-bg); }
+    .btn-ok { color: #fff; background: var(--ok); border-color: var(--ok); }
+    .btn-wa { color: #fff; background: #16a34a; border-color: #16a34a; }
+    .btn-sm { padding: 5px 10px; font-size: .78rem; border-radius: 8px; }
+    .btn-ghost { background: transparent; border-color: transparent; }
+    .btn-block { width: 100%; padding: 11px; }
+    .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .spacer { flex: 1; }
+    .pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border-radius: 99px; font-size: .74rem; font-weight: 800; white-space: nowrap; }
+    .p-ok { background: var(--ok-bg); color: var(--ok); } .p-warn { background: var(--warn-bg); color: var(--warn); }
+    .p-bad { background: var(--bad-bg); color: var(--bad); } .p-info { background: var(--info-bg); color: var(--info); }
+    .p-violet { background: var(--violet-bg); color: var(--violet); } .p-muted { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+    .switch { position: relative; width: 42px; height: 24px; flex: none; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch span { position: absolute; inset: 0; background: var(--line-strong); border-radius: 99px; cursor: pointer; transition: .2s; }
+    .switch span::before { content: ''; position: absolute; width: 18px; height: 18px; top: 3px; inset-inline-start: 3px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .switch input:checked + span { background: var(--brand); }
+    .switch input:checked + span::before { transform: translateX(18px); }
+    [dir="rtl"] .switch input:checked + span::before { transform: translateX(-18px); }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .toggle-row:last-child { border-bottom: 0; }
+    .toggle-row b { display: block; font-size: .9rem; }
+    .toggle-row small { color: var(--muted); font-size: .78rem; }
+    .notice { border-radius: 12px; padding: 12px 14px; font-size: .85rem; font-weight: 600; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
+    .n-info { background: var(--info-bg); color: var(--info); } .n-warn { background: var(--warn-bg); color: var(--warn); } .n-ok { background: var(--ok-bg); color: var(--ok); }
+    .empty { text-align: center; padding: 34px 16px; color: var(--muted); }
+    .empty .big { font-size: 2.4rem; margin-bottom: 6px; }
+
+    /* KPI */
+    .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+    .kpi .k-lbl { font-size: .78rem; color: var(--muted); font-weight: 800; display: flex; align-items: center; gap: 6px; }
+    .kpi .k-val { font-size: 1.6rem; font-weight: 900; margin-top: 4px; letter-spacing: -.01em; }
+    .kpi .k-sub { font-size: .76rem; color: var(--subtle); font-weight: 600; }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    th { text-align: start; font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; color: var(--subtle); font-weight: 800; padding: 10px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    .thumb { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: var(--surface-2); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex: none; }
+    .num { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .strike { text-decoration: line-through; color: var(--subtle); font-weight: 600; font-size: .8em; }
+
+    /* Upload */
+    .upload { display: flex; gap: 10px; align-items: center; }
+    .upload .preview { width: 64px; height: 64px; border-radius: 12px; border: 1px dashed var(--line-strong); background: var(--surface-2) center/contain no-repeat; flex: none; }
+    .upload .preview.wide { width: 128px; height: 64px; background-size: cover; }
+
+    /* Orders */
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .chip { border: 1px solid var(--line-strong); background: var(--surface); padding: 6px 12px; border-radius: 99px; font-weight: 800; font-size: .8rem; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+    .chip.active { background: var(--text); color: var(--surface); border-color: var(--text); }
+    .chip .c { font-size: .72rem; opacity: .75; }
+    .order { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
+    .order.is-new { border-color: color-mix(in srgb, var(--warn) 55%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 14%, transparent); }
+    .order-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; flex-wrap: wrap; }
+    .order-no { font-weight: 900; font-size: 1rem; }
+    .order-meta { color: var(--muted); font-size: .8rem; }
+    .order-total { font-weight: 900; font-size: 1.05rem; margin-inline-start: auto; }
+    .order-body { border-top: 1px dashed var(--line); padding: 14px; display: none; }
+    .order.open .order-body { display: block; }
+    .order-items { width: 100%; font-size: .85rem; margin: 6px 0 10px; }
+    .order-items td { padding: 5px 0; border: 0; }
+    .steps { display: flex; gap: 4px; margin: 10px 0; }
+    .steps i { flex: 1; height: 6px; border-radius: 4px; background: var(--line); }
+    .steps i.on { background: var(--brand); }
+
+    /* Banner / offer editors */
+    .slide-ed { display: grid; grid-template-columns: 300px 1fr; gap: 16px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; background: var(--surface); box-shadow: var(--shadow); }
+    .slide-ed.off { opacity: .6; }
+    .slide-prev { border-radius: 12px; overflow: hidden; min-height: 150px; position: relative; color: #fff; display: flex; align-items: flex-end; padding: 14px; background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 55%, #000)) center/cover no-repeat; }
+    .slide-prev::before { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,.62), rgba(0,0,0,.05) 70%); }
+    .slide-prev > div { position: relative; }
+    .slide-prev .sb { display: inline-block; background: rgba(255,255,255,.22); backdrop-filter: blur(4px); padding: 2px 9px; border-radius: 99px; font-size: .7rem; font-weight: 800; margin-bottom: 6px; }
+    .slide-prev .st { font-weight: 900; font-size: 1.02rem; line-height: 1.25; }
+    .slide-prev .ss { font-size: .78rem; opacity: .9; margin-top: 2px; }
+    .slide-prev .sbtn { display: inline-block; margin-top: 8px; background: #fff; color: #111; padding: 4px 12px; border-radius: 8px; font-weight: 800; font-size: .76rem; }
+    .slide-tools { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .color-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .swatch { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 1px var(--line-strong); cursor: pointer; }
+    .swatch.sel { box-shadow: 0 0 0 2px var(--text); }
+    .qr { width: 132px; height: 132px; border-radius: 12px; background: #fff; padding: 6px; border: 1px solid var(--line); }
+    .check-list li { list-style: none; display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: .88rem; }
+    .check-list li:last-child { border-bottom: 0; }
+    .check-list .dot { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 900; flex: none; }
+    .check-list .done .dot { background: var(--ok-bg); color: var(--ok); }
+    .check-list .todo .dot { background: var(--warn-bg); color: var(--warn); }
+    .check-list .todo span.t { font-weight: 700; }
+
+    /* Modal + toast */
+    .modal { position: fixed; inset: 0; z-index: 60; background: rgba(2,6,23,.55); display: none; align-items: center; justify-content: center; padding: 16px; }
+    .modal.open { display: flex; }
+    .modal-box { background: var(--surface); border-radius: 18px; width: 100%; max-width: 620px; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+    .modal-box header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+    .modal-box header h3 { font-size: 1.05rem; font-weight: 900; }
+    .modal-box .mb { padding: 18px; }
+    .modal-box footer { padding: 14px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; position: sticky; bottom: 0; background: var(--surface); }
+    #toast { position: fixed; bottom: 20px; inset-inline-start: 50%; transform: translateX(-50%); z-index: 80; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+    [dir="rtl"] #toast { transform: translateX(50%); }
+    .toast { background: var(--text); color: var(--surface); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: .88rem; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: fade .2s; max-width: 90vw; }
+    .toast.err { background: var(--bad); color: #fff; }
+    .toast.ok { background: var(--ok); color: #fff; }
+    .savebar { position: sticky; bottom: 0; z-index: 15; background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--line); padding: 12px 22px; display: none; align-items: center; gap: 10px; justify-content: flex-end; }
+    .savebar.show { display: flex; }
+    .savebar span { margin-inline-end: auto; color: var(--warn); font-weight: 800; font-size: .86rem; }
+
+    @media (max-width: 960px) {
+      .g4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .g3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .slide-ed { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 820px) {
+      .shell { grid-template-columns: 1fr; }
+      .side { position: fixed; inset-block: 0; inset-inline-start: 0; width: 270px; z-index: 40; transform: translateX(-105%); transition: transform .22s ease; }
+      [dir="rtl"] .side { transform: translateX(105%); }
+      .side.open { transform: none !important; box-shadow: 0 0 0 100vmax rgba(2,6,23,.5); }
+      .btn.menu-toggle { display: inline-flex; }
+      .topbar { padding: 10px 16px; }
+      .content { padding: 16px; }
+      .g2, .g3 { grid-template-columns: 1fr; }
+      .span2 { grid-column: auto; }
+      .topbar .hide-sm { display: none; }
+      .savebar { padding: 10px 16px; }
+    }
+    @media (max-width: 480px) { .g4 { grid-template-columns: 1fr 1fr; } .kpi .k-val { font-size: 1.3rem; } }
+    @media print {
+      body * { visibility: hidden; }
+      #print-area, #print-area * { visibility: visible; }
+      #print-area { position: absolute; inset: 0; }
+    }
+    #print-area { display: none; }
+    @media print { #print-area { display: block; } }
+  </style>
 </head>
 
-<body style="background:var(--bg-primary)">
-
-  <!-- SECURITY LOGIN OVERLAY -->
-  <div id="admin-pin-modal" class="pin-security-overlay" style="display:flex">
-    <div class="pin-security-card"
-      style="max-width:420px;box-shadow:0 20px 50px rgba(0,0,0,0.3);border-radius:18px;border:1px solid #cbd5e1">
-      <div style="font-size:3.2rem;margin-bottom:10px">🔐</div>
-      <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:6px" id="pin-modal-title">لوحة تحكم المتجر الإلكتروني
-      </h2>
-      <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px" id="pin-modal-desc">
-        يرجى إدخال كلمة المرور (أو رمز PIN) الخاص بمتجرك للمتابعة.
-      </p>
-
-      <div style="text-align:start;margin-bottom:14px">
-        <label class="field-label" id="lbl-login-slug" style="font-weight:700">معرف المتجر (Shop Slug) *</label>
-        <input type="text" id="admin-login-slug" class="field-input" placeholder="مثال: shop101"
-          style="font-family:monospace;direction:ltr;padding:10px;font-size:0.95rem;background:#f8fafc">
+<body>
+  <!-- ═══════════ LOGIN ═══════════ -->
+  <div id="login">
+    <div class="login-card">
+      <div class="login-logo" id="login-logo">🏪</div>
+      <h1 id="login-shop-name" data-en="Store manager" data-ar="إدارة المتجر">إدارة المتجر</h1>
+      <p class="sub" data-en="Sign in to manage your online store" data-ar="سجّل الدخول لإدارة متجرك الإلكتروني">سجّل الدخول لإدارة متجرك الإلكتروني</p>
+      <div class="field">
+        <label for="login-slug" data-en="Store ID" data-ar="معرّف المتجر">معرّف المتجر</label>
+        <input id="login-slug" class="input ltr" autocomplete="username" placeholder="myshop" onchange="Admin.previewLoginShop()">
       </div>
-
-      <div style="text-align:start;margin-bottom:18px">
-        <label class="field-label" id="lbl-login-pwd" style="font-weight:700">كلمة المرور / رمز PIN *</label>
+      <div class="field">
+        <label for="login-pwd" data-en="Password / manager PIN" data-ar="كلمة المرور / رمز المدير">كلمة المرور / رمز المدير</label>
         <div style="position:relative">
-          <input type="password" id="admin-login-pwd" class="field-input" placeholder="••••••••"
-            style="padding:10px;font-size:1.1rem;direction:ltr;font-family:monospace"
-            onkeydown="if(event.key==='Enter') Admin.verifyCredentials()">
-          <button type="button" onclick="Admin.toggleLoginPwdVisibility()"
-            style="position:absolute;inset-inline-end:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem"
-            title="إظهار / إخفاء">👁️</button>
+          <input id="login-pwd" type="password" class="input ltr" autocomplete="current-password" placeholder="••••••" onkeydown="if(event.key==='Enter')Admin.login()">
+          <button type="button" class="btn btn-ghost btn-sm" style="position:absolute;inset-inline-end:4px;top:50%;transform:translateY(-50%)" onclick="Admin.togglePwd('login-pwd')">👁️</button>
         </div>
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px" id="pin-default-hint">استخدم الرمز السري المحدد في إعدادات المتجر بنقطة البيع</div>
+      </div>
+      <div class="login-err" id="login-err"></div>
+      <button class="btn btn-primary btn-block" id="login-btn" onclick="Admin.login()" data-en="Sign in" data-ar="دخول">دخول</button>
+      <div class="row" style="justify-content:center;margin-top:12px">
+        <button class="btn btn-ghost btn-sm" onclick="Admin.toggleLang()">🌐 <span class="lang-label">English</span></button>
+      </div>
+      <div class="powered">Powered by <b>🦈 Red Shark</b></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ APP SHELL ═══════════ -->
+  <div class="shell hidden" id="shell">
+    <aside class="side" id="side">
+      <div class="side-brand">
+        <div class="side-logo" id="side-logo">🏪</div>
+        <div style="min-width:0">
+          <div class="side-name" id="side-name">—</div>
+          <div class="side-sub" data-en="Online store manager" data-ar="إدارة المتجر الإلكتروني">إدارة المتجر الإلكتروني</div>
+        </div>
+      </div>
+      <button class="nav-btn" data-sec="overview" onclick="Admin.go('overview')"><span class="ico">🏠</span><span data-en="Overview" data-ar="الرئيسية">الرئيسية</span></button>
+      <button class="nav-btn" data-sec="orders" onclick="Admin.go('orders')"><span class="ico">🧾</span><span data-en="Orders" data-ar="الطلبات">الطلبات</span><span class="count hidden" id="nav-new-count">0</span></button>
+      <button class="nav-btn" data-sec="banners" onclick="Admin.go('banners')"><span class="ico">🖼️</span><span data-en="Banners" data-ar="البانرات">البانرات</span></button>
+      <button class="nav-btn" data-sec="offers" onclick="Admin.go('offers')"><span class="ico">🏷️</span><span data-en="Offers &amp; announcements" data-ar="العروض والإعلانات">العروض والإعلانات</span></button>
+      <button class="nav-btn" data-sec="products" onclick="Admin.go('products')"><span class="ico">📦</span><span data-en="Products" data-ar="الأصناف">الأصناف</span></button>
+      <button class="nav-btn" data-sec="categories" onclick="Admin.go('categories')"><span class="ico">🗂️</span><span data-en="Categories" data-ar="الأقسام">الأقسام</span></button>
+      <button class="nav-btn" data-sec="profile" onclick="Admin.go('profile')"><span class="ico">🏪</span><span data-en="Store profile &amp; look" data-ar="بيانات المتجر والمظهر">بيانات المتجر والمظهر</span></button>
+      <button class="nav-btn" data-sec="delivery" onclick="Admin.go('delivery')"><span class="ico">🛵</span><span data-en="Delivery &amp; hours" data-ar="التوصيل وأوقات العمل">التوصيل وأوقات العمل</span></button>
+      <button class="nav-btn" data-sec="reports" onclick="Admin.go('reports')"><span class="ico">📊</span><span data-en="Reports" data-ar="التقارير">التقارير</span></button>
+      <button class="nav-btn" data-sec="security" onclick="Admin.go('security')"><span class="ico">🔐</span><span data-en="Security" data-ar="الأمان">الأمان</span></button>
+      <div class="side-foot">Powered by <b style="color:#cbd5e1">🦈 Red Shark</b></div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <button class="btn btn-sm menu-toggle" onclick="Admin.toggleMenu()" aria-label="Menu">☰</button>
+        <h2 id="page-title">—</h2>
+        <a class="btn btn-sm" id="btn-view-store" target="_blank" rel="noopener">🛍️ <span class="hide-sm" data-en="View store" data-ar="عرض المتجر">عرض المتجر</span></a>
+        <button class="btn btn-sm" onclick="Admin.toggleTheme()" id="btn-theme" title="Theme">🌙</button>
+        <button class="btn btn-sm" onclick="Admin.toggleLang()">🌐 <span class="lang-label hide-sm">English</span></button>
+        <button class="btn btn-sm btn-danger" onclick="Admin.logout()" title="Logout">⏻ <span class="hide-sm" data-en="Sign out" data-ar="خروج">خروج</span></button>
       </div>
 
-      <button class="btn-checkout-primary" onclick="Admin.verifyCredentials()" id="btn-login-submit"
-        style="width:100%;padding:13px;font-size:1rem;font-weight:900;border-radius:10px">
-        <span id="pin-modal-btn">🔓 دخول لوحة التحكم</span>
-      </button>
+      <div class="content">
+        <!-- ─────────── OVERVIEW ─────────── -->
+        <section class="section" id="sec-overview">
+          <div id="ov-alerts"></div>
+          <div class="grid g4" style="margin-bottom:16px">
+            <div class="kpi"><div class="k-lbl">🔔 <span data-en="New orders" data-ar="طلبات جديدة">طلبات جديدة</span></div><div class="k-val" id="ov-new">0</div><div class="k-sub" data-en="waiting for you" data-ar="بانتظار القبول">بانتظار القبول</div></div>
+            <div class="kpi"><div class="k-lbl">🧾 <span data-en="Orders today" data-ar="طلبات اليوم">طلبات اليوم</span></div><div class="k-val" id="ov-today">0</div><div class="k-sub" id="ov-today-sub">—</div></div>
+            <div class="kpi"><div class="k-lbl">💰 <span data-en="Sales today" data-ar="مبيعات اليوم">مبيعات اليوم</span></div><div class="k-val" id="ov-rev-today">$0.00</div><div class="k-sub" data-en="online orders, not cancelled" data-ar="الطلبات الأونلاين غير الملغاة">الطلبات الأونلاين غير الملغاة</div></div>
+            <div class="kpi"><div class="k-lbl">📅 <span data-en="This month" data-ar="هذا الشهر">هذا الشهر</span></div><div class="k-val" id="ov-rev-month">$0.00</div><div class="k-sub" id="ov-month-sub">—</div></div>
+          </div>
+          <div class="grid g2 top">
+            <div class="card" style="margin:0">
+              <div class="card-head"><div><h3 data-en="Latest orders" data-ar="آخر الطلبات">آخر الطلبات</h3></div><button class="btn btn-sm" onclick="Admin.go('orders')" data-en="All orders →" data-ar="كل الطلبات ←">كل الطلبات ←</button></div>
+              <div id="ov-latest"></div>
+            </div>
+            <div>
+              <div class="card">
+                <div class="card-head"><div><h3 data-en="Share your store" data-ar="شارك متجرك">شارك متجرك</h3><p data-en="Send this link to your customers or print the QR code at the counter." data-ar="أرسل الرابط لزبائنك أو اطبع رمز QR على الكاونتر.">أرسل الرابط لزبائنك أو اطبع رمز QR على الكاونتر.</p></div><span id="ov-status" class="pill p-muted">—</span></div>
+                <div class="row" style="align-items:flex-start;gap:14px">
+                  <img id="ov-qr" class="qr" alt="QR">
+                  <div style="flex:1;min-width:180px">
+                    <input id="ov-link" class="input ltr" readonly onclick="this.select()">
+                    <div class="row" style="margin-top:8px">
+                      <button class="btn btn-sm btn-primary" onclick="Admin.copyLink()">📋 <span data-en="Copy link" data-ar="نسخ الرابط">نسخ الرابط</span></button>
+                      <button class="btn btn-sm btn-wa" onclick="Admin.shareWhatsApp()">💬 WhatsApp</button>
+                      <a class="btn btn-sm" id="ov-qr-dl" download="store-qr.png" target="_blank" rel="noopener">⬇️ QR</a>
+                    </div>
+                    <div class="row" style="margin-top:8px">
+                      <button class="btn btn-sm" onclick="Admin.openManagerApp()">📱 <span data-en="Manager phone app" data-ar="تطبيق المدير للهاتف">تطبيق المدير للهاتف</span></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card" style="margin:0">
+                <div class="card-head"><div><h3 data-en="Make your store complete" data-ar="أكمل متجرك">أكمل متجرك</h3><p id="ov-score-text">—</p></div></div>
+                <ul class="check-list" id="ov-checklist"></ul>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <div
-        style="margin-top:18px;font-size:0.78rem;color:var(--text-muted);border-top:1px solid #f1f5f9;padding-top:12px">
-        <span id="lbl-master-link-hint">هل أنت صاحب المنصة الرئيسي؟</span>
-        <a href="superadmin.html"
-          style="color:var(--brand-primary);font-weight:800;text-decoration:none;margin-inline-start:4px"
-          id="link-superadmin">لوحة إدارة المتاجر (Master) ←</a>
+        <!-- ─────────── ORDERS ─────────── -->
+        <section class="section" id="sec-orders">
+          <div class="row" style="margin-bottom:12px">
+            <input id="ord-search" class="input" style="max-width:320px" oninput="Admin.renderOrders()" data-ph-en="Search number, name or phone…" data-ph-ar="ابحث برقم الطلب أو الاسم أو الهاتف…">
+            <span class="spacer"></span>
+            <label class="row" style="gap:6px;font-weight:700;font-size:.84rem"><span class="switch"><input type="checkbox" id="ord-sound" checked onchange="Admin.saveSoundPref()"><span></span></span> 🔔 <span data-en="Sound for new orders" data-ar="صوت للطلبات الجديدة">صوت للطلبات الجديدة</span></label>
+            <button class="btn btn-sm" onclick="Admin.loadOrders(true)">🔄 <span data-en="Refresh" data-ar="تحديث">تحديث</span></button>
+          </div>
+          <div class="chips" id="ord-chips"></div>
+          <div id="ord-list"></div>
+        </section>
+
+        <!-- ─────────── BANNERS ─────────── -->
+        <section class="section" id="sec-banners">
+          <div class="card">
+            <div class="toggle-row" style="padding-top:0">
+              <div><b data-en="Show the banner slider on the store home page" data-ar="إظهار شريط البانرات في الصفحة الرئيسية للمتجر">إظهار شريط البانرات في الصفحة الرئيسية للمتجر</b><small data-en="Banners change automatically every few seconds. A banner can be scheduled to start and end by itself." data-ar="تتبدّل البانرات تلقائياً كل بضع ثوانٍ. يمكن جدولة البانر ليبدأ وينتهي تلقائياً.">تتبدّل البانرات تلقائياً كل بضع ثوانٍ. يمكن جدولة البانر ليبدأ وينتهي تلقائياً.</small></div>
+              <label class="switch"><input type="checkbox" id="bn-active" onchange="Admin.dirty()"><span></span></label>
+            </div>
+          </div>
+          <div class="row" style="margin-bottom:12px">
+            <b id="bn-count" style="font-size:.9rem"></b><span class="spacer"></span>
+            <button class="btn btn-primary" onclick="Admin.addSlide()">➕ <span data-en="Add banner" data-ar="إضافة بانر">إضافة بانر</span></button>
+          </div>
+          <div id="bn-list"></div>
+        </section>
+
+        <!-- ─────────── OFFERS ─────────── -->
+        <section class="section" id="sec-offers">
+          <div class="card">
+            <div class="card-head"><div><h3>📣 <span data-en="Announcement bar" data-ar="شريط الإعلان">شريط الإعلان</span></h3><p data-en="A thin strip at the very top of your store, e.g. “Free delivery over $30 this week”." data-ar="شريط رفيع أعلى المتجر، مثلاً: «توصيل مجاني للطلبات فوق 30$ هذا الأسبوع».">شريط رفيع أعلى المتجر، مثلاً: «توصيل مجاني للطلبات فوق 30$ هذا الأسبوع».</p></div>
+              <label class="switch"><input type="checkbox" id="an-active" onchange="Admin.dirty()"><span></span></label></div>
+            <div class="grid g2">
+              <div class="field"><label data-en="Text (Arabic)" data-ar="النص (عربي)">النص (عربي)</label><input id="an-text-ar" class="input" oninput="Admin.dirty()" placeholder="🚚 توصيل مجاني للطلبات فوق 30$"></div>
+              <div class="field"><label data-en="Text (English)" data-ar="النص (إنجليزي)">النص (إنجليزي)</label><input id="an-text-en" class="input ltr" oninput="Admin.dirty()" placeholder="🚚 Free delivery on orders over $30"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div><h3>🏷️ <span data-en="Product offers" data-ar="عروض الأصناف">عروض الأصناف</span></h3><p data-en="Put a special online price on any product. Customers see the old price crossed out, and the offer price is what they pay." data-ar="ضع سعراً خاصاً أونلاين لأي صنف. يرى الزبون السعر القديم مشطوباً ويدفع سعر العرض.">ضع سعراً خاصاً أونلاين لأي صنف. يرى الزبون السعر القديم مشطوباً ويدفع سعر العرض.</p></div>
+              <button class="btn btn-primary" onclick="Admin.openOfferModal()">➕ <span data-en="New offer" data-ar="عرض جديد">عرض جديد</span></button>
+            </div>
+            <div id="of-list"></div>
+          </div>
+        </section>
+
+        <!-- ─────────── PRODUCTS ─────────── -->
+        <section class="section" id="sec-products">
+          <div id="pr-local-note"></div>
+          <div class="row" style="margin-bottom:12px">
+            <input id="pr-search" class="input" style="max-width:320px" oninput="Admin.renderProducts()" data-ph-en="Search products or barcode…" data-ph-ar="ابحث عن صنف أو باركود…">
+            <select id="pr-cat" class="input" style="max-width:220px" onchange="Admin.renderProducts()"></select>
+            <select id="pr-filter" class="input" style="max-width:200px" onchange="Admin.renderProducts()">
+              <option value="all" data-en="All products" data-ar="كل الأصناف">كل الأصناف</option>
+              <option value="noimg" data-en="Without picture" data-ar="بدون صورة">بدون صورة</option>
+              <option value="low" data-en="Low or out of stock" data-ar="مخزون منخفض أو نافد">مخزون منخفض أو نافد</option>
+              <option value="hidden" data-en="Hidden from store" data-ar="مخفية عن المتجر">مخفية عن المتجر</option>
+              <option value="offer" data-en="On offer" data-ar="عليها عرض">عليها عرض</option>
+            </select>
+            <span class="spacer"></span>
+            <button class="btn btn-primary cloud-only" onclick="Admin.openProductModal()">➕ <span data-en="Add product" data-ar="إضافة صنف">إضافة صنف</span></button>
+          </div>
+          <div id="pr-list"></div>
+        </section>
+
+        <!-- ─────────── CATEGORIES ─────────── -->
+        <section class="section" id="sec-categories">
+          <div id="ct-local-note"></div>
+          <div class="row" style="margin-bottom:12px">
+            <span style="color:var(--muted);font-size:.86rem" data-en="The cover picture is what customers see on the store home page." data-ar="صورة الغلاف هي ما يراه الزبون في الصفحة الرئيسية للمتجر.">صورة الغلاف هي ما يراه الزبون في الصفحة الرئيسية للمتجر.</span>
+            <span class="spacer"></span>
+            <button class="btn btn-primary cloud-only" onclick="Admin.openCategoryModal()">➕ <span data-en="Add category" data-ar="إضافة قسم">إضافة قسم</span></button>
+          </div>
+          <div id="ct-list"></div>
+        </section>
+
+        <!-- ─────────── PROFILE ─────────── -->
+        <section class="section" id="sec-profile">
+          <div id="pf-local-note"></div>
+          <div class="card">
+            <div class="card-head"><div><h3 data-en="Store identity" data-ar="هوية المتجر">هوية المتجر</h3><p data-en="Your name and logo appear on the store, the installed app, receipts and WhatsApp messages." data-ar="يظهر الاسم والشعار في المتجر والتطبيق المثبّت والإيصالات ورسائل واتساب.">يظهر الاسم والشعار في المتجر والتطبيق المثبّت والإيصالات ورسائل واتساب.</p></div></div>
+            <div class="grid g2">
+              <div class="field"><label data-en="Store name" data-ar="اسم المتجر">اسم المتجر</label><input id="pf-name" class="input" oninput="Admin.dirty()"></div>
+              <div class="field"><label data-en="Store link ID" data-ar="معرّف رابط المتجر">معرّف رابط المتجر</label><input id="pf-slug" class="input ltr" readonly><div class="hint" data-en="Part of your store link. Ask Red Shark support to change it." data-ar="جزء من رابط متجرك. تواصل مع دعم Red Shark لتغييره.">جزء من رابط متجرك. تواصل مع دعم Red Shark لتغييره.</div></div>
+              <div class="field full"><label data-en="Logo" data-ar="الشعار">الشعار</label>
+                <div class="upload"><div class="preview" id="pf-logo-prev"></div>
+                  <div style="flex:1"><input id="pf-logo" class="input ltr" placeholder="https://…" oninput="Admin.syncPreview('pf-logo','pf-logo-prev');Admin.dirty()">
+                    <div class="row" style="margin-top:6px"><button class="btn btn-sm" onclick="Admin.pickImage('pf-logo','pf-logo-prev',512)">📁 <span data-en="Upload picture" data-ar="رفع صورة">رفع صورة</span></button><button class="btn btn-sm btn-ghost" onclick="Admin.clearImage('pf-logo','pf-logo-prev')">🗑️</button><span class="hint" data-en="Square PNG with a transparent background looks best." data-ar="الأفضل صورة مربعة PNG بخلفية شفافة.">الأفضل صورة مربعة PNG بخلفية شفافة.</span></div></div></div></div>
+              <div class="field"><label data-en="Short description (Arabic)" data-ar="وصف قصير (عربي)">وصف قصير (عربي)</label><textarea id="pf-desc-ar" class="input" rows="2" oninput="Admin.dirty()"></textarea></div>
+              <div class="field"><label data-en="Short description (English)" data-ar="وصف قصير (إنجليزي)">وصف قصير (إنجليزي)</label><textarea id="pf-desc-en" class="input ltr" rows="2" oninput="Admin.dirty()"></textarea></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3 data-en="Brand colour" data-ar="لون المتجر">لون المتجر</h3><p data-en="Used for buttons, prices and highlights in your store." data-ar="يُستخدم للأزرار والأسعار والتمييز في متجرك.">يُستخدم للأزرار والأسعار والتمييز في متجرك.</p></div></div>
+            <div class="color-row" id="pf-swatches"></div>
+            <div class="row" style="margin-top:10px"><input type="color" id="pf-color" oninput="Admin.setColor(this.value)" style="width:44px;height:34px;border:0;background:none;cursor:pointer"><input id="pf-color-hex" class="input ltr" style="max-width:120px" oninput="Admin.setColor(this.value)"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3 data-en="Contact &amp; social" data-ar="التواصل ووسائل التواصل الاجتماعي">التواصل ووسائل التواصل الاجتماعي</h3><p data-en="Shown in the footer of your store so customers can reach you." data-ar="تظهر أسفل المتجر ليتواصل معك الزبائن.">تظهر أسفل المتجر ليتواصل معك الزبائن.</p></div></div>
+            <div class="grid g2">
+              <div class="field"><label data-en="WhatsApp number for orders" data-ar="رقم واتساب للطلبات">رقم واتساب للطلبات</label><input id="pf-wa" class="input ltr" placeholder="+961 70 123 456" oninput="Admin.dirty()"><div class="hint" data-en="With country code. Customers' WhatsApp orders and questions go to this number." data-ar="مع رمز الدولة. تصل طلبات واستفسارات الزبائن عبر واتساب إلى هذا الرقم.">مع رمز الدولة. تصل طلبات واستفسارات الزبائن عبر واتساب إلى هذا الرقم.</div></div>
+              <div class="field"><label data-en="Phone (calls)" data-ar="هاتف (للاتصال)">هاتف (للاتصال)</label><input id="pf-phone" class="input ltr" placeholder="+961 1 234 567" oninput="Admin.dirty()"></div>
+              <div class="field"><label data-en="Address" data-ar="العنوان">العنوان</label><input id="pf-address" class="input" oninput="Admin.dirty()"></div>
+              <div class="field"><label data-en="Google Maps link" data-ar="رابط خرائط Google">رابط خرائط Google</label><input id="pf-maps" class="input ltr" placeholder="https://maps.app.goo.gl/…" oninput="Admin.dirty()"></div>
+              <div class="field"><label>Instagram</label><input id="pf-ig" class="input ltr" placeholder="https://instagram.com/yourshop" oninput="Admin.dirty()"></div>
+              <div class="field"><label>Facebook</label><input id="pf-fb" class="input ltr" placeholder="https://facebook.com/yourshop" oninput="Admin.dirty()"></div>
+              <div class="field"><label>TikTok</label><input id="pf-tt" class="input ltr" placeholder="https://tiktok.com/@yourshop" oninput="Admin.dirty()"></div>
+              <div class="field"><label data-en="Email" data-ar="البريد الإلكتروني">البريد الإلكتروني</label><input id="pf-email" class="input ltr" placeholder="hello@yourshop.com" oninput="Admin.dirty()"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3 data-en="Store options" data-ar="خيارات المتجر">خيارات المتجر</h3></div></div>
+            <div class="toggle-row"><div><b data-en="Show info badges under the header" data-ar="إظهار شارات المعلومات تحت الرأس">إظهار شارات المعلومات تحت الرأس</b><small data-en="Open now, delivery fee and address, shown under your store name." data-ar="«مفتوح الآن» وأجور التوصيل والعنوان، تحت اسم المتجر.">«مفتوح الآن» وأجور التوصيل والعنوان، تحت اسم المتجر.</small></div><label class="switch"><input type="checkbox" id="pf-badges" onchange="Admin.dirty()"><span></span></label></div>
+            <div class="toggle-row cloud-only"><div><b data-en="Stock follows the POS" data-ar="المخزون مربوط بالكاشير">المخزون مربوط بالكاشير</b><small data-en="Quantities come from your cash register. Turn off to manage the online catalogue by hand." data-ar="الكميات تأتي من برنامج الكاشير. أوقفه لإدارة أصناف المتجر يدوياً.">الكميات تأتي من برنامج الكاشير. أوقفه لإدارة أصناف المتجر يدوياً.</small></div><label class="switch"><input type="checkbox" id="pf-linkstock" onchange="Admin.dirty()"><span></span></label></div>
+            <div class="toggle-row"><div><b data-en="Accept orders for out-of-stock items" data-ar="قبول الطلب على الأصناف النافدة">قبول الطلب على الأصناف النافدة</b><small data-en="Off: customers cannot add more than you have in stock." data-ar="عند الإيقاف: لا يستطيع الزبون طلب أكثر من المخزون المتوفر.">عند الإيقاف: لا يستطيع الزبون طلب أكثر من المخزون المتوفر.</small></div><label class="switch"><input type="checkbox" id="pf-backorder" onchange="Admin.dirty()"><span></span></label></div>
+          </div>
+        </section>
+
+        <!-- ─────────── DELIVERY ─────────── -->
+        <section class="section" id="sec-delivery">
+          <div class="card">
+            <div class="card-head"><div><h3 data-en="Delivery charges" data-ar="أجور التوصيل">أجور التوصيل</h3><p data-en="Used when you have no delivery areas below." data-ar="تُستخدم عندما لا توجد مناطق توصيل أدناه.">تُستخدم عندما لا توجد مناطق توصيل أدناه.</p></div></div>
+            <div class="grid g3">
+              <div class="field"><label data-en="Delivery fee ($)" data-ar="أجرة التوصيل ($)">أجرة التوصيل ($)</label><input id="dl-fee" type="number" step="0.25" min="0" class="input ltr" oninput="Admin.dirty()"></div>
+              <div class="field"><label data-en="Minimum order ($)" data-ar="الحد الأدنى للطلب ($)">الحد الأدنى للطلب ($)</label><input id="dl-min" type="number" step="0.5" min="0" class="input ltr" oninput="Admin.dirty()"></div>
+              <div class="field"><label data-en="LBP rate (1 USD =)" data-ar="سعر صرف الليرة (1 دولار =)">سعر صرف الليرة (1 دولار =)</label><input id="dl-rate" type="number" step="100" min="0" class="input ltr" oninput="Admin.dirty()"><div class="hint local-only" data-en="Comes from the POS exchange rate." data-ar="يُؤخذ من سعر الصرف في برنامج الكاشير.">يُؤخذ من سعر الصرف في برنامج الكاشير.</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3 data-en="Delivery areas" data-ar="مناطق التوصيل">مناطق التوصيل</h3><p data-en="Optional. The customer picks an area and its fee and minimum apply." data-ar="اختياري. يختار الزبون منطقته وتُطبّق أجرتها وحدّها الأدنى.">اختياري. يختار الزبون منطقته وتُطبّق أجرتها وحدّها الأدنى.</p></div><button class="btn btn-sm btn-primary" onclick="Admin.addZone()">➕ <span data-en="Add area" data-ar="إضافة منطقة">إضافة منطقة</span></button></div>
+            <div id="dl-zones"></div>
+            <div class="toggle-row" style="margin-top:6px"><div><b data-en="Allow pickup from the shop" data-ar="السماح بالاستلام من المحل">السماح بالاستلام من المحل</b><small data-en="No delivery fee; the customer collects the order." data-ar="بدون أجرة توصيل؛ يستلم الزبون الطلب بنفسه.">بدون أجرة توصيل؛ يستلم الزبون الطلب بنفسه.</small></div><label class="switch"><input type="checkbox" id="dl-pickup" onchange="Admin.dirty()"><span></span></label></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3 data-en="Opening hours" data-ar="أوقات العمل">أوقات العمل</h3><p data-en="Outside these hours customers can browse but cannot place orders. Lebanon time." data-ar="خارج هذه الأوقات يمكن التصفح ولا يمكن الطلب. بتوقيت لبنان.">خارج هذه الأوقات يمكن التصفح ولا يمكن الطلب. بتوقيت لبنان.</p></div><label class="switch"><input type="checkbox" id="dl-hours-on" onchange="Admin.renderHours();Admin.dirty()"><span></span></label></div>
+            <div id="dl-hours"></div>
+          </div>
+        </section>
+
+        <!-- ─────────── REPORTS ─────────── -->
+        <section class="section" id="sec-reports">
+          <div class="row" style="margin-bottom:14px">
+            <select id="rp-period" class="input" style="max-width:220px" onchange="Admin.renderReports()">
+              <option value="today" data-en="Today" data-ar="اليوم">اليوم</option>
+              <option value="week" data-en="Last 7 days" data-ar="آخر 7 أيام">آخر 7 أيام</option>
+              <option value="month" selected data-en="This month" data-ar="هذا الشهر">هذا الشهر</option>
+              <option value="all" data-en="All time" data-ar="كل الفترات">كل الفترات</option>
+            </select>
+            <select id="rp-source" class="input" style="max-width:240px" onchange="Admin.renderReports()">
+              <option value="online" data-en="Online orders" data-ar="الطلبات الأونلاين">الطلبات الأونلاين</option>
+              <option value="pos" data-en="Shop sales (POS)" data-ar="مبيعات المحل (الكاشير)">مبيعات المحل (الكاشير)</option>
+              <option value="all" data-en="Everything" data-ar="الكل">الكل</option>
+            </select>
+            <span class="spacer"></span>
+            <button class="btn btn-sm" onclick="Admin.loadOrders(true).then(Admin.renderReports)">🔄 <span data-en="Refresh" data-ar="تحديث">تحديث</span></button>
+          </div>
+          <div class="grid g4" style="margin-bottom:16px">
+            <div class="kpi"><div class="k-lbl">💰 <span data-en="Sales" data-ar="المبيعات">المبيعات</span></div><div class="k-val" id="rp-sales">$0.00</div><div class="k-sub" id="rp-sales-lbp">—</div></div>
+            <div class="kpi"><div class="k-lbl">🧾 <span data-en="Orders" data-ar="الطلبات">الطلبات</span></div><div class="k-val" id="rp-count">0</div><div class="k-sub" id="rp-count-sub">—</div></div>
+            <div class="kpi"><div class="k-lbl">🎯 <span data-en="Average order" data-ar="متوسط الطلب">متوسط الطلب</span></div><div class="k-val" id="rp-avg">$0.00</div><div class="k-sub">&nbsp;</div></div>
+            <div class="kpi"><div class="k-lbl">📈 <span data-en="Estimated profit" data-ar="الربح التقديري">الربح التقديري</span></div><div class="k-val" id="rp-profit">—</div><div class="k-sub" id="rp-profit-sub">&nbsp;</div></div>
+          </div>
+          <div class="card" id="rp-drawers-card">
+            <div class="card-head"><div><h3>💵 <span data-en="Cash drawers right now" data-ar="الصناديق الآن">الصناديق الآن</span></h3><p data-en="Live from your cash registers." data-ar="مباشرة من أجهزة الكاشير.">مباشرة من أجهزة الكاشير.</p></div></div>
+            <div id="rp-drawers" class="grid g3"></div>
+          </div>
+          <div class="grid g2">
+            <div class="card"><div class="card-head"><h3>🏆 <span data-en="Best sellers" data-ar="الأكثر مبيعاً">الأكثر مبيعاً</span></h3></div><div id="rp-top"></div></div>
+            <div class="card"><div class="card-head"><h3>⚠️ <span data-en="Low stock (5 or less)" data-ar="مخزون منخفض (5 أو أقل)">مخزون منخفض (5 أو أقل)</span></h3></div><div id="rp-low"></div></div>
+          </div>
+        </section>
+
+        <!-- ─────────── SECURITY ─────────── -->
+        <section class="section" id="sec-security">
+          <div class="card cloud-only">
+            <div class="card-head"><div><h3 data-en="Manager password" data-ar="كلمة مرور المدير">كلمة مرور المدير</h3><p data-en="Used to sign in to this page and to the manager phone app." data-ar="تُستخدم لدخول هذه الصفحة وتطبيق المدير على الهاتف.">تُستخدم لدخول هذه الصفحة وتطبيق المدير على الهاتف.</p></div></div>
+            <div id="sc-default-warn"></div>
+            <div class="grid g2">
+              <div class="field"><label data-en="New password" data-ar="كلمة المرور الجديدة">كلمة المرور الجديدة</label><input id="sc-new" type="password" class="input ltr" autocomplete="new-password"></div>
+              <div class="field"><label data-en="Repeat new password" data-ar="أعد كتابة كلمة المرور">أعد كتابة كلمة المرور</label><input id="sc-new2" type="password" class="input ltr" autocomplete="new-password"></div>
+            </div>
+            <div class="hint" data-en="At least 6 characters. Don't reuse your PIN from another service." data-ar="6 أحرف على الأقل. لا تستخدم رمزاً تستخدمه في خدمة أخرى.">6 أحرف على الأقل. لا تستخدم رمزاً تستخدمه في خدمة أخرى.</div>
+            <div class="row" style="margin-top:12px"><button class="btn btn-primary" onclick="Admin.changePassword()">🔐 <span data-en="Change password" data-ar="تغيير كلمة المرور">تغيير كلمة المرور</span></button></div>
+          </div>
+          <div class="card local-only">
+            <div class="card-head"><div><h3 data-en="Manager PIN" data-ar="رمز المدير (PIN)">رمز المدير (PIN)</h3></div></div>
+            <div class="notice n-info">ℹ️ <span data-en="Your store runs on your shop's own computer. The manager PIN is set in the POS: Online orders → Settings → Manager PIN. Use a PIN of at least 6 digits." data-ar="متجرك يعمل على كمبيوتر المحل نفسه. يتم تحديد رمز المدير من برنامج الكاشير: الطلبات الأونلاين ← الإعدادات ← رمز المدير. استخدم رمزاً من 6 أرقام على الأقل.">متجرك يعمل على كمبيوتر المحل نفسه. يتم تحديد رمز المدير من برنامج الكاشير: الطلبات الأونلاين ← الإعدادات ← رمز المدير. استخدم رمزاً من 6 أرقام على الأقل.</span></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><h3 data-en="This device" data-ar="هذا الجهاز">هذا الجهاز</h3></div></div>
+            <p style="color:var(--muted);font-size:.86rem;margin-bottom:10px" data-en="You stay signed in until you close this browser tab. Always sign out on a shared computer." data-ar="تبقى مسجلاً حتى تغلق نافذة المتصفح. سجّل الخروج دائماً على الأجهزة المشتركة.">تبقى مسجلاً حتى تغلق نافذة المتصفح. سجّل الخروج دائماً على الأجهزة المشتركة.</p>
+            <button class="btn btn-danger" onclick="Admin.logout()">⏻ <span data-en="Sign out" data-ar="تسجيل الخروج">تسجيل الخروج</span></button>
+          </div>
+        </section>
+      </div>
+
+      <div class="savebar" id="savebar">
+        <span>● <b data-en="You have unsaved changes" data-ar="لديك تغييرات غير محفوظة">لديك تغييرات غير محفوظة</b></span>
+        <button class="btn" onclick="Admin.discard()" data-en="Discard" data-ar="تجاهل">تجاهل</button>
+        <button class="btn btn-primary" id="btn-save" onclick="Admin.save()">💾 <span data-en="Save changes" data-ar="حفظ التغييرات">حفظ التغييرات</span></button>
       </div>
     </div>
   </div>
 
-  <!-- ADMIN HEADER WITH LANGUAGE TOGGLE -->
-  <header class="store-header">
-    <div class="header-main-bar">
-      <div class="brand-badge">
-        <div class="brand-logo">⚙️</div>
-        <div class="brand-info">
-          <h1 id="admin-header-title">لوحة تحكم المتجر الإلكتروني</h1>
-          <div style="font-size:0.8rem;color:#34d399;font-weight:700">Red Shark Admin Portal</div>
+  <!-- ═══════════ MODALS ═══════════ -->
+  <div class="modal" id="m-product" onclick="if(event.target===this)Admin.closeModal('m-product')">
+    <div class="modal-box">
+      <header><h3 id="m-product-title">—</h3><button class="btn btn-ghost btn-sm" onclick="Admin.closeModal('m-product')">✕</button></header>
+      <div class="mb">
+        <input type="hidden" id="mp-id">
+        <div class="grid g2">
+          <div class="field"><label data-en="Name (Arabic) *" data-ar="الاسم (عربي) *">الاسم (عربي) *</label><input id="mp-name-ar" class="input"></div>
+          <div class="field"><label data-en="Name (English)" data-ar="الاسم (إنجليزي)">الاسم (إنجليزي)</label><input id="mp-name-en" class="input ltr"></div>
+          <div class="field"><label data-en="Category" data-ar="القسم">القسم</label><select id="mp-cat" class="input"></select></div>
+          <div class="field"><label data-en="Price ($) *" data-ar="السعر ($) *">السعر ($) *</label><input id="mp-price" type="number" step="0.01" min="0" class="input ltr"></div>
+          <div class="field"><label data-en="Stock" data-ar="المخزون">المخزون</label><input id="mp-stock" type="number" step="1" class="input ltr"></div>
+          <div class="field"><label data-en="Barcode" data-ar="الباركود">الباركود</label><input id="mp-barcode" class="input ltr"></div>
+          <div class="field full"><label data-en="Picture" data-ar="الصورة">الصورة</label>
+            <div class="upload"><div class="preview" id="mp-img-prev"></div><div style="flex:1"><input id="mp-img" class="input ltr" placeholder="https://…" oninput="Admin.syncPreview('mp-img','mp-img-prev')">
+              <div class="row" style="margin-top:6px"><button class="btn btn-sm" onclick="Admin.pickImage('mp-img','mp-img-prev',800)">📁 <span data-en="Upload picture" data-ar="رفع صورة">رفع صورة</span></button><button class="btn btn-sm btn-ghost" onclick="Admin.clearImage('mp-img','mp-img-prev')">🗑️</button></div></div></div></div>
+          <div class="field full"><label data-en="Description" data-ar="الوصف">الوصف</label><textarea id="mp-desc" class="input" rows="2"></textarea></div>
+          <div class="full toggle-row" style="border:0;padding:0"><div><b data-en="Show in the online store" data-ar="إظهار في المتجر الإلكتروني">إظهار في المتجر الإلكتروني</b></div><label class="switch"><input type="checkbox" id="mp-pub" checked><span></span></label></div>
         </div>
       </div>
-
-      <div class="header-actions">
-        <!-- Logged-in Shop Badge & Logout -->
-        <span id="admin-active-shop-pill"
-          style="background:rgba(5,150,105,0.1);color:var(--brand-primary);padding:4px 10px;border-radius:20px;font-weight:800;font-size:0.8rem;border:1px solid rgba(5,150,105,0.2);display:inline-flex;align-items:center;gap:5px">
-          <span>🏪</span><span id="admin-active-shop-text">shop101</span>
-        </span>
-
-        <!-- Push Sync to POS Button -->
-        <!-- Download / Open Mobile Admin App -->
-        <button id="btn-admin-mobile-app" class="icon-btn" onclick="Admin.openMobileAppModal()"
-          style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);color:#fff;border:none;box-shadow:0 2px 8px rgba(59,130,246,0.3);font-weight:700"
-          title="تحميل تطبيق الهاتف للمدير">
-          <span>📲</span>
-          <span id="admin-mobile-app-text">📥 تنزيل تطبيق الهاتف</span>
-        </button>
-
-        <button id="btn-admin-pos-sync" class="icon-btn" onclick="Admin.openPosSyncModal()"
-          style="background:linear-gradient(135deg, #10b981, #059669);color:#fff;border:none;box-shadow:0 2px 8px rgba(16,185,129,0.3);font-weight:700"
-          title="مزامنة مع الكاشير">
-          <span>🔄</span>
-          <span id="admin-pos-sync-text">مزامنة مع الكاشير</span>
-        </button>
-
-        <button id="btn-admin-logout" class="icon-btn" onclick="Admin.logout()"
-          style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)"
-          title="تسجيل الخروج">
-          <span>🚪</span>
-          <span id="admin-logout-text">خروج</span>
-        </button>
-
-        <!-- English / Arabic Switcher -->
-        <button id="btn-admin-lang" class="icon-btn" onclick="Admin.toggleLang()">
-          <span>🌐</span>
-          <span id="admin-lang-text">English</span>
-        </button>
-
-        <a href="javascript:void(0)" onclick="Admin.openStorefront()" class="icon-btn" id="btn-view-store"
-          title="View Storefront">
-          <span>🏪</span>
-          <span id="admin-view-store-text">معاينة المتجر</span>
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <div class="admin-container">
-
-    <!-- Save Alert Banner -->
-    <div id="admin-alert" class="save-alert"></div>
-
-    <!-- Navigation Tabs -->
-    <div class="admin-nav-tabs">
-      <button class="nav-tab-btn active" id="tab-btn-settings" onclick="Admin.switchTab('settings')">
-        <span>⚙️</span>
-        <span id="tab-title-settings">إعدادات المتجر</span>
-      </button>
-      <button class="nav-tab-btn" id="tab-btn-banner" onclick="Admin.switchTab('banner')">
-        <span>🎯</span>
-        <span id="tab-title-banner">عروض البانر والشرائح</span>
-      </button>
-      <button class="nav-tab-btn" id="tab-btn-categories" onclick="Admin.switchTab('categories')">
-        <span>📂</span>
-        <span id="tab-title-categories">الأقسام والتصنيفات</span>
-      </button>
-      <button class="nav-tab-btn" id="tab-btn-catalog" onclick="Admin.switchTab('catalog')">
-        <span>📦</span>
-        <span id="tab-title-catalog">أصناف المتجر والمخزون</span>
-      </button>
-      <button class="nav-tab-btn" id="tab-btn-reports" onclick="Admin.switchTab('reports')">
-        <span>📊</span>
-        <span id="tab-title-reports">تقارير المبيعات والأرباح</span>
-      </button>
-      <button class="nav-tab-btn" id="tab-btn-orders" onclick="Admin.switchTab('orders')">
-        <span>📋</span>
-        <span id="tab-title-orders">الطلبات الواردة</span>
-      </button>
-    </div>
-
-    <!-- TAB 1: SETTINGS -->
-    <div id="tab-settings" class="admin-card">
-      <div class="admin-header">
-        <h2 style="font-size:1.25rem;font-weight:900" id="h2-settings">⚙️ الإعدادات العامة للمتجر</h2>
-        <button id="btn-save-settings" class="btn-checkout-primary" onclick="Admin.saveSettings()"
-          style="padding:8px 20px">
-          <span>💾</span>
-          <span id="btn-save-text">حفظ الإعدادات</span>
-        </button>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="field-label" id="lbl-shop-name">اسم المتجر (Shop Name)</label>
-          <input type="text" id="admin-shop-name" class="field-input" placeholder="Red Shark Supermarket">
-        </div>
-
-        <div class="form-group">
-          <label class="field-label" id="lbl-shop-slug">رابط المتجر (Slug Identifier)</label>
-          <input type="text" id="admin-shop-slug" class="field-input" placeholder="shop101">
-        </div>
-
-        <div class="form-group">
-          <label class="field-label" id="lbl-whatsapp">رقم الواتساب للطلبات</label>
-          <input type="text" id="admin-whatsapp" class="field-input" placeholder="+96170123456">
-        </div>
-
-        <div class="form-group">
-          <label class="field-label" id="lbl-pin">رمز PIN للأمان وحماية لوحة التحكم</label>
-          <input type="text" id="admin-security-pin" class="field-input" placeholder="1234" maxlength="10">
-        </div>
-
-        <div class="form-group">
-          <label class="field-label" id="lbl-delivery">أجور التوصيل ($)</label>
-          <input type="number" step="0.5" id="admin-delivery-fee" class="field-input" placeholder="2.00">
-        </div>
-
-        <div class="form-group">
-          <label class="field-label" id="lbl-min-order">الحد الأدنى للطلب ($)</label>
-          <input type="number" step="1" id="admin-min-order" class="field-input" placeholder="5.00">
-        </div>
-
-        <div class="form-group" style="grid-column:1/-1">
-          <label class="field-label">🗺️ مناطق التوصيل <span style="opacity:.7;font-weight:600">Delivery zones (optional)</span></label>
-          <div style="font-size:.78rem;opacity:.75;margin-bottom:8px">إن أضفت مناطق، يختار الزبون منطقته ويُحسب سعر التوصيل والحد الأدنى حسبها. بدون مناطق تُستخدم أجور التوصيل أعلاه. · If you add zones, the customer picks one and its fee and minimum apply.</div>
-          <div id="admin-zones"></div>
-          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px">
-            <button type="button" class="btn btn-secondary" onclick="Admin.addZone()" style="font-weight:800">➕ إضافة منطقة · Add zone</button>
-            <label style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:.85rem"><input type="checkbox" id="admin-allow-pickup"> 🏬 السماح بالاستلام من المحل (بدون توصيل) · Allow pickup</label>
-          </div>
-        </div>
-
-        <div class="form-group" style="grid-column:1/-1">
-          <label class="field-label">🕒 أوقات العمل <span style="opacity:.7;font-weight:600">Opening hours</span></label>
-          <label style="display:flex;align-items:center;gap:6px;font-weight:700;font-size:.85rem;margin-bottom:8px"><input type="checkbox" id="admin-hours-enabled" onchange="Admin.renderHours()"> إيقاف استقبال الطلبات تلقائياً خارج أوقات العمل · Stop taking orders outside opening hours</label>
-          <div id="admin-hours"></div>
-        </div>
-
-        <div class="form-group">
-          <label class="field-label" id="lbl-lbp-rate">سعر صرف الليرة مقابل الدولار (LBP)</label>
-          <input type="number" id="admin-lbp-rate" class="field-input" placeholder="89500">
-        </div>
-
-        <div class="form-group">
-          <label class="field-label" id="lbl-address">عنوان وموقع المتجر</label>
-          <input type="text" id="admin-address" class="field-input" placeholder="بيروت - وسط المدينة">
-        </div>
-
-        <!-- Shop Logo with Direct Upload Button -->
-        <div class="form-group" style="grid-column:1/-1">
-          <label class="field-label" id="lbl-logo">شعار المتجر (Store Logo)</label>
-          <div class="upload-field-row">
-            <input type="text" id="admin-shop-logo" class="field-input" placeholder="https://... أو اضغط رفع صورة">
-            <input type="file" id="file-shop-logo" accept="image/*" style="display:none"
-              onchange="Admin.handleFileUpload(this, 'admin-shop-logo', 'preview-shop-logo')">
-            <button type="button" class="btn-upload-file" onclick="document.getElementById('file-shop-logo').click()">
-              <span>📁</span>
-              <span id="btn-upload-logo-text">رفع صورة</span>
-            </button>
-            <img id="preview-shop-logo" class="img-preview-thumb" alt="Logo Preview">
-          </div>
-        </div>
-
-        <div class="form-group" style="grid-column:1/-1">
-          <label class="field-label" id="lbl-desc-ar">وصف المتجر الترويجي</label>
-          <textarea id="admin-desc-ar" class="field-input" rows="2"
-            placeholder="أفضل تشكيلة من المنتجات الغذائية والمواد التموينية..."></textarea>
-        </div>
-      </div>
-
-
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-top:14px">
-        <input type="checkbox" id="admin-show-header-badges" style="width:18px;height:18px">
-        <span id="lbl-show-badges-text">إظهار شريط الشارات في أعلى المتجر (مفتوح للطلبات، رسوم التوصيل، مخزون
-          الكاشير)</span>
-      </label>
-      <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.4;margin-top:4px" id="lbl-show-badges-hint">
-        افتراضياً، يتم إخفاء هذا الشريط لتوفير المساحة وتسهيل تصفح المنتجات على الهواتف. يمكنك تفعيله إذا أردت إبراز
-        الشارات للزبائن.
-      </div>
-
-      <!-- POS LIVE STOCK TOGGLE -->
-      <div
-        style="margin-top:24px;padding:16px;background:var(--bg-secondary);border-radius:var(--radius-md);border:1px solid var(--border-color)">
-        <h3 style="font-size:1.05rem;font-weight:900;margin-bottom:8px" id="lbl-pos-title">⚡ الربط بمخزون الكاشير
-          المباشر (POS Live Stock)</h3>
-
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-bottom:8px">
-          <input type="checkbox" id="admin-link-pos-stock" style="width:18px;height:18px"
-            onchange="Admin.handlePosStockToggle(this.checked)">
-          <span id="lbl-link-pos-text">ربط كميات المتجر الإلكتروني بمخزون نقطة البيع (الكاشير) لحظياً</span>
-        </label>
-
-        <div style="font-size:0.8rem;color:var(--text-muted);line-height:1.4" id="lbl-link-pos-hint">
-          عند إلغاء هذا الخيار، سيتم سؤالك عما إذا كنت ترغب في مسح أصناف الكاشير من المتجر لإنشاء قائمة أصناف خاصة
-          وحصرية للمتجر مع إمكانية حذف الأصناف يدوياً.
-        </div>
-
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin-top:12px">
-          <input type="checkbox" id="admin-allow-out-of-stock" style="width:18px;height:18px">
-          <span id="lbl-allow-out-text">السماح للزبون بالطلب حتى لو نفد المخزون (Backorder)</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- TAB 2: MULTI-OFFER BANNER CAROUSEL -->
-    <div id="tab-banner" class="admin-card" style="display:none">
-      <div class="admin-header">
-        <div>
-          <h2 style="font-size:1.25rem;font-weight:900" id="h2-banner">🎯 عروض البانر والشرائح الترويجية</h2>
-          <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px" id="p-banner-desc">
-            يمكنك إضافة أكثر من عرض وسيتنقل البانر تلقائياً بينها للزبائن مع الصور
-          </p>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="icon-btn" onclick="Admin.addNewSlide()"
-            style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
-            <span>➕</span>
-            <span id="btn-add-slide-text">إضافة شريحة عرض جديدة</span>
-          </button>
-          <button class="btn-checkout-primary" onclick="Admin.saveSettings()" style="padding:8px 18px">
-            <span>💾</span>
-            <span id="btn-save-banner-text">حفظ عروض البانر</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Banner Active Toggle -->
-      <div
-        style="margin-bottom:18px;padding:12px;background:var(--bg-secondary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <strong id="lbl-banner-active-title">تفعيل بانر العروض الخاصة والتخفيضات أونلاين</strong>
-          <div style="font-size:0.8rem;color:var(--text-muted)" id="lbl-banner-active-desc">إذا تم إيقافه سيختفي شريط
-            العروض من الصفحة الرئيسية للزبائن</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <span id="banner-active-badge"
-            style="background:#d1fae5;color:#065f46;padding:4px 12px;border-radius:12px;font-weight:800;font-size:0.85rem">نشط
-            أونلاين 🟢</span>
-          <input type="checkbox" id="admin-carousel-active" checked style="width:24px;height:24px;cursor:pointer"
-            onchange="Admin.updateBannerStatusBadge(this.checked)">
-        </div>
-      </div>
-
-      <div id="admin-slides-list"></div>
-    </div>
-
-    <!-- TAB: CATEGORIES MANAGER (NEW) -->
-    <div id="tab-categories" class="admin-card" style="display:none">
-      <div class="admin-header">
-        <div>
-          <h2 style="font-size:1.25rem;font-weight:900" id="h2-categories">📂 إدارة أقسام وتصنيفات المتجر</h2>
-          <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px" id="p-categories-desc">
-            تعديل أسماء الأقسام، ورفع صور الغلاف الكبيرة التي تظهر للزبائن في الصفحة الرئيسية
-          </p>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="btn-catalog-sync-pos" class="icon-btn" onclick="Admin.openPosSyncModal()"
-            style="background:rgba(16,185,129,0.12);color:#059669;border:1px solid rgba(16,185,129,0.3);font-weight:700">
-            <span>🔄</span>
-            <span id="btn-catalog-sync-pos-text">مزامنة مع الكاشير</span>
-          </button>
-          <button class="icon-btn" onclick="Admin.openAddCategoryModal()"
-            style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
-            <span>➕</span>
-            <span id="btn-add-cat-text">إضافة قسم جديد مع صورة غلاف</span>
-          </button>
-          <button class="icon-btn" onclick="Admin.loadCategories()" id="btn-reload-cats">🔄 تحديث الأقسام</button>
-        </div>
-      </div>
-      <div id="admin-categories-table"></div>
-    </div>
-
-    <!-- TAB 3: PRODUCTS & CATALOG (DELETE ITEMS + MANUAL ITEM CREATION + DIRECT IMAGE UPLOAD) -->
-    <div id="tab-catalog" class="admin-card" style="display:none">
-      <div class="admin-header">
-        <div>
-          <h2 style="font-size:1.25rem;font-weight:900" id="h2-catalog">📦 أصناف المتجر والمخزون</h2>
-          <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px" id="p-catalog-desc">
-            إدارة كاملة للأصناف مع إمكانية إضافة أصناف بصورها وحذف الأصناف غير المرغوبة
-          </p>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="icon-btn" onclick="Admin.openAddItemModal()"
-            style="background:var(--brand-primary);color:#fff;border:none;font-weight:800">
-            <span>➕</span>
-            <span id="btn-add-item-modal-text">إضافة صنف جديد مع صورة</span>
-          </button>
-          <button class="icon-btn" onclick="Admin.confirmClearAllProducts()"
-            style="background:var(--danger);color:#fff;border:none;font-weight:800">
-            <span>🗑️</span>
-            <span id="btn-clear-all-text">مسح جميع الأصناف</span>
-          </button>
-          <button class="icon-btn" onclick="Admin.loadCatalog()" id="btn-reload-catalog">🔄 تحديث القائمة</button>
-        </div>
-      </div>
-      <div id="admin-catalog-table"></div>
-    </div>
-
-    <!-- TAB 4: ORDERS -->
-
-    <!-- TAB 5: REPORTS & ANALYTICS -->
-    <div id="tab-reports" class="admin-card" style="display:none">
-      <div class="admin-header" style="flex-wrap:wrap;gap:12px">
-        <div>
-          <h2 style="font-size:1.25rem;font-weight:900" id="h2-reports">📊 تقارير المبيعات والأرباح والمخزون</h2>
-          <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px" id="p-reports-desc">
-            متابعة حية وشاملة لإيرادات المتجر، الأرباح التقديرية، أفضل الأصناف مبيعاً، وحالة المخزون
-          </p>
-        </div>
-
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="reports-branch-filter" class="field-input"
-            style="padding:6px 12px;font-size:0.85rem;font-weight:700;width:auto;background:var(--bg-primary)"
-            onchange="Admin.loadReports()">
-            <option value="all">🌐 كافة الفروع والمحطات (All Branches)</option>
-            <option value="main">📍 الفرع الرئيسي (Main Branch)</option>
-          </select>
-          <select id="reports-date-filter" class="field-input"
-            style="padding:6px 12px;font-size:0.85rem;font-weight:700;width:auto;background:var(--bg-primary)"
-            onchange="Admin.loadReports()">
-            <option value="today">📅 مبيعات اليوم (Today)</option>
-            <option value="week">📅 آخر 7 أيام (Last 7 Days)</option>
-            <option value="month" selected>📅 مبيعات هذا الشهر (This Month)</option>
-            <option value="all">📅 جميع المبيعات (All Time)</option>
-          </select>
-          <button class="icon-btn" onclick="Admin.loadReports()"
-            style="background:var(--bg-primary);border:1px solid #cbd5e1;padding:6px 12px" title="تحديث التقارير">
-            🔄
-          </button>
-        </div>
-      </div>
-
-      <!-- KPI METRIC CARDS -->
-      <!-- LIVE CASH DRAWERS CARDS -->
-      <div id="reports-cashbox-container" style="margin-bottom:20px">
-        <div
-          style="background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.02));border:1.5px solid rgba(16,185,129,0.3);border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-          <div>
-            <div style="font-size:0.82rem;font-weight:800;color:var(--text-muted)">💵 رصيد الصندوق الفعلي في الدرج الآن
-              (Cash in Drawer)</div>
-            <div style="font-size:2rem;font-weight:900;color:#059669" id="rpt-drawer-total">$0.00</div>
-            <div style="font-size:0.8rem;font-weight:700;color:var(--text-muted)" id="rpt-drawer-lbp">0 ل.ل</div>
-          </div>
-          <div style="font-size:0.82rem;text-align:end">
-            <div>الكاشير المناوب: <strong id="rpt-drawer-cashier">Administrator</strong></div>
-            <div>حالة الوردية: <span class="badge"
-                style="background:rgba(16,185,129,0.15);color:#059669;font-weight:800;padding:2px 8px;border-radius:10px"
-                id="rpt-drawer-status">مفتوحة 🟢</span></div>
-            <div style="color:var(--text-muted);font-size:0.75rem;margin-top:2px" id="rpt-drawer-time">مباشر لحظياً
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- KPI METRIC CARDS -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin-bottom:20px">
-        <div
-          style="background:linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.05));border:1px solid rgba(16,185,129,0.25);border-radius:14px;padding:16px">
-          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-sales">💰
-            إجمالي المبيعات المحققة</div>
-          <div style="font-size:1.6rem;font-weight:900;color:#059669" id="kpi-total-sales">$0.00</div>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="kpi-total-sales-lbp">0 ل.ل</div>
-        </div>
-
-        <div
-          style="background:linear-gradient(135deg, rgba(59,130,246,0.1), rgba(29,78,216,0.05));border:1px solid rgba(59,130,246,0.25);border-radius:14px;padding:16px">
-          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-orders">
-            📦 عدد الفواتير والطلبات</div>
-          <div style="font-size:1.6rem;font-weight:900;color:#2563eb" id="kpi-total-orders">0</div>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="kpi-completed-orders">0 طلب مكتمل
-          </div>
-        </div>
-
-        <div
-          style="background:linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.05));border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:16px">
-          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px" id="lbl-kpi-avg">🎯
-            متوسط قيمة الفاتورة</div>
-          <div style="font-size:1.6rem;font-weight:900;color:#d97706" id="kpi-avg-order">$0.00</div>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="lbl-kpi-avg-sub">لكل زبون</div>
-        </div>
-
-        <div
-          style="background:linear-gradient(135deg, rgba(239,68,68,0.1), rgba(220,38,38,0.05));border:1px solid rgba(239,68,68,0.25);border-radius:14px;padding:16px">
-          <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;margin-bottom:4px"
-            id="lbl-kpi-lowstock">⚠️ تنبيهات المخزون المنخفض</div>
-          <div style="font-size:1.6rem;font-weight:900;color:#dc2626" id="kpi-low-stock">0</div>
-          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600" id="lbl-kpi-lowstock-sub">صنف شارف على
-            النفاد</div>
-        </div>
-      </div>
-
-      <!-- TABLES GRID -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px">
-        <!-- Top Selling Items -->
-        <div style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:14px;padding:16px">
-          <div style="font-weight:800;font-size:0.95rem;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-            <span>🏆</span>
-            <span id="lbl-top-products">الأصناف الأكثر طلباً ومبيعاً</span>
-          </div>
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:0.84rem">
-              <thead>
-                <tr style="border-bottom:1.5px solid #cbd5e1;color:var(--text-muted);text-align:start">
-                  <th style="padding:6px 8px" id="th-top-item">الصنف</th>
-                  <th style="padding:6px 8px;text-align:center" id="th-top-qty">الكمية المباعة</th>
-                  <th style="padding:6px 8px;text-align:end" id="th-top-rev">الإجمالي</th>
-                </tr>
-              </thead>
-              <tbody id="reports-top-products-body">
-                <tr>
-                  <td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">جارِ تحميل البيانات...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Detailed Sales Invoices List -->
-        <div
-          style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:14px;padding:16px;margin-bottom:16px">
-          <div
-            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-            <div style="font-weight:800;font-size:0.95rem;display:flex;align-items:center;gap:6px">
-              <span>🧾</span>
-              <span>فواتير ومبيعات الكاشير التفصيلية (Detailed Sales Invoices)</span>
-            </div>
-            <input type="text" id="admin-inv-search" placeholder="🔍 تصفية برقم الفاتورة أو العميل..."
-              oninput="Admin.filterReportsInvoices()"
-              style="padding:5px 12px;border-radius:8px;border:1px solid #cbd5e1;font-size:0.8rem;outline:none">
-          </div>
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:0.82rem">
-              <thead>
-                <tr style="border-bottom:1.5px solid #cbd5e1;color:var(--text-muted);text-align:start">
-                  <th style="padding:6px 8px">رقم الفاتورة</th>
-                  <th style="padding:6px 8px">الوقت والفرع</th>
-                  <th style="padding:6px 8px">الكاشير / العميل</th>
-                  <th style="padding:6px 8px;text-align:end">الإجمالي ($)</th>
-                  <th style="padding:6px 8px;text-align:end">التكلفة ($)</th>
-                  <th style="padding:6px 8px;text-align:end">صافي الربح ($)</th>
-                </tr>
-              </thead>
-              <tbody id="reports-invoices-body">
-                <tr>
-                  <td colspan="6" style="text-align:center;padding:18px;color:var(--text-muted)">جارِ جلب الفواتير...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Inventory Status & Out of stock -->
-        <div style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:14px;padding:16px">
-          <div style="font-weight:800;font-size:0.95rem;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-            <span>📦</span>
-            <span id="lbl-stock-health">الأصناف التي تحتاج إعادة طلب (مخزون منخفض)</span>
-          </div>
-          <div style="overflow-x:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:0.84rem">
-              <thead>
-                <tr style="border-bottom:1.5px solid #cbd5e1;color:var(--text-muted);text-align:start">
-                  <th style="padding:6px 8px" id="th-low-item">الصنف</th>
-                  <th style="padding:6px 8px;text-align:center" id="th-low-qty">المخزون المتبقي</th>
-                  <th style="padding:6px 8px;text-align:end" id="th-low-price">السعر</th>
-                </tr>
-              </thead>
-              <tbody id="reports-low-stock-body">
-                <tr>
-                  <td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">جارِ تحميل البيانات...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="tab-orders" class="admin-card" style="display:none">
-      <div class="admin-header">
-        <h2 style="font-size:1.25rem;font-weight:900" id="h2-orders">📋 الطلبات الواردة من المتجر أونلاين</h2>
-        <button class="icon-btn" onclick="Admin.loadOrders()" id="btn-reload-orders">🔄 تحديث الطلبات</button>
-      </div>
-      <div id="admin-orders-table"></div>
+      <footer><button class="btn btn-danger hidden" id="mp-delete" onclick="Admin.deleteProduct()">🗑️ <span data-en="Delete" data-ar="حذف">حذف</span></button><span class="spacer"></span><button class="btn" onclick="Admin.closeModal('m-product')" data-en="Cancel" data-ar="إلغاء">إلغاء</button><button class="btn btn-primary" id="mp-save" onclick="Admin.saveProduct()">💾 <span data-en="Save" data-ar="حفظ">حفظ</span></button></footer>
     </div>
   </div>
 
-  <!-- ADD ITEM MODAL WITH DIRECT IMAGE UPLOAD -->
-  <div id="modal-add-item" class="modal-backdrop" onclick="if(event.target===this) Admin.closeAddItemModal()">
-    <div class="modal-sheet" style="max-height:unset">
-      <div class="modal-header">
-        <h3 style="font-size:1.15rem;font-weight:900" id="modal-add-item-title">➕ إضافة صنف جديد للمتجر الإلكتروني</h3>
-        <button class="icon-btn" onclick="Admin.closeAddItemModal()"
-          style="background:none;border:none;color:var(--text-main)">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="field-label" id="lbl-item-name-ar">اسم الصنف بالعربي *</label>
-            <input type="text" id="new-item-name-ar" class="field-input" placeholder="مثال: زيت زيتون بكر ممتاز 1 لتر"
-              required>
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-item-name-en">اسم الصنف بالإنجليزي</label>
-            <input type="text" id="new-item-name-en" class="field-input" placeholder="Extra Virgin Olive Oil 1L">
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-item-cat">القسم (Category)</label>
-            <select id="new-item-cat" class="field-input"></select>
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-item-price">سعر البيع ($) *</label>
-            <input type="number" step="0.1" id="new-item-price" class="field-input" placeholder="8.50" required>
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-item-stock">كمية المخزون المتوفرة</label>
-            <input type="number" id="new-item-stock" class="field-input" placeholder="25" value="25">
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-item-barcode">الباركود (Barcode - اختياري)</label>
-            <input type="text" id="new-item-barcode" class="field-input" placeholder="6281001234567">
-          </div>
-
-          <!-- Direct Image Upload + URL Input -->
-          <div class="form-group" style="grid-column:1/-1">
-            <label class="field-label" id="lbl-item-image">صورة المنتج (Image)</label>
-            <div class="upload-field-row">
-              <input type="text" id="new-item-img" class="field-input" placeholder="https://... أو اضغط زر رفع صورة">
-              <input type="file" id="file-new-item-img" accept="image/*" style="display:none"
-                onchange="Admin.handleFileUpload(this, 'new-item-img', 'preview-new-item-img')">
-              <button type="button" class="btn-upload-file"
-                onclick="document.getElementById('file-new-item-img').click()">
-                <span>📁</span>
-                <span id="btn-upload-item-img-text">رفع صورة</span>
-              </button>
-              <img id="preview-new-item-img" class="img-preview-thumb" alt="Product Preview">
-            </div>
-          </div>
-
-          <div class="form-group" style="grid-column:1/-1">
-            <label class="field-label" id="lbl-item-desc">وصف الصنف ومميزاته</label>
-            <textarea id="new-item-desc" class="field-input" rows="2"
-              placeholder="تفاصيل المنتج، المنشأ، الحجم..."></textarea>
-          </div>
+  <div class="modal" id="m-category" onclick="if(event.target===this)Admin.closeModal('m-category')">
+    <div class="modal-box">
+      <header><h3 id="m-category-title">—</h3><button class="btn btn-ghost btn-sm" onclick="Admin.closeModal('m-category')">✕</button></header>
+      <div class="mb">
+        <input type="hidden" id="mc-id">
+        <div class="grid g2">
+          <div class="field"><label data-en="Name (Arabic) *" data-ar="الاسم (عربي) *">الاسم (عربي) *</label><input id="mc-name-ar" class="input"></div>
+          <div class="field"><label data-en="Name (English)" data-ar="الاسم (إنجليزي)">الاسم (إنجليزي)</label><input id="mc-name-en" class="input ltr"></div>
+          <div class="field full"><label data-en="Cover picture" data-ar="صورة الغلاف">صورة الغلاف</label>
+            <div class="upload"><div class="preview wide" id="mc-img-prev"></div><div style="flex:1"><input id="mc-img" class="input ltr" placeholder="https://…" oninput="Admin.syncPreview('mc-img','mc-img-prev')">
+              <div class="row" style="margin-top:6px"><button class="btn btn-sm" onclick="Admin.pickImage('mc-img','mc-img-prev',900)">📁 <span data-en="Upload picture" data-ar="رفع صورة">رفع صورة</span></button><button class="btn btn-sm btn-ghost" onclick="Admin.clearImage('mc-img','mc-img-prev')">🗑️</button></div></div></div></div>
         </div>
+      </div>
+      <footer><button class="btn btn-danger hidden" id="mc-delete" onclick="Admin.deleteCategory()">🗑️ <span data-en="Delete" data-ar="حذف">حذف</span></button><span class="spacer"></span><button class="btn" onclick="Admin.closeModal('m-category')" data-en="Cancel" data-ar="إلغاء">إلغاء</button><button class="btn btn-primary" id="mc-save" onclick="Admin.saveCategory()">💾 <span data-en="Save" data-ar="حفظ">حفظ</span></button></footer>
+    </div>
+  </div>
 
-        <button id="btn-save-new-item" class="btn-checkout-primary" onclick="Admin.submitNewItem()">
-          <span>💾</span>
-          <span id="btn-save-new-item-text">حفظ ونشر الصنف فوراً</span>
-        </button>
+  <div class="modal" id="m-offer" onclick="if(event.target===this)Admin.closeModal('m-offer')">
+    <div class="modal-box">
+      <header><h3 id="m-offer-title">—</h3><button class="btn btn-ghost btn-sm" onclick="Admin.closeModal('m-offer')">✕</button></header>
+      <div class="mb">
+        <input type="hidden" id="mo-id">
+        <div class="field" style="margin-bottom:12px"><label data-en="Product *" data-ar="الصنف *">الصنف *</label>
+          <input id="mo-search" class="input" oninput="Admin.renderOfferPicker()" data-ph-en="Type to search a product…" data-ph-ar="اكتب للبحث عن صنف…">
+          <div id="mo-picker" style="max-height:200px;overflow-y:auto;margin-top:6px"></div>
+          <input type="hidden" id="mo-product">
+        </div>
+        <div class="grid g2">
+          <div class="field"><label data-en="Regular price" data-ar="السعر العادي">السعر العادي</label><input id="mo-regular" class="input ltr" readonly></div>
+          <div class="field"><label data-en="Discount %" data-ar="نسبة الخصم %">نسبة الخصم %</label><input id="mo-pct" type="number" min="1" max="95" step="1" class="input ltr" oninput="Admin.offerFromPct()"></div>
+          <div class="field"><label data-en="Offer price ($) *" data-ar="سعر العرض ($) *">سعر العرض ($) *</label><input id="mo-price" type="number" min="0" step="0.01" class="input ltr" oninput="Admin.offerFromPrice()"></div>
+          <div class="field"><label data-en="Label (optional)" data-ar="عبارة العرض (اختياري)">عبارة العرض (اختياري)</label><input id="mo-label" class="input" data-ph-en="e.g. Weekend deal" data-ph-ar="مثال: عرض نهاية الأسبوع"></div>
+          <div class="field"><label data-en="Starts" data-ar="يبدأ">يبدأ</label><input id="mo-start" type="date" class="input ltr"></div>
+          <div class="field"><label data-en="Ends" data-ar="ينتهي">ينتهي</label><input id="mo-end" type="date" class="input ltr"><div class="hint" data-en="Leave empty to keep the offer until you stop it." data-ar="اتركه فارغاً ليبقى العرض حتى توقفه.">اتركه فارغاً ليبقى العرض حتى توقفه.</div></div>
+        </div>
+      </div>
+      <footer><span class="spacer"></span><button class="btn" onclick="Admin.closeModal('m-offer')" data-en="Cancel" data-ar="إلغاء">إلغاء</button><button class="btn btn-primary" onclick="Admin.saveOffer()">💾 <span data-en="Save offer" data-ar="حفظ العرض">حفظ العرض</span></button></footer>
+    </div>
+  </div>
+
+  <div class="modal" id="m-app" onclick="if(event.target===this)Admin.closeModal('m-app')">
+    <div class="modal-box" style="max-width:420px;text-align:center">
+      <header><h3 data-en="Manager phone app" data-ar="تطبيق المدير للهاتف">تطبيق المدير للهاتف</h3><button class="btn btn-ghost btn-sm" onclick="Admin.closeModal('m-app')">✕</button></header>
+      <div class="mb">
+        <p style="color:var(--muted);font-size:.86rem;margin-bottom:12px" data-en="Scan with your phone, then add it to your home screen. You get new-order alerts, live stock and sales on your phone." data-ar="امسح الرمز بهاتفك ثم أضفه إلى الشاشة الرئيسية. تصلك تنبيهات الطلبات الجديدة والمخزون والمبيعات مباشرة.">امسح الرمز بهاتفك ثم أضفه إلى الشاشة الرئيسية. تصلك تنبيهات الطلبات الجديدة والمخزون والمبيعات مباشرة.</p>
+        <img id="m-app-qr" class="qr" style="width:180px;height:180px" alt="QR">
+        <input id="m-app-link" class="input ltr" readonly style="margin-top:12px" onclick="this.select()">
+        <a id="m-app-open" class="btn btn-primary btn-block" style="margin-top:10px" target="_blank" rel="noopener" data-en="Open on this device" data-ar="فتح على هذا الجهاز">فتح على هذا الجهاز</a>
       </div>
     </div>
   </div>
 
-  <!-- EDIT ITEM MODAL WITH IMAGE UPLOAD -->
-  <div id="modal-edit-item" class="modal-backdrop" onclick="if(event.target===this) Admin.closeEditItemModal()">
-    <div class="modal-sheet" style="max-height:unset">
-      <div class="modal-header">
-        <h3 style="font-size:1.15rem;font-weight:900" id="modal-edit-item-title">✏️ تعديل بيانات وصورة الصنف</h3>
-        <button class="icon-btn" onclick="Admin.closeEditItemModal()"
-          style="background:none;border:none;color:var(--text-main)">✕</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="edit-item-id">
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="field-label" id="lbl-edit-name-ar">اسم الصنف بالعربي *</label>
-            <input type="text" id="edit-item-name-ar" class="field-input" required>
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-edit-name-en">اسم الصنف بالإنجليزي</label>
-            <input type="text" id="edit-item-name-en" class="field-input">
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-edit-cat">القسم (Category)</label>
-            <select id="edit-item-cat" class="field-input"></select>
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-edit-price">سعر البيع ($) *</label>
-            <input type="number" step="0.1" id="edit-item-price" class="field-input" required>
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-edit-stock">كمية المخزون المتوفرة</label>
-            <input type="number" id="edit-item-stock" class="field-input">
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-edit-barcode">الباركود (Barcode)</label>
-            <input type="text" id="edit-item-barcode" class="field-input">
-          </div>
-
-          <!-- Product Image Upload Section -->
-          <div class="form-group" style="grid-column:1/-1">
-            <label class="field-label" id="lbl-edit-image">صورة المنتج (Product Image)</label>
-            <div class="upload-field-row">
-              <input type="text" id="edit-item-img" class="field-input" placeholder="https://... أو اضغط زر رفع صورة">
-              <input type="file" id="file-edit-item-img" accept="image/*" style="display:none"
-                onchange="Admin.handleFileUpload(this, 'edit-item-img', 'preview-edit-item-img')">
-              <button type="button" class="btn-upload-file"
-                onclick="document.getElementById('file-edit-item-img').click()">
-                <span>📁</span>
-                <span id="btn-upload-edit-img-text">رفع صورة</span>
-              </button>
-              <button type="button" class="btn-clear-cart"
-                onclick="document.getElementById('edit-item-img').value=''; document.getElementById('preview-edit-item-img').style.display='none';"
-                title="حذف الصورة">🗑️</button>
-            </div>
-            <div style="margin-top:8px">
-              <img id="preview-edit-item-img" class="img-preview-thumb"
-                style="width:80px;height:80px;border-radius:10px" alt="Preview">
-            </div>
-          </div>
-
-          <div class="form-group" style="grid-column:1/-1">
-            <label class="field-label" id="lbl-edit-desc">وصف الصنف ومميزاته</label>
-            <textarea id="edit-item-desc" class="field-input" rows="2"></textarea>
-          </div>
-
-          <div class="form-group" style="grid-column:1/-1">
-            <label style="display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer">
-              <input type="checkbox" id="edit-item-published" style="width:18px;height:18px">
-              <span id="lbl-edit-published">نشر هذا الصنف أونلاين في المتجر للزبائن</span>
-            </label>
-          </div>
-        </div>
-
-        <button id="btn-save-edit-item" class="btn-checkout-primary" onclick="Admin.submitEditItem()">
-          <span>💾</span>
-          <span id="btn-save-edit-item-text">حفظ التعديلات وتحديث الصنف</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ADD / EDIT CATEGORY MODAL -->
-  <div id="modal-category" class="modal-backdrop" onclick="if(event.target===this) Admin.closeCategoryModal()">
-    <div class="modal-sheet" style="max-height:unset">
-      <div class="modal-header">
-        <h3 style="font-size:1.15rem;font-weight:900" id="modal-category-title">📂 تعديل بيانات وصورة غلاف القسم</h3>
-        <button class="icon-btn" onclick="Admin.closeCategoryModal()"
-          style="background:none;border:none;color:var(--text-main)">✕</button>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="category-modal-id">
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="field-label" id="lbl-cat-modal-name-ar">اسم القسم بالعربي *</label>
-            <input type="text" id="category-modal-name-ar" class="field-input" placeholder="مثال: الخضار والفواكه"
-              required>
-          </div>
-          <div class="form-group">
-            <label class="field-label" id="lbl-cat-modal-name-en">اسم القسم بالإنجليزي *</label>
-            <input type="text" id="category-modal-name-en" class="field-input" placeholder="Fruits & Vegetables"
-              required>
-          </div>
-
-          <!-- Category Cover Image Upload -->
-          <div class="form-group" style="grid-column:1/-1">
-            <label class="field-label" id="lbl-cat-modal-img">صورة غلاف القسم (تظهر في الواجهة الرئيسية)</label>
-            <div class="upload-field-row">
-              <input type="text" id="category-modal-img" class="field-input" placeholder="https://... أو اضغط رفع صورة">
-              <input type="file" id="file-category-img" accept="image/*" style="display:none"
-                onchange="Admin.handleFileUpload(this, 'category-modal-img', 'preview-category-img')">
-              <button type="button" class="btn-upload-file"
-                onclick="document.getElementById('file-category-img').click()">
-                <span>📁</span>
-                <span id="btn-upload-cat-img-text">رفع صورة الغلاف</span>
-              </button>
-            </div>
-            <div style="margin-top:8px">
-              <img id="preview-category-img" class="img-preview-thumb"
-                style="width:120px;height:75px;border-radius:10px" alt="Cover Preview">
-            </div>
-          </div>
-        </div>
-
-        <button id="btn-save-category" class="btn-checkout-primary" onclick="Admin.submitCategoryForm()">
-          <span>💾</span>
-          <span id="btn-save-cat-text">حفظ بيانات وقسم المتجر</span>
-        </button>
-      </div>
-    </div>
-  </div>
+  <input type="file" id="file-picker" accept="image/*" class="hidden">
+  <div id="toast"></div>
+  <div id="print-area"></div>
 
   <script src="js/supabase-client.js"></script>
-  <script src="js/storefront-admin.js?v=3.3"></script>
-
-  <!-- MODAL: SELECTIVE POS SYNC -->
-  <div id="modal-pos-sync" class="modal-backdrop" style="display:none"
-    onclick="if(event.target===this) Admin.closePosSyncModal()">
-    <div class="modal-sheet" style="max-width:480px">
-      <div class="modal-header">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:1.3rem">🔄</span>
-          <h3 style="font-size:1.15rem;font-weight:900" id="modal-pos-sync-title">مزامنة البيانات مع برنامج الكاشير
-            (POS)</h3>
-        </div>
-        <button class="icon-btn" onclick="Admin.closePosSyncModal()"
-          style="background:none;border:none;color:var(--text-main);font-size:1.2rem">✕</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:16px;line-height:1.5"
-          id="modal-pos-sync-desc">
-          حدد البيانات التي تريد إرسالها فورياً إلى أجهزة الكاشير في المحل. التحديث آمن 100% ولا يؤثر على الفواتير أو
-          المبيعات:
-        </p>
-
-        <div
-          style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:12px;padding:14px;margin-bottom:18px;display:flex;flex-direction:column;gap:12px">
-          <label style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.9rem;cursor:pointer">
-            <input type="checkbox" id="sync-chk-items" checked
-              style="width:18px;height:18px;accent-color:var(--brand-primary)">
-            <span id="lbl-sync-items">📦 الأصناف والأسعار والباركود (Items & Prices)</span>
-          </label>
-
-          <label style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.9rem;cursor:pointer">
-            <input type="checkbox" id="sync-chk-stock" checked
-              style="width:18px;height:18px;accent-color:var(--brand-primary)">
-            <span id="lbl-sync-stock">📊 كميات ومستويات المخزون (Stock Quantities)</span>
-          </label>
-
-          <label style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.9rem;cursor:pointer">
-            <input type="checkbox" id="sync-chk-categories" checked
-              style="width:18px;height:18px;accent-color:var(--brand-primary)">
-            <span id="lbl-sync-categories">📂 الأقسام والتصنيفات وأيقونات 3D (Categories)</span>
-          </label>
-
-          <label style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.9rem;cursor:pointer">
-            <input type="checkbox" id="sync-chk-offers" checked
-              style="width:18px;height:18px;accent-color:var(--brand-primary)">
-            <span id="lbl-sync-offers">🎯 عروض البانر والشرائح الترويجية (Offers & Banners)</span>
-          </label>
-        </div>
-
-        <div id="pos-sync-status-msg" style="margin-bottom:14px;display:none"></div>
-
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="icon-btn" onclick="Admin.closePosSyncModal()"
-            style="border:1px solid #cbd5e1;padding:8px 16px;font-weight:700" id="btn-cancel-sync">
-            إلغاء
-          </button>
-          <button class="icon-btn" id="btn-confirm-pos-sync" onclick="Admin.triggerPosSync()"
-            style="background:var(--brand-primary);color:#fff;border:none;padding:8px 22px;font-weight:800;display:inline-flex;align-items:center;gap:6px">
-            <span>🚀</span>
-            <span id="btn-confirm-sync-text">إرسال المزامنة للكاشير الآن</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- MODAL: DOWNLOAD / OPEN MOBILE ADMIN APP -->
-  <div id="modal-mobile-app" class="modal-backdrop" style="display:none"
-    onclick="if(event.target===this) Admin.closeMobileAppModal()">
-    <div class="modal-sheet" style="max-width:450px;text-align:center;padding:24px;border-radius:22px">
-      <div class="modal-header" style="justify-content:center;position:relative;border:none;padding-bottom:4px">
-        <h3 style="font-size:1.3rem;font-weight:900" id="modal-app-title">📥 تنزيل وتثبيت تطبيق المدير للهاتف</h3>
-        <button class="icon-btn" onclick="Admin.closeMobileAppModal()"
-          style="position:absolute;right:0;top:0;background:none;border:none;color:var(--text-main);font-size:1.3rem">✕</button>
-      </div>
-      <div class="modal-body" style="padding:0">
-        <div
-          style="width:68px;height:68px;border-radius:18px;background:linear-gradient(135deg, #2563eb, #1d4ed8);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 6px 18px rgba(37,99,235,0.35)">
-          <span style="font-size:2.2rem">🦈</span>
-        </div>
-        <h4 style="font-size:1.05rem;font-weight:800;margin:4px 0" id="modal-app-store-name">تطبيق إدارة متجر Red Shark
-        </h4>
-        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;line-height:1.4" id="modal-app-desc">
-          امسح الكود بكاميرا هاتفك أو اضغط الزر أدناه لتنزيل وتثبيت التطبيق مباشرة على جهازك:
-        </p>
-
-        <!-- QR Code Container -->
-        <div
-          style="background:#fff;padding:12px;border-radius:16px;display:inline-block;box-shadow:0 6px 18px rgba(0,0,0,0.08);border:1px solid #e2e8f0;margin-bottom:14px">
-          <img id="modal-app-qr-img" src="" alt="Scan QR Code" style="width:170px;height:170px;display:block">
-        </div>
-
-        <!-- Download & Setup Button -->
-        <a id="btn-open-mobile-app-link" href="#" target="_blank" class="icon-btn"
-          style="background:linear-gradient(135deg, #2563eb, #1d4ed8);color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border-radius:14px;font-weight:900;font-size:1rem;box-shadow:0 4px 16px rgba(37,99,235,0.35);margin-bottom:12px">
-          <span>📥</span>
-          <span id="btn-open-app-text">تنزيل وتثبيت التطبيق على الهاتف الآن</span>
-        </a>
-
-        <!-- Copy Link box -->
-        <div
-          style="background:var(--bg-primary);border:1px solid #cbd5e1;border-radius:10px;padding:8px 12px;font-size:0.78rem;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
-          <span id="app-direct-url-text"
-            style="font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://shop.redshark-ai.com/app?shop=shop101</span>
-          <button class="icon-btn"
-            onclick="navigator.clipboard.writeText(document.getElementById('app-direct-url-text').textContent); alert('تم نسخ رابط التطبيق!');"
-            style="font-size:0.75rem;padding:4px 8px;border:1px solid #cbd5e1;white-space:nowrap;background:var(--surface)">
-            📋 نسخ الرابط
-          </button>
-        </div>
-
-        <!-- Installation Instructions -->
-        <div
-          style="background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.25);border-radius:14px;padding:12px;text-align:right;font-size:0.78rem;line-height:1.6;color:var(--text-main)">
-          <div style="font-weight:900;margin-bottom:4px;color:var(--primary)">💡 كيف يتم تثبيت التطبيق على الهاتف:</div>
-          • <strong>أندرويد (Android Chrome):</strong> اضغط على زر <strong>"تثبيت التطبيق (Install)"</strong> الذي يظهر
-          لك لتحميل التطبيق مباشرة على جهازك كأي تطبيق رسمي.<br>
-          • <strong>آيفون (iPhone Safari):</strong> في متصفح Safari، اضغط زر المشاركة <strong>(Share ⎋)</strong> أسفل
-          الشاشة ➔ اختر <strong>"إضافة إلى الشاشة الرئيسية (Add to Home Screen ➕)"</strong> ليصبح مثبتاً على هاتفك بدون
-          متصفح وبأيقونة القرش الرسمية!
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <script src="js/storefront-admin.js?v=4.0"></script>
 </body>
 
 </html>

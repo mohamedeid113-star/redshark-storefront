@@ -1,2043 +1,1213 @@
 /**
- * Red Shark Storefront — Administration Controller
- * 100% Comprehensive Multilingual (EN/AR), Products & Categories Editor, Image Uploader
+ * Online store — manager portal (admin.html)
+ * Works with the cloud store (Supabase) and with a shop's own server (tenant-local-01).
+ * Everything the owner edits that has no column of its own is kept inside tenants.banner_url
+ * (a JSON object): slides, offers, announcement, brand, delivery zones, opening hours…
  */
-
 const Admin = (() => {
-  let _tenant = null;
-  let _orders = [];
-  let _products = [];
-  let _categories = [];
-  let _categoryImages = {};
-  let _slides = [];
-  let _lang = localStorage.getItem('rs_admin_lang') || 'en';
-
-    const I18N = {
-    ar: {
-      pageTitle: 'لوحة تحكم المتجر الإلكتروني | Red Shark',
-      langSwitch: 'English',
-      headerTitle: 'لوحة تحكم المتجر الإلكتروني',
-      headerSubtitle: 'Red Shark Admin Portal',
-      viewStore: 'معاينة المتجر',
-      pinTitle: 'لوحة تحكم المتجر الإلكتروني',
-      pinDesc: 'هذه الصفحة مخصصة لمدير المتجر فقط. يرجى إدخال رمز PIN للمتابعة.',
-      pinDefaultHint: 'استخدم الرمز السري المحدد في إعدادات المتجر بنقطة البيع',
-      pinBtn: '🔓 دخول لوحة التحكم',
-      pinIncorrect: '❌ رمز PIN غير صحيح!',
-      tabSettings: 'إعدادات المتجر',
-      tabBanner: 'عروض البانر',
-      tabCategories: 'الأقسام والتصنيفات',
-      tabCatalog: 'أصناف المتجر والمخزون',
-      tabOrders: 'الطلبات الواردة',
-      tabReports: '📊 تقارير المبيعات والأرباح',
-      mobileAppBtn: 'تطبيق الهاتف',
-      posSyncBtn: 'مزامنة مع الكاشير',
-      logoutBtn: 'خروج',
-      h2Reports: '📊 تقارير المبيعات والأرباح والمخزون',
-      pReportsDesc: 'متابعة حية وشاملة لإيرادات المتجر، الأرباح التقديرية، أفضل الأصناف مبيعاً، وحالة المخزون',
-      dateFilterToday: '📅 مبيعات اليوم (Today)',
-      dateFilterWeek: '📅 آخر 7 أيام (Last 7 Days)',
-      dateFilterMonth: '📅 مبيعات هذا الشهر (This Month)',
-      dateFilterAll: '📅 جميع المبيعات (All Time)',
-      lblKpiSales: '💰 إجمالي المبيعات المحققة',
-      lblKpiOrders: '📦 عدد الفواتير والطلبات',
-      lblKpiAvg: '🎯 متوسط قيمة الفاتورة',
-      lblKpiAvgSub: 'لكل زبون',
-      lblKpiLowStock: '⚠️ تنبيهات المخزون المنخفض',
-      lblKpiLowStockSub: 'صنف شارف على النفاد',
-      lblTopProducts: 'الأصناف الأكثر طلباً ومبيعاً',
-      lblStockHealth: 'الأصناف التي تحتاج إعادة طلب (مخزون منخفض)',
-      thItem: 'الصنف',
-      thSoldQty: 'الكمية المباعة',
-      thTotal: 'الإجمالي',
-      thStockLeft: 'المخزون المتبقي',
-      thPrice: 'السعر',
-      completedOrdersSub: 'طلب مكتمل ومسلّم',
-      noSalesRecords: 'لا توجد مبيعات مسجلة في هذه الفترة',
-      healthyStockMsg: '✅ جميع الأصناف متوفرة بمخزون كافٍ وممتاز',
-      currencyLbp: 'ل.ل',
-      h2Settings: '⚙️ الإعدادات العامة للمتجر',
-      btnSaveSettings: 'حفظ الإعدادات',
-      lblShopName: 'اسم المتجر',
-      lblShopSlug: 'رابط المتجر (Slug)',
-      lblWhatsapp: 'رقم الواتساب للطلبات',
-      lblPin: 'رمز PIN للأمان وحماية لوحة التحكم',
-      lblDelivery: 'أجور التوصيل ($)',
-      lblMinOrder: 'الحد الأدنى للطلب ($)',
-      lblLbpRate: 'سعر صرف الليرة مقابل الدولار (LBP)',
-      lblAddress: 'عنوان وموقع المتجر',
-      phAddress: 'بيروت - وسط المدينة',
-      lblLogo: 'شعار المتجر',
-      phLogo: 'https://... أو اضغط رفع صورة',
-      btnUploadFile: 'رفع صورة',
-      lblDesc: 'وصف المتجر الترويجي',
-      phDesc: 'أفضل تشكيلة من المنتجات الغذائية والمواد التموينية...',
-      lblPosTitle: '⚡ الربط بمخزون الكاشير المباشر (POS Live Stock)',
-      lblLinkPos: 'ربط كميات المتجر الإلكتروني بمخزون نقطة البيع (الكاشير) لحظياً',
-      lblLinkPosHint: 'عند إلغاء هذا الخيار، سيتم سؤالك عما إذا كنت ترغب في مسح أصناف الكاشير من المتجر لإنشاء قائمة أصناف خاصة وحصرية للمتجر مع إمكانية حذف الأصناف يدوياً.',
-      lblAllowOut: 'السماح للزبون بالطلب حتى لو نفد المخزون (Backorder)',
-      h2Banner: '🎯 عروض البانر والشرائح الترويجية',
-      pBannerDesc: 'يمكنك إضافة أكثر من عرض وسيتنقل البانر تلقائياً بينها للزبائن مع الصور',
-      btnAddSlide: 'إضافة شريحة عرض جديدة',
-      btnSaveBanner: 'حفظ عروض البانر',
-      lblBannerActiveTitle: 'تفعيل بانر العروض الخاصة والتخفيضات أونلاين',
-      lblBannerActiveDesc: 'إذا تم إيقافه سيختفي شريط العروض من الصفحة الرئيسية للزبائن',
-      bannerActiveBadge: 'نشط أونلاين 🟢',
-      bannerInactiveBadge: 'مخفي حالياً ⚠️',
-      slideNum: 'شريحة عرض',
-      slideHeadline: 'عنوان العرض الرئيسي',
-      slideSub: 'تفاصيل العرض الترويجي',
-      slideBadge: 'شارة العرض',
-      slideImg: 'صورة البانر',
-      btnDeleteSlide: '🗑️ حذف هذا العرض',
-      h2Categories: '📂 إدارة أقسام وتصنيفات المتجر',
-      pCategoriesDesc: 'تعديل أسماء الأقسام، ورفع صور الغلاف الكبيرة التي تظهر للزبائن في الواجهة',
-      btnAddCatText: 'إضافة قسم جديد مع صورة غلاف',
-      btnReloadCats: '🔄 تحديث الأقسام',
-      thCover: 'صورة الغلاف',
-      thCatAr: 'الاسم بالعربي',
-      thCatEn: 'الاسم بالإنجليزي',
-      thItemsCount: 'عدد الأصناف',
-      thActions: 'الإجراءات',
-      modalCatTitleAdd: '➕ إضافة قسم جديد مع صورة غلاف',
-      modalCatTitleEdit: '✏️ تعديل بيانات وصورة غلاف القسم',
-      lblCatModalNameAr: 'اسم القسم بالعربي *',
-      phCatModalNameAr: 'مثال: الخضار والفواكه الطازجة',
-      lblCatModalNameEn: 'اسم القسم بالإنجليزي *',
-      phCatModalNameEn: 'مثال: Fresh Fruits & Vegetables',
-      lblCatModalImg: 'صورة غلاف القسم (تظهر في الواجهة الرئيسية)',
-      phCatModalImg: 'https://... أو اضغط رفع صورة الغلاف',
-      btnUploadCatImg: 'رفع صورة الغلاف',
-      btnSaveCat: 'حفظ بيانات وقسم المتجر',
-      h2Catalog: '📦 أصناف المتجر والمخزون',
-      pCatalogDesc: 'إدارة كاملة للأصناف مع إمكانية تعديلها ورفع صورها وحذف الأصناف غير المرغوبة',
-      btnAddItemModal: 'إضافة صنف جديد مع صورة',
-      btnClearAll: 'مسح جميع الأصناف',
-      btnReloadCatalog: '🔄 تحديث القائمة',
-      thImage: 'الصورة',
-      thItem: 'الصنف',
-      thPrice: 'السعر ($)',
-      thStock: 'المخزون',
-      thStatus: 'الحالة',
-      statusPublished: 'منشور أونلاين',
-      statusHidden: 'مخفي',
-      btnEdit: '✏️ تعديل',
-      btnDelete: '🗑️ حذف',
-      modalAddTitle: '➕ إضافة صنف جديد للمتجر الإلكتروني',
-      modalEditTitle: '✏️ تعديل بيانات وصورة الصنف',
-      lblItemNameAr: 'اسم الصنف بالعربي *',
-      phItemNameAr: 'مثال: زيت زيتون بكر ممتاز 1 لتر',
-      lblItemNameEn: 'اسم الصنف بالإنجليزي',
-      phItemNameEn: 'e.g. Extra Virgin Olive Oil 1L',
-      lblItemCat: 'القسم',
-      lblItemPrice: 'سعر البيع ($) *',
-      lblItemStock: 'كمية المخزون المتوفرة',
-      lblItemBarcode: 'الباركود',
-      lblItemImage: 'صورة المنتج',
-      phItemImage: 'https://... أو اضغط زر رفع صورة',
-      btnClearEditImg: 'مسح الصورة',
-      lblItemDesc: 'وصف الصنف ومميزاته',
-      phItemDesc: 'تفاصيل المنتج، المنشأ، الحجم...',
-      lblItemPublished: 'نشر هذا الصنف أونلاين في المتجر للزبائن',
-      btnSaveNewItem: 'حفظ ونشر الصنف فوراً',
-      btnSaveEditItem: 'حفظ التعديلات وتحديث الصنف',
-      confirmDeleteItem: 'هل أنت متأكد من حذف هذا الصنف من المتجر الإلكتروني؟',
-      confirmDeleteCat: 'هل أنت متأكد من حذف هذا القسم؟',
-      confirmClearAll: 'تحذير: هل أنت متأكد من مسح جميع الأصناف من المتجر الإلكتروني؟ هذا الإجراء لا يمكن التراجع عنه.',
-      h2Orders: '📋 الطلبات الواردة من المتجر أونلاين',
-      btnReloadOrders: '🔄 تحديث الطلبات',
-      saveSuccess: '✅ تم حفظ التعديلات بنجاح!',
-      saveError: '⚠️ فشل الحفظ: ',
-      itemUpdatedSuccess: '✅ تم تحديث بيانات وصورة الصنف بنجاح!',
-      catUpdatedSuccess: '✅ تم حفظ بيانات وقسم المتجر بنجاح!'
-    },
-    en: {
-      pageTitle: 'Storefront Admin Portal | Red Shark',
-      langSwitch: 'عربي',
-      headerTitle: 'Storefront Admin Portal',
-      headerSubtitle: 'Red Shark Admin Portal',
-      viewStore: 'View Storefront',
-      pinTitle: 'Storefront Admin Portal',
-      pinDesc: 'This page is restricted to store administrators. Please enter your PIN to continue.',
-      pinDefaultHint: 'Use the PIN set in the POS store settings',
-      pinBtn: '🔓 Unlock Admin Portal',
-      pinIncorrect: '❌ Incorrect Security PIN!',
-      tabSettings: 'Store Settings',
-      tabBanner: 'Offer Banners',
-      tabCategories: 'Categories Manager',
-      tabCatalog: 'Catalog & Inventory',
-      tabOrders: 'Incoming Orders',
-      tabReports: '📊 Sales & Profit Reports',
-      mobileAppBtn: 'Mobile App',
-      posSyncBtn: 'POS Sync',
-      logoutBtn: 'Logout',
-      h2Reports: '📊 Sales, Profit & Inventory Analytics',
-      pReportsDesc: 'Live overview of store revenue, profit, top-selling items, and stock health',
-      dateFilterToday: '📅 Today Sales',
-      dateFilterWeek: '📅 Last 7 Days',
-      dateFilterMonth: '📅 This Month',
-      dateFilterAll: '📅 All Time',
-      lblKpiSales: '💰 Total Sales Revenue',
-      lblKpiOrders: '📦 Completed Orders',
-      lblKpiAvg: '🎯 Average Basket Value',
-      lblKpiAvgSub: 'per customer',
-      lblKpiLowStock: '⚠️ Low Stock Alerts',
-      lblKpiLowStockSub: 'items need restock',
-      lblTopProducts: 'Top Selling Products',
-      lblStockHealth: 'Low Stock & Depleted Items',
-      thItem: 'Product',
-      thSoldQty: 'Sold Qty',
-      thTotal: 'Total',
-      thStockLeft: 'Stock Left',
-      thPrice: 'Price',
-      completedOrdersSub: 'completed orders',
-      noSalesRecords: 'No sales records in this period',
-      healthyStockMsg: '✅ All items have healthy stock',
-      currencyLbp: 'LBP',
-      h2Settings: '⚙️ General Store Settings',
-      btnSaveSettings: 'Save Settings',
-      lblShopName: 'Shop Name',
-      lblShopSlug: 'Store Slug Identifier',
-      lblWhatsapp: 'WhatsApp Number for Orders',
-      lblPin: 'Security PIN Code',
-      lblDelivery: 'Delivery Fee ($)',
-      lblMinOrder: 'Minimum Order ($)',
-      lblLbpRate: 'LBP Exchange Rate to USD',
-      lblAddress: 'Store Address & Location',
-      phAddress: 'Beirut - Downtown, Hamra...',
-      lblLogo: 'Store Logo URL',
-      phLogo: 'https://... or click upload',
-      btnUploadFile: 'Upload Image',
-      lblDesc: 'Promotional Store Description',
-      phDesc: 'Finest selection of groceries and household items...',
-      lblPosTitle: '⚡ Live POS Stock Synchronization',
-      lblLinkPos: 'Link online store quantities directly to POS inventory in real time',
-      lblLinkPosHint: 'When disabled, you will be prompted if you want to clear imported POS items to create a dedicated online catalog with manual product deletion.',
-      lblAllowOut: 'Allow customer orders even when out of stock (Backorder)',
-      h2Banner: '🎯 Offer Banners & Promotional Slides',
-      pBannerDesc: 'Add multiple offers and the banner will automatically cycle between them for customers',
-      btnAddSlide: 'Add New Offer Slide',
-      btnSaveBanner: 'Save Offer Banners',
-      lblBannerActiveTitle: 'Enable Offer Banner Carousel Online',
-      lblBannerActiveDesc: 'When disabled, the top offer banner will be hidden from the storefront',
-      bannerActiveBadge: 'Active Online 🟢',
-      bannerInactiveBadge: 'Hidden ⚠️',
-      slideNum: 'Offer Slide',
-      slideHeadline: 'Headline',
-      slideSub: 'Promotional Details (Subtitle)',
-      slideBadge: 'Offer Badge',
-      slideImg: 'Slide Poster Image',
-      btnDeleteSlide: '🗑️ Delete Slide',
-      h2Categories: '📂 Categories & Departments Manager',
-      pCategoriesDesc: 'Edit category names and upload big cover images displayed on the homepage',
-      btnAddCatText: 'Add New Category with Cover Image',
-      btnReloadCats: '🔄 Refresh Categories',
-      thCover: 'Cover Image',
-      thCatAr: 'Arabic Name',
-      thCatEn: 'English Name',
-      thItemsCount: 'Items Count',
-      thActions: 'Actions',
-      modalCatTitleAdd: '➕ Add New Category with Cover Image',
-      modalCatTitleEdit: '✏️ Edit Category & Cover Photo',
-      lblCatModalNameAr: 'Category Name (Arabic) *',
-      phCatModalNameAr: 'e.g. Fruits & Vegetables',
-      lblCatModalNameEn: 'Category Name (English) *',
-      phCatModalNameEn: 'e.g. Fruits & Vegetables',
-      lblCatModalImg: 'Category Cover Image (Displayed on Homepage)',
-      phCatModalImg: 'https://... or click upload cover image',
-      btnUploadCatImg: 'Upload Cover Image',
-      btnSaveCat: 'Save Category',
-      h2Catalog: '📦 Store Products & Inventory',
-      pCatalogDesc: 'Full catalog control: Edit items, upload product photos, and manage inventory',
-      btnAddItemModal: 'Add New Product with Image',
-      btnClearAll: 'Clear All Products',
-      btnReloadCatalog: '🔄 Refresh Catalog',
-      thImage: 'Image',
-      thItem: 'Product',
-      thPrice: 'Price ($)',
-      thStock: 'Stock',
-      thStatus: 'Status',
-      statusPublished: 'Published Online',
-      statusHidden: 'Hidden',
-      btnEdit: '✏️ Edit',
-      btnDelete: '🗑️ Delete',
-      modalAddTitle: '➕ Add New Product to Online Store',
-      modalEditTitle: '✏️ Edit Product Details & Photo',
-      lblItemNameAr: 'Product Name (Arabic) *',
-      phItemNameAr: 'e.g. Extra Virgin Olive Oil 1L',
-      lblItemNameEn: 'Product Name (English)',
-      phItemNameEn: 'e.g. Extra Virgin Olive Oil 1L',
-      lblItemCat: 'Category',
-      lblItemPrice: 'Selling Price ($) *',
-      lblItemStock: 'Stock Quantity',
-      lblItemBarcode: 'Barcode',
-      lblItemImage: 'Product Image',
-      phItemImage: 'https://... or click upload image',
-      btnClearEditImg: 'Clear Photo',
-      lblItemDesc: 'Description & Highlights',
-      phItemDesc: 'Product details, origin, package size...',
-      lblItemPublished: 'Publish this product online for customers',
-      btnSaveNewItem: 'Save & Publish Product',
-      btnSaveEditItem: 'Save Changes & Update Product',
-      confirmDeleteItem: 'Are you sure you want to delete this product from the online store?',
-      confirmDeleteCat: 'Are you sure you want to delete this category?',
-      confirmClearAll: 'Warning: Are you sure you want to delete ALL products from the online store? This cannot be undone.',
-      h2Orders: '📋 Online Orders Received',
-      btnReloadOrders: '🔄 Refresh Orders',
-      saveSuccess: '✅ Saved successfully!',
-      saveError: '⚠️ Save failed: ',
-      itemUpdatedSuccess: '✅ Product and image updated successfully!',
-      catUpdatedSuccess: '✅ Category updated successfully!'
-    }
+  const SESSION_KEY = 'rs_admin_session';
+  const S = {
+    lang: localStorage.getItem('rs_admin_lang') || 'ar',
+    tenant: null, banner: {}, local: false,
+    slides: [], offers: [], zones: [], hours: null, catImages: {}, brand: {}, announcement: {},
+    categories: [], products: [], orders: [],
+    section: 'overview', dirty: false, filter: 'received', openOrders: new Set(),
+    knownNew: null, timer: null
   };
 
-  function t(k) { return (I18N[_lang] && I18N[_lang][k]) || k; }
+  // ── small helpers ─────────────────────────────────────────────
+  const $ = (id) => document.getElementById(id);
+  const L = (en, ar) => (S.lang === 'ar' ? ar : en);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const num = (v, d = 0) => { const n = parseFloat(v); return isFinite(n) ? n : d; };
+  const money = (v) => '$' + num(v).toFixed(2);
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const val = (id) => { const e = $(id); return e ? String(e.value || '').trim() : ''; };
+  const setVal = (id, v) => { const e = $(id); if (e) e.value = v == null ? '' : v; };
+  const checked = (id) => !!($(id) && $(id).checked);
+  const setChecked = (id, v) => { const e = $(id); if (e) e.checked = !!v; };
+  const parseJSON = (raw) => { try { if (raw && typeof raw === 'object') return raw; const s = String(raw || '').trim(); return s.startsWith('{') ? JSON.parse(s) : {}; } catch (e) { return {}; } };
+  const notesOf = (o) => parseJSON(o && o.notes);
+  const today0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+  const fmtTime = (iso) => { try { const d = new Date(iso); const sameDay = d.toDateString() === new Date().toDateString(); return d.toLocaleString(S.lang === 'ar' ? 'ar-LB' : 'en-GB', sameDay ? { hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+  const nameOf = (x) => S.lang === 'en' ? (x.name_en || x.name || x.name_ar || '') : (x.name_ar || x.name || x.name_en || '');
 
-  function getShopSlug() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('shop') || params.get('slug') || localStorage.getItem('rs_last_shop_slug') || 'shop101';
+  function toast(msg, type) {
+    const box = $('toast'); if (!box) return;
+    const el = document.createElement('div');
+    el.className = 'toast ' + (type || '');
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(() => el.remove(), type === 'err' ? 6000 : 3200);
   }
 
-    function getActiveSession() {
-    try {
-      const s = sessionStorage.getItem('rs_admin_session');
-      return s ? JSON.parse(s) : null;
-    } catch(e) {
-      return null;
-    }
-  }
+  // ── session & API ─────────────────────────────────────────────
+  function getSession() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { return null; } }
+  function setSession(s) { if (s) sessionStorage.setItem(SESSION_KEY, JSON.stringify(s)); else sessionStorage.removeItem(SESSION_KEY); }
 
-  function setActiveSession(session) {
-    if (session) {
-      sessionStorage.setItem('rs_admin_session', JSON.stringify(session));
-    } else {
-      sessionStorage.removeItem('rs_admin_session');
-    }
-  }
-
-  (function attachPinToShopServer() {
-    try {
-      const origFetch = window.fetch.bind(window);
-      window.fetch = function (input, init) {
-        try {
-          const s = getActiveSession();
-          if (s && s.pin) {
-            const url = typeof input === 'string' ? input : (input && input.url) || '';
-            const base = (window.StorefrontAPI && StorefrontAPI.getUrl) ? StorefrontAPI.getUrl() : window.location.origin;
-            if (url.startsWith('/') || url.startsWith(base) || url.startsWith(window.location.origin)) {
-              init = Object.assign({}, init || {});
-              init.headers = Object.assign({}, (init.headers && !(init.headers instanceof Headers)) ? init.headers : {}, { 'x-admin-pin': s.pin });
-            }
+  // The shop's own server checks the manager PIN on every request (x-admin-pin header).
+  (function attachPin() {
+    const orig = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+      try {
+        const s = getSession();
+        if (s && s.pin) {
+          const url = typeof input === 'string' ? input : (input && input.url) || '';
+          const base = (window.StorefrontAPI && StorefrontAPI.getUrl) ? StorefrontAPI.getUrl() : location.origin;
+          if (url.startsWith('/') || (base && url.startsWith(base)) || url.startsWith(location.origin)) {
+            init = Object.assign({}, init || {});
+            init.headers = Object.assign({}, (init.headers && !(init.headers instanceof Headers)) ? init.headers : {}, { 'x-admin-pin': s.pin });
           }
-        } catch (e) { }
-        return origFetch(input, init);
-      };
-    } catch (e) { }
+        }
+      } catch (e) { }
+      return orig(input, init);
+    };
   })();
 
-  function toggleLoginPwdVisibility() {
-    const input = document.getElementById('admin-login-pwd');
-    if (!input) return;
-    input.type = input.type === 'password' ? 'text' : 'password';
+  function headers(extra) {
+    const k = StorefrontAPI.getKey();
+    const h = { 'Content-Type': 'application/json' };
+    if (k) { h.apikey = k; h.Authorization = 'Bearer ' + k; }
+    return Object.assign(h, extra || {});
   }
-
-    async function verifyCredentials() {
-    const slugInput = document.getElementById('admin-login-slug');
-    const pwdInput = document.getElementById('admin-login-pwd') || document.getElementById('admin-pin-input');
-
-    const slug = (slugInput?.value.trim().toLowerCase()) || getShopSlug() || 'shop101';
-    const pwd = pwdInput?.value.trim() || '';
-
-    if (!pwd) {
-      alert(_lang === 'ar' ? 'يرجى إدخال كلمة المرور / رمز PIN!' : 'Please enter the password / PIN!');
-      pwdInput?.focus();
-      return;
+  async function api(path, opts = {}) {
+    const res = await fetch(StorefrontAPI.getUrl() + path, Object.assign({}, opts, { headers: headers(opts.headers) }));
+    if (!res.ok) {
+      let t = ''; try { t = await res.text(); } catch (e) { }
+      throw new Error((t && t.length < 300 ? t : '') || ('HTTP ' + res.status));
     }
-
-    const btn = document.getElementById('btn-login-submit');
-    if (btn) btn.disabled = true;
-
-    try {
-      const tenant = await StorefrontAPI.fetchTenant(slug);
-      if (!tenant) {
-        alert(_lang === 'ar' ? `❌ معرف المتجر "${slug}" غير مسجل في النظام!` : `❌ Shop slug "${slug}" not found in system!`);
-        if (btn) btn.disabled = false;
-        return;
-      }
-
-      // A shop's own server checks the manager PIN itself (it never sends the PIN to the page).
-      if (tenant.id === 'tenant-local-01') {
-        let ok = false;
-        try {
-          const vr = await fetch(StorefrontAPI.getUrl() + '/api/storefront/verify-admin-pin', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: pwd })
-          });
-          const vj = await vr.json().catch(() => ({}));
-          ok = vr.ok && vj && vj.ok === true;
-        } catch (e) { ok = false; }
-        if (ok) {
-          setActiveSession({ slug: tenant.slug, id: tenant.id, name: tenant.shop_name, pin: pwd });
-          const modal = document.getElementById('admin-pin-modal');
-          if (modal) modal.style.display = 'none';
-          updateHeaderShopBadge(tenant.slug);
-          await loadData();
-        } else {
-          alert(_lang === 'ar' ? '❌ رمز المدير (PIN) غير صحيح' : '❌ Incorrect manager PIN');
-          if (pwdInput) { pwdInput.value = ''; pwdInput.focus(); }
-        }
-        if (btn) btn.disabled = false;
-        return;
-      }
-
-      // Cloud: check tenant password inside banner_url JSON
-      let expectedPwd = '';
-      if (tenant.banner_url) {
-        try {
-          const bObj = typeof tenant.banner_url === 'string' ? JSON.parse(tenant.banner_url) : tenant.banner_url;
-          if (bObj.admin_password) expectedPwd = String(bObj.admin_password);
-        } catch(e){}
-      }
-
-      // Allow either the tenant password OR standard default 1234
-      // "1234" only while the shop has not set its own password
-      if ((expectedPwd && pwd === expectedPwd) || (!expectedPwd && pwd === '1234')) {
-        setActiveSession({
-          slug: tenant.slug,
-          id: tenant.id,
-          name: tenant.shop_name
-        });
-
-        // Update URL query parameter without reload
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.set('shop', tenant.slug);
-        window.history.replaceState({}, '', newUrl.toString());
-
-        const modal = document.getElementById('admin-pin-modal');
-        if (modal) modal.style.display = 'none';
-        updateHeaderShopBadge(tenant.slug);
-        await loadData();
-      } else {
-        alert(_lang === 'ar' ? `❌ كلمة المرور غير صحيحة للمتجر (${slug})!` : `❌ Incorrect password for shop (${slug})!`);
-        if (pwdInput) {
-          pwdInput.value = '';
-          pwdInput.focus();
-        }
-      }
-    } catch(e) {
-      alert((_lang === 'ar' ? '⚠️ خطأ في الاتصال: ' : '⚠️ Connection error: ') + e.message);
-    } finally {
-      if (btn) btn.disabled = false;
-    }
+    const txt = await res.text();
+    try { return txt ? JSON.parse(txt) : null; } catch (e) { return null; }
   }
 
-  function logout() {
-    setActiveSession(null);
-    window.location.reload();
+  function getSlug() {
+    const p = new URLSearchParams(location.search);
+    return (p.get('shop') || p.get('slug') || localStorage.getItem('rs_last_shop_slug') || '').trim().toLowerCase();
   }
 
-    function openStorefront() {
-    const slug = (_currentSlug || getShopSlug() || 'shop101');
-    const targetUrl = '/?shop=' + encodeURIComponent(slug);
-    window.open(targetUrl, '_blank');
+  // ── language & theme ──────────────────────────────────────────
+  function applyLang() {
+    const ar = S.lang === 'ar';
+    document.documentElement.lang = S.lang;
+    document.documentElement.dir = ar ? 'rtl' : 'ltr';
+    document.querySelectorAll('[data-en]').forEach(el => { el.innerHTML = ar ? el.getAttribute('data-ar') : el.getAttribute('data-en'); });
+    document.querySelectorAll('[data-ph-en]').forEach(el => { el.placeholder = ar ? el.getAttribute('data-ph-ar') : el.getAttribute('data-ph-en'); });
+    document.querySelectorAll('.lang-label').forEach(el => { el.textContent = ar ? 'English' : 'عربي'; });
+    updateTitle();
   }
-
-  function updateHeaderShopBadge(slug) {
-    const el = document.getElementById('admin-active-shop-text');
-    if (el) el.textContent = slug || 'shop';
-
-    const btnView = document.getElementById('btn-view-store');
-    if (btnView) {
-      const activeSlug = slug || getShopSlug() || 'shop101';
-      btnView.href = 'index.html?shop=' + encodeURIComponent(activeSlug);
-    }
-  }
-
-  async function init() {
-    applyLang(_lang);
-
-    const urlSlug = getShopSlug();
-    const session = getActiveSession();
-
-    // Fill login slug input
-    const slugInput = document.getElementById('admin-login-slug');
-    if (slugInput) {
-      slugInput.value = (session && session.slug) || urlSlug || 'shop101';
-    }
-
-    // Verify session matches current URL slug
-    if (session && session.slug && (!urlSlug || session.slug === urlSlug)) {
-      document.getElementById('admin-pin-modal').style.display = 'none';
-      updateHeaderShopBadge(session.slug);
-      await loadData();
-    } else {
-      document.getElementById('admin-pin-modal').style.display = 'flex';
-      const pwdInput = document.getElementById('admin-login-pwd');
-      if (pwdInput) pwdInput.focus();
-    }
-  }
-
-  function setText(id, text) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = text;
-  }
-
-  function setPlaceholder(id, ph) {
-    const el = document.getElementById(id);
-    if (el) el.placeholder = ph;
-  }
-
-  function applyLang(lang) {
-    _lang = lang;
-    localStorage.setItem('rs_admin_lang', lang);
-    document.documentElement.setAttribute('lang', lang);
-    document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
-    document.body.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
-    document.title = t('pageTitle');
-
-    // Header elements
-    setText('admin-header-title', t('headerTitle'));
-    setText('admin-lang-text', t('langSwitch'));
-    setText('admin-view-store-text', t('viewStore'));
-
-    // PIN modal
-    setText('pin-modal-title', t('pinTitle'));
-    setText('pin-modal-desc', t('pinDesc'));
-    setText('pin-default-hint', t('pinDefaultHint'));
-    setText('pin-modal-btn', t('pinBtn'));
-
-    // Tabs
-    setText('tab-title-settings', t('tabSettings'));
-    setText('tab-title-banner', t('tabBanner'));
-    setText('tab-title-categories', t('tabCategories'));
-    setText('tab-title-catalog', t('tabCatalog'));
-    setText('tab-title-orders', t('tabOrders'));
-    setText('tab-title-reports', t('tabReports'));
-
-    // Header buttons
-    setText('admin-mobile-app-text', t('mobileAppBtn'));
-    setText('admin-pos-sync-text', t('posSyncBtn'));
-    setText('admin-logout-text', t('logoutBtn'));
-
-    // Tab Reports
-    setText('h2-reports', t('h2Reports'));
-    setText('p-reports-desc', t('pReportsDesc'));
-    setText('lbl-kpi-sales', t('lblKpiSales'));
-    setText('lbl-kpi-orders', t('lblKpiOrders'));
-    setText('lbl-kpi-avg', t('lblKpiAvg'));
-    setText('lbl-kpi-avg-sub', t('lblKpiAvgSub'));
-    setText('lbl-kpi-lowstock', t('lblKpiLowStock'));
-    setText('lbl-kpi-lowstock-sub', t('lblKpiLowStockSub'));
-    setText('lbl-top-products', t('lblTopProducts'));
-    setText('lbl-stock-health', t('lblStockHealth'));
-
-    setText('th-top-item', t('thItem'));
-    setText('th-top-qty', t('thSoldQty'));
-    setText('th-top-rev', t('thTotal'));
-    setText('th-low-item', t('thItem'));
-    setText('th-low-qty', t('thStockLeft'));
-    setText('th-low-price', t('thPrice'));
-
-    const df = document.getElementById('reports-date-filter');
-    if (df && df.options.length >= 4) {
-      df.options[0].text = t('dateFilterToday');
-      df.options[1].text = t('dateFilterWeek');
-      df.options[2].text = t('dateFilterMonth');
-      df.options[3].text = t('dateFilterAll');
-    }
-
-    // Tab 1: Settings
-    setText('h2-settings', t('h2Settings'));
-    setText('btn-save-text', t('btnSaveSettings'));
-    setText('lbl-shop-name', t('lblShopName'));
-    setText('lbl-shop-slug', t('lblShopSlug'));
-    setText('lbl-whatsapp', t('lblWhatsapp'));
-    setText('lbl-pin', t('lblPin'));
-    setText('lbl-delivery', t('lblDelivery'));
-    setText('lbl-min-order', t('lblMinOrder'));
-    setText('lbl-lbp-rate', t('lblLbpRate'));
-    setText('lbl-address', t('lblAddress'));
-    setPlaceholder('admin-address', t('phAddress'));
-    setText('lbl-logo', t('lblLogo'));
-    setPlaceholder('admin-shop-logo', t('phLogo'));
-    setText('btn-upload-logo-text', t('btnUploadFile'));
-    setText('lbl-desc-ar', t('lblDesc'));
-    setPlaceholder('admin-desc-ar', t('phDesc'));
-    setText('lbl-pos-title', t('lblPosTitle'));
-    setText('lbl-link-pos-text', t('lblLinkPos'));
-    setText('lbl-link-pos-hint', t('lblLinkPosHint'));
-    setText('lbl-allow-out-text', t('lblAllowOut'));
-
-    // Tab 2: Banner
-    setText('h2-banner', t('h2Banner'));
-    setText('p-banner-desc', t('pBannerDesc'));
-    setText('btn-add-slide-text', t('btnAddSlide'));
-    setText('btn-save-banner-text', t('btnSaveBanner'));
-    setText('lbl-banner-active-title', t('lblBannerActiveTitle'));
-    setText('lbl-banner-active-desc', t('lblBannerActiveDesc'));
-
-    // Tab 3: Categories
-    setText('h2-categories', t('h2Categories'));
-    setText('p-categories-desc', t('pCategoriesDesc'));
-    setText('btn-add-cat-text', t('btnAddCatText'));
-    setText('btn-reload-cats', t('btnReloadCats'));
-    setText('modal-category-title', t('modalCatTitleEdit'));
-    setText('lbl-cat-modal-name-ar', t('lblCatModalNameAr'));
-    setPlaceholder('category-modal-name-ar', t('phCatModalNameAr'));
-    setText('lbl-cat-modal-name-en', t('lblCatModalNameEn'));
-    setPlaceholder('category-modal-name-en', t('phCatModalNameEn'));
-    setText('lbl-cat-modal-img', t('lblCatModalImg'));
-    setPlaceholder('category-modal-img', t('phCatModalImg'));
-    setText('btn-upload-cat-img-text', t('btnUploadCatImg'));
-    setText('btn-save-cat-text', t('btnSaveCat'));
-
-    // Tab 4: Catalog
-    setText('h2-catalog', t('h2Catalog'));
-    setText('p-catalog-desc', t('pCatalogDesc'));
-    setText('btn-add-item-modal-text', t('btnAddItemModal'));
-    setText('btn-clear-all-text', t('btnClearAll'));
-    setText('btn-reload-catalog', t('btnReloadCatalog'));
-
-    // Add Item Modal
-    setText('modal-add-item-title', t('modalAddTitle'));
-    setText('lbl-item-name-ar', t('lblItemNameAr'));
-    setPlaceholder('new-item-name-ar', t('phItemNameAr'));
-    setText('lbl-item-name-en', t('lblItemNameEn'));
-    setPlaceholder('new-item-name-en', t('phItemNameEn'));
-    setText('lbl-item-cat', t('lblItemCat'));
-    setText('lbl-item-price', t('lblItemPrice'));
-    setText('lbl-item-stock', t('lblItemStock'));
-    setText('lbl-item-barcode', t('lblItemBarcode'));
-    setText('lbl-item-image', t('lblItemImage'));
-    setPlaceholder('new-item-img', t('phItemImage'));
-    setText('btn-upload-item-img-text', t('btnUploadFile'));
-    setText('lbl-item-desc', t('lblItemDesc'));
-    setPlaceholder('new-item-desc', t('phItemDesc'));
-    setText('btn-save-new-item-text', t('btnSaveNewItem'));
-
-    // Edit Item Modal
-    setText('modal-edit-item-title', t('modalEditTitle'));
-    setText('lbl-edit-name-ar', t('lblItemNameAr'));
-    setText('lbl-edit-name-en', t('lblItemNameEn'));
-    setText('lbl-edit-cat', t('lblItemCat'));
-    setText('lbl-edit-price', t('lblItemPrice'));
-    setText('lbl-edit-stock', t('lblItemStock'));
-    setText('lbl-edit-barcode', t('lblItemBarcode'));
-    setText('lbl-edit-image', t('lblItemImage'));
-    setPlaceholder('edit-item-img', t('phItemImage'));
-    setText('btn-upload-edit-img-text', t('btnUploadFile'));
-    setText('btn-clear-edit-img-text', t('btnClearEditImg'));
-    setText('lbl-edit-desc', t('lblItemDesc'));
-    setText('lbl-edit-published', t('lblItemPublished'));
-    setText('btn-save-edit-item-text', t('btnSaveEditItem'));
-
-    // Tab 5: Orders
-    setText('h2-orders', t('h2Orders'));
-    setText('btn-reload-orders', t('btnReloadOrders'));
-
-    // Update banner badge
-    const bannerActiveCheck = document.getElementById('admin-banner-active');
-    if (bannerActiveCheck) updateBannerStatusBadge(bannerActiveCheck.checked);
-
-    // Re-render dynamic lists with updated language
-    renderSlidesList();
-    renderCategoriesTable();
-    renderCatalog();
-    if (document.getElementById('tab-reports') && document.getElementById('tab-reports').style.display !== 'none') { loadReports(); }
-  }
-
   function toggleLang() {
-    applyLang(_lang === 'ar' ? 'en' : 'ar');
+    S.lang = S.lang === 'ar' ? 'en' : 'ar';
+    localStorage.setItem('rs_admin_lang', S.lang);
+    applyLang();
+    if (S.tenant) renderAll();
+  }
+  function applyTheme(t) {
+    if (t) document.documentElement.setAttribute('data-theme', t); else document.documentElement.removeAttribute('data-theme');
+    const dark = t === 'dark' || (!t && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    if ($('btn-theme')) $('btn-theme').textContent = dark ? '☀️' : '🌙';
+  }
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const dark = cur === 'dark' || (!cur && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    const next = dark ? 'light' : 'dark';
+    localStorage.setItem('rs_admin_theme', next);
+    applyTheme(next);
+  }
+  function setBrandColor(c) {
+    const ok = /^#[0-9a-f]{6}$/i.test(c || '') ? c : '#dc2626';
+    document.documentElement.style.setProperty('--brand', ok);
   }
 
-  // ── IMAGE FILE UPLOADER (CLIENT-SIDE CANVAS COMPRESSION TO COMPACT BASE64) ──
-  function handleFileUpload(fileInput, targetInputId, previewImgId) {
-    if (!fileInput.files || fileInput.files.length === 0) return;
-    const file = fileInput.files[0];
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const maxDim = 800;
-
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-
-        const targetInput = document.getElementById(targetInputId);
-        if (targetInput) targetInput.value = dataUrl;
-
-        const previewImg = document.getElementById(previewImgId);
-        if (previewImg) {
-          previewImg.src = dataUrl;
-          previewImg.style.display = 'block';
-        }
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+  // ── login ─────────────────────────────────────────────────────
+  function paintLogo(el, tenant) {
+    if (!el) return;
+    if (tenant && tenant.logo_url) el.innerHTML = `<img src="${esc(tenant.logo_url)}" alt="">`;
+    else el.textContent = tenant && tenant.shop_name ? String(tenant.shop_name).trim().charAt(0).toUpperCase() : '🏪';
   }
-
-  async function loadData() {
-    const slug = getShopSlug();
-    _tenant = await StorefrontAPI.fetchTenant(slug);
-    if (!_tenant) {
-      showAlert('⚠️ Shop not found: ' + slug, 'error');
-      return;
-    }
-
-    populateSettingsForm();
-    await loadCategories();
-    loadCatalog();
-    loadOrders();
+  async function previewLoginShop() {
+    const slug = val('login-slug').toLowerCase();
+    if (!slug) return;
+    try {
+      const t = await StorefrontAPI.fetchTenant(slug);
+      if (t) {
+        paintLogo($('login-logo'), t);
+        if ($('login-shop-name')) $('login-shop-name').textContent = t.shop_name || L('Store manager', 'إدارة المتجر');
+        const b = parseJSON(t.banner_url);
+        if (b.brand && b.brand.color) setBrandColor(b.brand.color);
+      }
+    } catch (e) { }
   }
+  function togglePwd(id) { const e = $(id); if (e) e.type = e.type === 'password' ? 'text' : 'password'; }
 
-  function populateSettingsForm() {
-    document.getElementById('admin-shop-name').value = _tenant.shop_name || '';
-    document.getElementById('admin-shop-slug').value = _tenant.slug || '';
-    document.getElementById('admin-link-pos-stock').checked = _tenant.link_pos_stock !== false;
-    document.getElementById('admin-allow-out-of-stock').checked = _tenant.allow_out_of_stock === true;
-    document.getElementById('admin-whatsapp').value = _tenant.whatsapp_phone || '';
-    document.getElementById('admin-security-pin').value = localStorage.getItem('rs_admin_pin') || '1234';
-    document.getElementById('admin-delivery-fee').value = _tenant.delivery_fee || 0;
-    document.getElementById('admin-min-order').value = _tenant.min_order || 0;
-    document.getElementById('admin-lbp-rate').value = _tenant.currency_lbp_rate || 89500;
-    document.getElementById('admin-address').value = _tenant.address || '';
-    document.getElementById('admin-shop-logo').value = _tenant.logo_url || '';
-    if (_tenant.logo_url) {
-      const p = document.getElementById('preview-shop-logo');
-      if (p) { p.src = _tenant.logo_url; p.style.display = 'block'; }
-    }
-    document.getElementById('admin-desc-ar').value = _tenant.description_ar || '';
-
-    // Parse Banner URL & Category Images Map
-    _slides = [];
-    _categoryImages = {};
-    if (_tenant.banner_url) {
-      const trimmed = _tenant.banner_url.trim();
-      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+  async function login() {
+    const slug = val('login-slug').toLowerCase() || getSlug();
+    const pwd = val('login-pwd');
+    const err = $('login-err');
+    err.textContent = '';
+    if (!slug) { err.textContent = L('Enter your store ID.', 'أدخل معرّف المتجر.'); return; }
+    if (!pwd) { err.textContent = L('Enter your password.', 'أدخل كلمة المرور.'); $('login-pwd').focus(); return; }
+    const btn = $('login-btn'); btn.disabled = true;
+    try {
+      const t = await StorefrontAPI.fetchTenant(slug);
+      if (!t || (t.id !== 'tenant-local-01' && !t.id)) { err.textContent = L(`Store “${slug}” was not found.`, `المتجر «${slug}» غير موجود.`); return; }
+      if (t.id === 'tenant-local-01') {
+        let ok = false, msg = '';
         try {
-          const parsed = JSON.parse(trimmed);
-          if (Array.isArray(parsed.slides)) _slides = parsed.slides;
-          else if (parsed.title || parsed.image_url) _slides = [parsed];
-          if (parsed.category_images && typeof parsed.category_images === 'object') {
-            _categoryImages = parsed.category_images;
-          }
-          if (typeof parsed.active !== 'undefined') {
-            document.getElementById('admin-carousel-active').checked = parsed.active;
-            updateBannerStatusBadge(parsed.active);
-          }
-          _zones = Array.isArray(parsed.delivery_zones) ? parsed.delivery_zones.map(z => ({ name: z.name || '', fee: z.fee ?? '', min: z.min ?? '' })) : [];
-          const pk = document.getElementById('admin-allow-pickup'); if (pk) pk.checked = parsed.allow_pickup === true;
-          if (parsed.opening_hours && typeof parsed.opening_hours === 'object') _hours = parsed.opening_hours;
-        } catch(e) {}
-      } else if (trimmed.startsWith('http')) {
-        _slides = [{ active: true, image_url: trimmed }];
-      }
-    }
-
-    renderSlidesList();
-    const he = document.getElementById('admin-hours-enabled'); if (he) he.checked = !!(_hours && _hours.enabled);
-    renderZones(); renderHours();
-  }
-
-  // ── Delivery zones & opening hours ──
-  let _zones = [];
-  const DAY_NAMES = [['الأحد', 'Sun'], ['الاثنين', 'Mon'], ['الثلاثاء', 'Tue'], ['الأربعاء', 'Wed'], ['الخميس', 'Thu'], ['الجمعة', 'Fri'], ['السبت', 'Sat']];
-  let _hours = null;
-  function _defaultHours() { const days = {}; for (let i = 0; i < 7; i++) days[i] = { open: '09:00', close: '22:00', closed: false }; return { enabled: false, tz: 'Asia/Beirut', days }; }
-  function _escAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
-  function renderZones() {
-    const box = document.getElementById('admin-zones'); if (!box) return;
-    if (!_zones.length) { box.innerHTML = '<div style="font-size:.8rem;opacity:.6;padding:6px 0">— لا توجد مناطق · No zones —</div>'; return; }
-    box.innerHTML = '<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;font-size:.75rem;font-weight:800;opacity:.7;margin-bottom:4px"><span>المنطقة · Zone</span><span>التوصيل $ · Fee</span><span>الحد الأدنى $ · Min</span><span></span></div>' +
-      _zones.map((z, i) => `<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-bottom:6px">
-        <input class="field-input" value="${_escAttr(z.name)}" placeholder="الحمرا / Hamra" oninput="Admin.setZone(${i},'name',this.value)">
-        <input class="field-input" type="number" step="0.5" min="0" value="${_escAttr(z.fee)}" placeholder="2" oninput="Admin.setZone(${i},'fee',this.value)">
-        <input class="field-input" type="number" step="1" min="0" value="${_escAttr(z.min)}" placeholder="0" oninput="Admin.setZone(${i},'min',this.value)">
-        <button type="button" class="btn btn-secondary" onclick="Admin.removeZone(${i})" title="حذف">🗑️</button></div>`).join('');
-  }
-  function addZone() { _zones.push({ name: '', fee: '', min: '' }); renderZones(); }
-  function setZone(i, k, v) { if (_zones[i]) _zones[i][k] = v; }
-  function removeZone(i) { _zones.splice(i, 1); renderZones(); }
-  function renderHours() {
-    const box = document.getElementById('admin-hours'); if (!box) return;
-    if (!_hours || !_hours.days) _hours = _defaultHours();
-    const on = document.getElementById('admin-hours-enabled')?.checked;
-    _hours.enabled = !!on;
-    box.style.opacity = on ? '1' : '.5';
-    box.innerHTML = DAY_NAMES.map(([ar, en], i) => { const d = _hours.days[i] || { open: '09:00', close: '22:00', closed: false };
-      return `<div style="display:grid;grid-template-columns:120px auto 1fr 1fr;gap:8px;align-items:center;margin-bottom:6px">
-        <b style="font-size:.85rem">${ar} · ${en}</b>
-        <label style="display:flex;gap:4px;align-items:center;font-size:.8rem"><input type="checkbox" ${d.closed ? 'checked' : ''} onchange="Admin.setDay(${i},'closed',this.checked)"> مغلق · Closed</label>
-        <input class="field-input" type="time" value="${_escAttr(d.open)}" ${d.closed ? 'disabled' : ''} onchange="Admin.setDay(${i},'open',this.value)">
-        <input class="field-input" type="time" value="${_escAttr(d.close)}" ${d.closed ? 'disabled' : ''} onchange="Admin.setDay(${i},'close',this.value)"></div>`; }).join('') +
-      '<div style="font-size:.75rem;opacity:.65">إذا كان وقت الإغلاق بعد منتصف الليل (مثلاً 18:00 → 02:00) يُحسب لليوم نفسه. · A closing time after midnight counts for the same day. Times are Lebanon time.</div>';
-  }
-  function setDay(i, k, v) { if (!_hours) _hours = _defaultHours(); _hours.days[i] = { ...(_hours.days[i] || {}), [k]: v }; if (k === 'closed') renderHours(); }
-
-  function updateBannerStatusBadge(isChecked) {
-    const badge = document.getElementById('banner-active-badge');
-    if (!badge) return;
-    if (isChecked) {
-      badge.style.background = '#d1fae5';
-      badge.style.color = '#065f46';
-      badge.textContent = _lang === 'ar' ? 'نشط أونلاين 🟢' : 'Active Online 🟢';
-    } else {
-      badge.style.background = '#fee2e2';
-      badge.style.color = '#991b1b';
-      badge.textContent = _lang === 'ar' ? 'معطل ومخفي ⚪' : 'Disabled & Hidden ⚪';
-    }
-  }
-
-  function renderSlidesList() {
-    const container = document.getElementById('admin-slides-list');
-    if (!container) return;
-
-    container.innerHTML = _slides.map((s, i) => `
-      <div class="slide-editor-card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-weight:900;font-size:0.95rem;color:var(--brand-primary)">${t('slideNum')} #${i + 1}</div>
-          <button class="btn-clear-cart" onclick="Admin.removeSlide(${i})" style="padding:2px 8px">${t('btnDeleteSlide')}</button>
-        </div>
-        <div class="form-grid">
-          <div class="form-group" style="grid-column:1/-1">
-            <label class="field-label">${t('slideHeadline')}</label>
-            <input type="text" class="field-input" value="${s.title || ''}" onchange="Admin.updateSlideField(${i}, 'title', this.value)">
-          </div>
-          <div class="form-group" style="grid-column:1/-1">
-            <label class="field-label">${t('slideSub')}</label>
-            <input type="text" class="field-input" value="${s.subtitle || ''}" onchange="Admin.updateSlideField(${i}, 'subtitle', this.value)">
-          </div>
-          <div class="form-group">
-            <label class="field-label">${t('slideBadge')}</label>
-            <input type="text" class="field-input" value="${s.badge || '🔥 عرض محدود'}" onchange="Admin.updateSlideField(${i}, 'badge', this.value)">
-          </div>
-          <div class="form-group">
-            <label class="field-label">${t('slideImg')}</label>
-            <div class="upload-field-row">
-              <input type="text" class="field-input" id="slide-img-${i}" value="${s.image_url || ''}" onchange="Admin.updateSlideField(${i}, 'image_url', this.value)">
-              <input type="file" id="file-slide-${i}" accept="image/*" style="display:none" onchange="Admin.handleSlideUpload(this, ${i})">
-              <button type="button" class="btn-upload-file" onclick="document.getElementById('file-slide-${i}').click()">
-                <span>📁</span>
-                <span>${t('btnUploadFile')}</span>
-              </button>
-            </div>
-            ${s.image_url ? `<img src="${s.image_url}" class="img-preview-thumb" style="display:block;margin-top:6px;width:120px;height:65px;border-radius:8px">` : ''}
-          </div>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function handleSlideUpload(fileInput, slideIdx) {
-    if (!fileInput.files || fileInput.files.length === 0) return;
-    const file = fileInput.files[0];
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width, height = img.height;
-        const maxDim = 1000;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
-          else { width = Math.round((width * maxDim) / height); height = maxDim; }
-        }
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-        updateSlideField(slideIdx, 'image_url', dataUrl);
-        renderSlidesList();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function addNewSlide() {
-    _slides.push({ active: true, title: '🔥 New Special Offer', subtitle: 'Offer description shown here', badge: '🔥 Special Offer', image_url: '' });
-    renderSlidesList();
-  }
-
-  function removeSlide(idx) {
-    if (confirm('Delete this slide?')) {
-      _slides.splice(idx, 1);
-      renderSlidesList();
-    }
-  }
-
-  function updateSlideField(idx, field, value) {
-    if (_slides[idx]) _slides[idx][field] = value.trim();
-  }
-
-  // ── 4. CATEGORIES MANAGER (EDIT, ADD, UPLOAD BIG COVER IMAGES) ──
-  async function loadCategories() {
-    if (!_tenant) return;
-    try {
-      _categories = await StorefrontAPI.fetchCategories(_tenant.id);
-      renderCategoriesTable();
-    } catch(e) {
-      console.error('Failed to load categories:', e);
-    }
-  }
-
-  function renderCategoriesTable() {
-    const container = document.getElementById('admin-categories-table');
-    if (!container) return;
-
-    if (_categories.length === 0) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">No categories registered</div>';
-      return;
-    }
-
-    container.innerHTML = `
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:0.88rem">
-          <thead>
-            <tr style="border-bottom:2px solid var(--border-color);text-align:start">
-              <th style="padding:10px">${t('thCover')}</th>
-              <th style="padding:10px">${t('thCatAr')}</th>
-              <th style="padding:10px">${t('thCatEn')}</th>
-              <th style="padding:10px">${t('thItemsCount')}</th>
-              <th style="padding:10px;text-align:center">${t('thActions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${_categories.map(c => {
-              const img = _categoryImages[c.id] || c.image_url;
-              const count = _products.filter(p => p.category_id === c.id).length;
-              return `
-                <tr style="border-bottom:1px solid var(--border-color)">
-                  <td style="padding:10px;width:70px">
-                    ${img ? `<img src="${img}" class="cat-cover-thumb" alt="${c.name}">` : '<div class="cat-cover-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem">📂</div>'}
-                  </td>
-                  <td style="padding:10px;font-weight:800;color:var(--text-main)">${c.name_ar || c.name || '—'}</td>
-                  <td style="padding:10px;font-weight:700;color:var(--text-muted)">${c.name_en || c.name || '—'}</td>
-                  <td style="padding:10px;font-weight:800;color:var(--brand-primary)">${count} ${_lang === 'ar' ? 'أصناف' : 'items'}</td>
-                  <td style="padding:10px;text-align:center">
-                    <div class="table-btn-group">
-                      <button class="btn-edit-item" onclick="Admin.openEditCategoryModal('${c.id}')">
-                        <span>✏️</span>
-                        <span>${t('btnEdit')}</span>
-                      </button>
-                      <button class="btn-clear-cart" onclick="Admin.deleteCategory('${c.id}')" style="background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-weight:800">
-                        <span>🗑️</span>
-                        <span>${t('btnDelete')}</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  function openAddCategoryModal() {
-    document.getElementById('category-modal-id').value = '';
-    document.getElementById('category-modal-name-ar').value = '';
-    document.getElementById('category-modal-name-en').value = '';
-    document.getElementById('category-modal-img').value = '';
-    document.getElementById('preview-category-img').style.display = 'none';
-    setText('modal-category-title', t('modalCatTitleAdd'));
-    document.getElementById('modal-category').classList.add('open');
-  }
-
-  function openEditCategoryModal(catId) {
-    const cat = _categories.find(c => c.id === catId);
-    if (!cat) return;
-
-    document.getElementById('category-modal-id').value = cat.id;
-    document.getElementById('category-modal-name-ar').value = cat.name_ar || cat.name || '';
-    document.getElementById('category-modal-name-en').value = cat.name_en || cat.name || '';
-    
-    const img = _categoryImages[cat.id] || cat.image_url || '';
-    document.getElementById('category-modal-img').value = img;
-    const prev = document.getElementById('preview-category-img');
-    if (img && prev) { prev.src = img; prev.style.display = 'block'; }
-    else if (prev) { prev.style.display = 'none'; }
-
-    setText('modal-category-title', t('modalCatTitleEdit'));
-    document.getElementById('modal-category').classList.add('open');
-  }
-
-  function closeCategoryModal() {
-    document.getElementById('modal-category').classList.remove('open');
-  }
-
-  async function submitCategoryForm() {
-    const catId = document.getElementById('category-modal-id').value;
-    const nameAr = document.getElementById('category-modal-name-ar').value.trim();
-    const nameEn = document.getElementById('category-modal-name-en').value.trim() || nameAr;
-    const imgUrl = document.getElementById('category-modal-img').value.trim();
-
-    if (!nameAr && !nameEn) {
-      alert(_lang === 'ar' ? 'يرجى إدخال اسم القسم' : 'Please enter category name');
-      return;
-    }
-
-    const btn = document.getElementById('btn-save-category');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳</span><span>...</span>'; }
-
-    try {
-      if (catId) {
-        const url = `${StorefrontAPI.getUrl()}/rest/v1/categories?id=eq.${catId}`;
-        await fetch(url, {
-          method: 'PATCH',
-          headers: {
-            "apikey": StorefrontAPI.getKey(),
-            "Authorization": `Bearer ${StorefrontAPI.getKey()}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ name: nameAr || nameEn, name_ar: nameAr, name_en: nameEn })
-        });
-
-        if (imgUrl) _categoryImages[catId] = imgUrl;
-        else delete _categoryImages[catId];
+          const r = await fetch(StorefrontAPI.getUrl() + '/api/storefront/verify-admin-pin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin: pwd }) });
+          const j = await r.json().catch(() => ({}));
+          ok = r.ok && j.ok === true; msg = j.error || '';
+        } catch (e) { msg = e.message; }
+        if (!ok) { err.textContent = msg && /many/i.test(msg) ? L('Too many attempts. Try again in 15 minutes.', 'محاولات كثيرة. حاول بعد 15 دقيقة.') : L('Wrong PIN.', 'رمز غير صحيح.'); $('login-pwd').value = ''; return; }
+        setSession({ slug: t.slug || slug, id: t.id, name: t.shop_name, pin: pwd });
       } else {
-        const slug = (nameEn || nameAr).toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random()*1000);
-        const url = `${StorefrontAPI.getUrl()}/rest/v1/categories`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            "apikey": StorefrontAPI.getKey(),
-            "Authorization": `Bearer ${StorefrontAPI.getKey()}`,
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
-          },
-          body: JSON.stringify({
-            shop_id: _tenant.id,
-            name: nameAr || nameEn,
-            name_ar: nameAr,
-            name_en: nameEn,
-            slug: slug,
-            is_active: true
-          })
-        });
-        const created = await res.json();
-        if (created && created[0] && imgUrl) {
-          _categoryImages[created[0].id] = imgUrl;
-        }
+        const b = parseJSON(t.banner_url);
+        const expected = b.admin_password ? String(b.admin_password) : '';
+        if (!((expected && pwd === expected) || (!expected && pwd === '1234'))) { err.textContent = L('Wrong password.', 'كلمة المرور غير صحيحة.'); $('login-pwd').value = ''; return; }
+        setSession({ slug: t.slug, id: t.id, name: t.shop_name });
       }
-
-      await persistCategoryImagesMap();
-
-      closeCategoryModal();
-      showAlert(t('saveSuccess'), 'success');
-      await loadCategories();
-    } catch(e) {
-      alert('Error: ' + e.message);
-    }
-
-    if (btn) { btn.disabled = false; btn.innerHTML = `<span>💾</span><span>${t('btnSaveCat')}</span>`; }
+      localStorage.setItem('rs_last_shop_slug', t.slug || slug);
+      const u = new URL(location.href); u.searchParams.set('shop', t.slug || slug); history.replaceState({}, '', u.toString());
+      await enter();
+    } catch (e) {
+      err.textContent = L('Connection problem: ', 'مشكلة في الاتصال: ') + e.message;
+    } finally { btn.disabled = false; }
+  }
+  function logout() {
+    if (S.dirty && !confirm(L('Discard unsaved changes and sign out?', 'تجاهل التغييرات غير المحفوظة والخروج؟'))) return;
+    S.dirty = false;
+    setSession(null);
+    location.reload();
   }
 
-  async function persistCategoryImagesMap() {
-    if (!_tenant) return;
-    const bannerPayload = {
-      active: document.getElementById('admin-carousel-active')?.checked ?? true,
-      slides: _slides,
-      category_images: _categoryImages
-    };
-
-    const url = `${StorefrontAPI.getUrl()}/rest/v1/tenants?id=eq.${_tenant.id}`;
-    await fetch(url, {
-      method: 'PATCH',
-      headers: {
-        "apikey": StorefrontAPI.getKey(),
-        "Authorization": `Bearer ${StorefrontAPI.getKey()}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ banner_url: JSON.stringify(bannerPayload) })
-    });
+  // ── loading ───────────────────────────────────────────────────
+  async function loadTenant() {
+    const s = getSession();
+    const t = await StorefrontAPI.fetchTenant(s.slug);
+    if (!t) throw new Error(L('Store not found', 'المتجر غير موجود'));
+    S.tenant = t;
+    S.local = t.id === 'tenant-local-01';
+    S.banner = parseJSON(t.banner_url);
+    readBannerIntoState();
   }
-
-  async function deleteCategory(catId) {
-    if (!confirm(t('confirmDeleteCat'))) return;
-    try {
-      const url = `${StorefrontAPI.getUrl()}/rest/v1/categories?id=eq.${catId}`;
-      await fetch(url, {
-        method: 'DELETE',
-        headers: {
-          "apikey": StorefrontAPI.getKey(),
-          "Authorization": `Bearer ${StorefrontAPI.getKey()}`
-        }
-      });
-      delete _categoryImages[catId];
-      await persistCategoryImagesMap();
-      showAlert('✅ Category deleted successfully!', 'success');
-      loadCategories();
-    } catch(e) {
-      alert('Error: ' + e.message);
-    }
+  function readBannerIntoState() {
+    const b = S.banner;
+    S.slides = (Array.isArray(b.slides) ? b.slides : (b.title || b.image_url ? [b] : [])).map(x => Object.assign({ id: uid(), active: true }, x, { id: x.id || uid() }));
+    S.offers = (Array.isArray(b.online_offers) ? b.online_offers : []).map(o => Object.assign({ id: uid(), active: true }, o, { id: o.id || uid() }));
+    S.zones = Array.isArray(b.delivery_zones) ? b.delivery_zones.map(z => ({ name: z.name || '', fee: z.fee ?? '', min: z.min ?? '' })) : [];
+    S.hours = (b.opening_hours && b.opening_hours.days) ? JSON.parse(JSON.stringify(b.opening_hours)) : defaultHours();
+    S.catImages = (b.category_images && typeof b.category_images === 'object') ? Object.assign({}, b.category_images) : {};
+    S.brand = Object.assign({}, b.brand || {});
+    S.announcement = Object.assign({ active: false, text_ar: '', text_en: '' }, b.announcement || {});
   }
-
-  // ── 5. PRODUCTS & CATALOG: EDIT PRODUCTS & UPLOAD IMAGES ──
   async function loadCatalog() {
-    if (!_tenant) return;
-    const container = document.getElementById('admin-catalog-table');
-    if (!container) return;
-
-    container.innerHTML = '<div style="text-align:center;padding:20px">Loading products...</div>';
-
+    const id = S.tenant.id;
+    const [cats, prods] = await Promise.all([
+      StorefrontAPI.fetchCategories(id).catch(() => []),
+      S.local ? api('/rest/v1/products?shop_id=eq.' + encodeURIComponent(id)).catch(() => []) : loadAllCloudProducts()
+    ]);
+    S.categories = Array.isArray(cats) ? cats : [];
+    S.products = Array.isArray(prods) ? prods : [];
+  }
+  // The manager sees hidden products too (the customer list only returns published ones).
+  async function loadAllCloudProducts() {
+    let all = [], from = 0;
+    for (let i = 0; i < 20; i++) {
+      const res = await fetch(StorefrontAPI.getUrl() + '/rest/v1/products?shop_id=eq.' + encodeURIComponent(S.tenant.id) + '&order=name.asc', { headers: headers({ 'Range-Unit': 'items', Range: from + '-' + (from + 999) }) });
+      if (!res.ok) break;
+      const page = await res.json();
+      if (!Array.isArray(page) || !page.length) break;
+      all = all.concat(page);
+      if (page.length < 1000) break;
+      from += 1000;
+    }
+    return all;
+  }
+  async function loadOrders(manual) {
     try {
-      _products = await StorefrontAPI.fetchProducts(_tenant.id);
-      renderCatalog();
-    } catch(e) {
-      container.innerHTML = '<div style="color:red">Failed to load catalog: ' + e.message + '</div>';
-    }
-  }
-
-  function renderCatalog() {
-    const container = document.getElementById('admin-catalog-table');
-    if (!container) return;
-
-    if (_products.length === 0) {
-      container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)">${_lang === 'ar' ? 'لا توجد أصناف حالياً. يمكنك إضافة صنف جديد من الزر بالأعلى.' : 'No products available. You can add new products above.'}</div>`;
-      return;
-    }
-
-    container.innerHTML = `
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
-          <thead>
-            <tr style="border-bottom:2px solid var(--border-color);text-align:start">
-              <th style="padding:10px">${t('thImage')}</th>
-              <th style="padding:10px">${t('thItem')}</th>
-              <th style="padding:10px">${t('thPrice')}</th>
-              <th style="padding:10px">${t('thStock')}</th>
-              <th style="padding:10px">${t('thStatus')}</th>
-              <th style="padding:10px;text-align:center">${t('thActions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${_products.map(p => {
-              const displayName = _lang === 'en' ? (p.name_en || p.name || p.name_ar) : (p.name_ar || p.name);
-              const subName = _lang === 'en' ? (p.name_ar !== displayName ? p.name_ar : '') : (p.name_en !== displayName ? p.name_en : '');
-
-              return `
-                <tr style="border-bottom:1px solid var(--border-color)">
-                  <td style="padding:10px;width:58px">
-                    <div class="table-img-clickable" onclick="Admin.openEditItemModal('${p.id}')" title="Click to edit product & image">
-                      ${p.image_url ? `<img src="${p.image_url}" alt="${displayName}" style="width:46px;height:46px;object-fit:cover;border-radius:6px;border:1px solid var(--border-color)">` : '<div style="width:46px;height:46px;background:var(--bg-secondary);display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:1.4rem">📦</div>'}
-                    </div>
-                  </td>
-                  <td style="padding:10px;font-weight:700">
-                    <div style="cursor:pointer" onclick="Admin.openEditItemModal('${p.id}')">${displayName}</div>
-                    ${subName ? `<div style="font-size:0.75rem;color:var(--text-subtle)">${subName}</div>` : ''}
-                  </td>
-                  <td style="padding:10px;font-weight:800">$${(parseFloat(p.price) || 0).toFixed(2)}</td>
-                  <td style="padding:10px;font-weight:800;color:${p.stock_quantity > 0 ? '#059669' : '#dc2626'}">
-                    ${p.stock_quantity || 0}
-                  </td>
-                  <td style="padding:10px">
-                    <span style="background:${p.is_published ? '#d1fae5' : '#f1f5f9'};color:${p.is_published ? '#059669' : '#64748b'};padding:3px 8px;border-radius:12px;font-weight:800">
-                      ${p.is_published ? t('statusPublished') : t('statusHidden')}
-                    </span>
-                  </td>
-                  <td style="padding:10px;text-align:center">
-                    <div class="table-btn-group">
-                      <button class="btn-edit-item" onclick="Admin.openEditItemModal('${p.id}')">
-                        <span>✏️</span>
-                        <span>${t('btnEdit')}</span>
-                      </button>
-                      <button class="btn-clear-cart" onclick="Admin.deleteProduct('${p.id}')" style="background:#fee2e2;color:#dc2626;padding:4px 8px;border-radius:6px;font-weight:800">
-                        <span>🗑️</span>
-                        <span>${t('btnDelete')}</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  function openEditItemModal(productId) {
-    const p = _products.find(it => it.id === productId);
-    if (!p) return;
-
-    document.getElementById('edit-item-id').value = p.id;
-    document.getElementById('edit-item-name-ar').value = p.name_ar || p.name || '';
-    document.getElementById('edit-item-name-en').value = p.name_en || '';
-    document.getElementById('edit-item-price').value = p.price || 0;
-    document.getElementById('edit-item-stock').value = p.stock_quantity || 0;
-    document.getElementById('edit-item-barcode').value = p.barcode || '';
-    document.getElementById('edit-item-desc').value = p.description || p.description_ar || '';
-    document.getElementById('edit-item-published').checked = p.is_published !== false;
-
-    const catSelect = document.getElementById('edit-item-cat');
-    if (catSelect) {
-      catSelect.innerHTML = _categories.map(c => {
-        const cName = _lang === 'en' ? (c.name_en || c.name || c.name_ar) : (c.name_ar || c.name);
-        return `<option value="${c.id}" ${c.id === p.category_id ? 'selected' : ''}>${cName}</option>`;
-      }).join('');
-    }
-
-    document.getElementById('edit-item-img').value = p.image_url || '';
-    const prev = document.getElementById('preview-edit-item-img');
-    if (p.image_url && prev) {
-      prev.src = p.image_url;
-      prev.style.display = 'block';
-    } else if (prev) {
-      prev.style.display = 'none';
-    }
-
-    document.getElementById('modal-edit-item').classList.add('open');
-  }
-
-  function closeEditItemModal() {
-    document.getElementById('modal-edit-item').classList.remove('open');
-  }
-
-  async function submitEditItem() {
-    const id = document.getElementById('edit-item-id').value;
-    const nameAr = document.getElementById('edit-item-name-ar').value.trim();
-    const nameEn = document.getElementById('edit-item-name-en').value.trim() || nameAr;
-    const catId = document.getElementById('edit-item-cat').value || null;
-    const price = parseFloat(document.getElementById('edit-item-price').value) || 0;
-    const stock = parseInt(document.getElementById('edit-item-stock').value) || 0;
-    const barcode = document.getElementById('edit-item-barcode').value.trim() || null;
-    const imgUrl = document.getElementById('edit-item-img').value.trim() || null;
-    const desc = document.getElementById('edit-item-desc').value.trim() || '';
-    const isPub = document.getElementById('edit-item-published').checked;
-
-    if (!nameAr && !nameEn) {
-      alert(_lang === 'ar' ? 'يرجى إدخال اسم الصنف' : 'Please enter product name');
-      return;
-    }
-
-    const btn = document.getElementById('btn-save-edit-item');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳</span><span>...</span>'; }
-
-    const payload = {
-      name: nameAr || nameEn,
-      name_ar: nameAr,
-      name_en: nameEn,
-      category_id: catId,
-      price: price,
-      stock_quantity: stock,
-      barcode: barcode,
-      image_url: imgUrl,
-      description: desc,
-      description_ar: desc,
-      is_published: isPub,
-      updated_at: new Date().toISOString()
-    };
-
-    try {
-      const url = `${StorefrontAPI.getUrl()}/rest/v1/products?id=eq.${id}`;
-      const res = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          "apikey": StorefrontAPI.getKey(),
-          "Authorization": `Bearer ${StorefrontAPI.getKey()}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        closeEditItemModal();
-        showAlert(t('itemUpdatedSuccess'), 'success');
-        loadCatalog();
-      } else {
-        const err = await res.text();
-        alert('Error: ' + err);
+      const rows = await api('/rest/v1/orders?shop_id=eq.' + encodeURIComponent(S.tenant.id) + '&order=created_at.desc&limit=400');
+      const seen = new Set();
+      S.orders = (Array.isArray(rows) ? rows : []).filter(o => { const k = String(o.id || o.order_number); if (seen.has(k)) return false; seen.add(k); return true; });
+      const newOnes = S.orders.filter(o => isOnline(o) && o.order_status === 'received');
+      if (S.knownNew) {
+        const fresh = newOnes.filter(o => !S.knownNew.has(String(o.id)));
+        if (fresh.length) { chime(); toast(L(`🔔 ${fresh.length} new order(s)`, `🔔 ${fresh.length} طلب جديد`), 'ok'); }
       }
-    } catch(e) {
-      alert('Error: ' + e.message);
+      S.knownNew = new Set(newOnes.map(o => String(o.id)));
+      updateNewCount();
+      if (S.section === 'orders') renderOrders();
+      if (S.section === 'overview') renderOverview();
+      if (manual) toast(L('Updated', 'تم التحديث'));
+    } catch (e) {
+      if (manual) toast(L('Could not load orders: ', 'تعذّر جلب الطلبات: ') + e.message, 'err');
     }
-
-    if (btn) { btn.disabled = false; btn.innerHTML = `<span>💾</span><span>${t('btnSaveEditItem')}</span>`; }
   }
-
-  function openAddItemModal() {
-    const catSelect = document.getElementById('new-item-cat');
-    if (catSelect) {
-      catSelect.innerHTML = _categories.map(c => {
-        const cName = _lang === 'en' ? (c.name_en || c.name || c.name_ar) : (c.name_ar || c.name);
-        return `<option value="${c.id}">${cName}</option>`;
-      }).join('');
-    }
-    document.getElementById('modal-add-item').classList.add('open');
-  }
-
-  function closeAddItemModal() {
-    document.getElementById('modal-add-item').classList.remove('open');
-  }
-
-  async function submitNewItem() {
-    const nameAr = document.getElementById('new-item-name-ar')?.value.trim();
-    const nameEn = document.getElementById('new-item-name-en')?.value.trim() || nameAr;
-    const catId = document.getElementById('new-item-cat')?.value || null;
-    const price = parseFloat(document.getElementById('new-item-price')?.value) || 0;
-    const stock = parseInt(document.getElementById('new-item-stock')?.value) || 20;
-    const barcode = document.getElementById('new-item-barcode')?.value.trim() || null;
-    const imgUrl = document.getElementById('new-item-img')?.value.trim() || null;
-    const desc = document.getElementById('new-item-desc')?.value.trim() || '';
-
-    if (!nameAr && !nameEn) {
-      alert(_lang === 'ar' ? 'يرجى كتابة اسم الصنف' : 'Please enter product name');
+  async function enter() {
+    $('login').classList.add('hidden');
+    $('shell').classList.remove('hidden');
+    try {
+      await loadTenant();
+      await loadCatalog();
+    } catch (e) {
+      toast(L('Could not load the store: ', 'تعذّر تحميل المتجر: ') + e.message, 'err');
       return;
     }
-
-    const payload = {
-      shop_id: _tenant.id,
-      category_id: catId,
-      name: nameAr || nameEn,
-      name_ar: nameAr,
-      name_en: nameEn,
-      price: price,
-      stock_quantity: stock,
-      barcode: barcode,
-      image_url: imgUrl,
-      description: desc,
-      is_published: true,
-      track_inventory: true
-    };
-
-    const btn = document.getElementById('btn-save-new-item');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳</span><span>...</span>'; }
-
-    try {
-      const url = `${StorefrontAPI.getUrl()}/rest/v1/products`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          "apikey": StorefrontAPI.getKey(),
-          "Authorization": `Bearer ${StorefrontAPI.getKey()}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        closeAddItemModal();
-        showAlert(t('saveSuccess'), 'success');
-        loadCatalog();
-      } else {
-        const err = await res.text();
-        alert('Error: ' + err);
-      }
-    } catch(e) {
-      alert('Error: ' + e.message);
-    }
-
-    if (btn) { btn.disabled = false; btn.innerHTML = `<span>💾</span><span>${t('btnSaveNewItem')}</span>`; }
+    fillForms();
+    renderAll();
+    const hash = (location.hash || '').replace('#', '');
+    go(['overview', 'orders', 'banners', 'offers', 'products', 'categories', 'profile', 'delivery', 'reports', 'security'].includes(hash) ? hash : 'overview');
+    await loadOrders();
+    clearInterval(S.timer);
+    S.timer = setInterval(() => { if (!document.hidden) loadOrders(); }, 20000);
   }
 
-  async function deleteProduct(productId) {
-    if (!confirm(t('confirmDeleteItem'))) return;
+  // ── order helpers ─────────────────────────────────────────────
+  function isPosSale(o) {
+    if (!o) return false;
+    if (notesOf(o).source === 'pos') return true;
+    if (o.pos_synced === true && (o.pos_invoice_ref || /^RS-/i.test(String(o.order_number || '')))) return false;
+    return o.pos_synced === true;
+  }
+  const isOnline = (o) => !isPosSale(o);
+  const itemsOf = (o) => { const it = o && (o.items || o.order_items); if (Array.isArray(it)) return it; try { const a = JSON.parse(it || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+  const STATUS = {
+    received: { en: 'New', ar: 'جديد', cls: 'p-warn', step: 1 },
+    preparing: { en: 'Preparing', ar: 'قيد التحضير', cls: 'p-info', step: 2 },
+    out_for_delivery: { en: 'On the way', ar: 'في الطريق', cls: 'p-violet', step: 3 },
+    completed: { en: 'Completed', ar: 'مكتمل', cls: 'p-ok', step: 4 },
+    cancelled: { en: 'Cancelled', ar: 'ملغى', cls: 'p-bad', step: 0 }
+  };
+  const statusOf = (o) => STATUS[o.order_status] || STATUS.received;
+  const itemName = (it) => { const p = it && it.product_id != null ? S.products.find(x => String(x.id) === String(it.product_id)) : null; return p ? nameOf(p) : (it.product_name || it.name || ''); };
+  function updateNewCount() {
+    const n = S.orders.filter(o => isOnline(o) && o.order_status === 'received').length;
+    const el = $('nav-new-count');
+    if (el) { el.textContent = n; el.classList.toggle('hidden', !n); }
+    document.title = (n ? `(${n}) ` : '') + (S.tenant ? S.tenant.shop_name + ' · ' : '') + L('Store manager', 'إدارة المتجر');
+  }
+  let _ac = null;
+  function chime() {
+    if (localStorage.getItem('rs_admin_sound') === 'off') return;
     try {
-      const url = `${StorefrontAPI.getUrl()}/rest/v1/products?id=eq.${productId}`;
-      await fetch(url, {
-        method: 'DELETE',
-        headers: {
-          "apikey": StorefrontAPI.getKey(),
-          "Authorization": `Bearer ${StorefrontAPI.getKey()}`
-        }
+      _ac = _ac || new (window.AudioContext || window.webkitAudioContext)();
+      [0, 0.18, 0.36].forEach((t, i) => {
+        const o = _ac.createOscillator(), g = _ac.createGain();
+        o.type = 'sine'; o.frequency.value = [880, 1175, 1568][i];
+        g.gain.setValueAtTime(0.0001, _ac.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.25, _ac.currentTime + t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, _ac.currentTime + t + 0.3);
+        o.connect(g); g.connect(_ac.destination); o.start(_ac.currentTime + t); o.stop(_ac.currentTime + t + 0.32);
       });
-      showAlert('✅ Product deleted successfully!', 'success');
-      loadCatalog();
-    } catch(e) {
-      alert('Error: ' + e.message);
-    }
+    } catch (e) { }
+  }
+  function saveSoundPref() { localStorage.setItem('rs_admin_sound', checked('ord-sound') ? 'on' : 'off'); }
+
+  // ── navigation ────────────────────────────────────────────────
+  const TITLES = {
+    overview: ['Overview', 'الرئيسية'], orders: ['Orders', 'الطلبات'], banners: ['Banners', 'البانرات'],
+    offers: ['Offers & announcements', 'العروض والإعلانات'], products: ['Products', 'الأصناف'], categories: ['Categories', 'الأقسام'],
+    profile: ['Store profile & look', 'بيانات المتجر والمظهر'], delivery: ['Delivery & hours', 'التوصيل وأوقات العمل'],
+    reports: ['Reports', 'التقارير'], security: ['Security', 'الأمان']
+  };
+  function updateTitle() { const t = TITLES[S.section]; if (t && $('page-title')) $('page-title').textContent = L(t[0], t[1]); }
+  function go(sec) {
+    S.section = sec;
+    document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'sec-' + sec));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-sec') === sec));
+    $('side').classList.remove('open');
+    if (history.replaceState) history.replaceState({}, '', location.pathname + location.search + '#' + sec);
+    updateTitle();
+    renderSection(sec);
+    window.scrollTo({ top: 0 });
+  }
+  function toggleMenu() { $('side').classList.toggle('open'); }
+  function renderSection(sec) {
+    ({ overview: renderOverview, orders: renderOrders, banners: renderSlides, offers: renderOffers, products: renderProducts,
+      categories: renderCategories, delivery: () => { renderZones(); renderHours(); }, reports: renderReports, security: renderSecurity, profile: renderSwatches }[sec] || (() => { }))();
+  }
+  function renderAll() {
+    const t = S.tenant;
+    paintLogo($('side-logo'), t);
+    $('side-name').textContent = t.shop_name || t.slug;
+    setBrandColor(S.brand.color);
+    const fav = $('admin-favicon'); if (fav && t.logo_url) fav.href = t.logo_url;
+    $('btn-view-store').href = storeLink();
+    document.querySelectorAll('.cloud-only').forEach(e => e.classList.toggle('hidden', S.local));
+    document.querySelectorAll('.local-only').forEach(e => e.classList.toggle('hidden', !S.local));
+    updateNewCount();
+    renderSection(S.section);
   }
 
-  async function confirmClearAllProducts() {
-    if (!confirm(t('confirmClearAll'))) return;
-    try {
-      const url = `${StorefrontAPI.getUrl()}/rest/v1/products?shop_id=eq.${_tenant.id}`;
-      await fetch(url, {
-        method: 'DELETE',
-        headers: {
-          "apikey": StorefrontAPI.getKey(),
-          "Authorization": `Bearer ${StorefrontAPI.getKey()}`
-        }
-      });
-      showAlert('✅ All products cleared!', 'success');
-      loadCatalog();
-    } catch(e) {
-      alert('Error: ' + e.message);
-    }
+  // ── forms (profile / delivery / banner switches / announcement) ──
+  function fillForms() {
+    const t = S.tenant, b = S.banner;
+    setVal('pf-name', t.shop_name || '');
+    setVal('pf-slug', t.slug || '');
+    setVal('pf-logo', t.logo_url || ''); syncPreview('pf-logo', 'pf-logo-prev');
+    setVal('pf-desc-ar', t.description_ar || '');
+    setVal('pf-desc-en', t.description_en || '');
+    setVal('pf-wa', t.whatsapp_phone || '');
+    setVal('pf-phone', S.brand.phone || b.phone || '');
+    setVal('pf-address', t.address || b.address || '');
+    setVal('pf-maps', S.brand.maps_url || '');
+    setVal('pf-ig', S.brand.instagram || '');
+    setVal('pf-fb', S.brand.facebook || '');
+    setVal('pf-tt', S.brand.tiktok || '');
+    setVal('pf-email', S.brand.email || '');
+    setChecked('pf-badges', b.show_header_badges === true);
+    setChecked('pf-linkstock', t.link_pos_stock !== false);
+    setChecked('pf-backorder', t.allow_out_of_stock === true);
+    setColorInputs(S.brand.color || '#dc2626');
+    setVal('dl-fee', num(t.delivery_fee));
+    setVal('dl-min', num(t.min_order));
+    setVal('dl-rate', num(t.currency_lbp_rate, 89500));
+    setChecked('dl-pickup', b.allow_pickup === true);
+    setChecked('dl-hours-on', !!(S.hours && S.hours.enabled));
+    setChecked('bn-active', b.active !== false);
+    setChecked('an-active', !!S.announcement.active);
+    setVal('an-text-ar', S.announcement.text_ar || '');
+    setVal('an-text-en', S.announcement.text_en || '');
+    setChecked('ord-sound', localStorage.getItem('rs_admin_sound') !== 'off');
+    // On a shop's own server the name, address, LBP rate (and logo, if the POS has one) come from the POS.
+    const lock = (id, on) => { const e = $(id); if (e) e.readOnly = !!on; };
+    const posLogo = /\/api\/shop\/logo/.test(String(t.logo_url || ''));
+    lock('pf-name', S.local); lock('pf-address', S.local); lock('dl-rate', S.local); lock('pf-logo', S.local && posLogo);
+    $('pf-local-note').innerHTML = S.local ? `<div class="notice n-info">ℹ️ <span>${L('Your store name, address, exchange rate and logo come from the POS (Settings → Company). Change them there and they update here.', 'اسم المتجر والعنوان وسعر الصرف والشعار تأتي من برنامج الكاشير (الإعدادات ← بيانات الشركة). عدّلها هناك وستتحدث هنا.')}</span></div>` : '';
+    S.dirty = false; $('savebar').classList.remove('show');
+  }
+  function dirty() { S.dirty = true; $('savebar').classList.add('show'); }
+  async function discard() {
+    if (!confirm(L('Discard your changes?', 'تجاهل التغييرات؟'))) return;
+    readBannerIntoState(); fillForms(); renderAll();
+  }
+  const SWATCHES = ['#dc2626', '#ea580c', '#d97706', '#16a34a', '#059669', '#0d9488', '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#c026d3', '#db2777', '#0f172a', '#78350f'];
+  function renderSwatches() {
+    const cur = (S.brand.color || '#dc2626').toLowerCase();
+    $('pf-swatches').innerHTML = SWATCHES.map(c => `<button type="button" class="swatch ${c === cur ? 'sel' : ''}" style="background:${c}" onclick="Admin.setColor('${c}')" aria-label="${c}"></button>`).join('');
+  }
+  function setColorInputs(c) { setVal('pf-color', c); setVal('pf-color-hex', c); }
+  function setColor(c) {
+    c = String(c || '').trim();
+    if (!/^#[0-9a-f]{6}$/i.test(c)) { setVal('pf-color-hex', c); return; }
+    S.brand.color = c.toLowerCase();
+    setColorInputs(S.brand.color); setBrandColor(S.brand.color); renderSwatches(); dirty();
   }
 
-  // ── SETTINGS & GENERAL SAVE ──
-  async function saveSettings() {
-    if (!_tenant) return;
-    const btn = document.getElementById('btn-save-settings');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳</span><span>...</span>'; }
-
-    const newSlug = document.getElementById('admin-shop-slug').value.trim() || _tenant.slug;
-    const pin = document.getElementById('admin-security-pin')?.value.trim() || '1234';
-    localStorage.setItem('rs_admin_pin', pin);
-
-    const isCarouselActive = document.getElementById('admin-carousel-active')?.checked ?? true;
-    // Re-read the stored settings and merge: the same field also holds other data (manager
-    // password, branch status, cash boxes) that a plain overwrite would erase.
-    let currentBanner = {};
-    try {
-      const fresh = await StorefrontAPI.fetchTenant(_tenant.slug);
-      const raw = fresh && fresh.banner_url;
-      if (raw && String(raw).trim().startsWith('{')) currentBanner = JSON.parse(raw);
-    } catch (e) { currentBanner = {}; }
-    if (!currentBanner || typeof currentBanner !== 'object') currentBanner = {};
-    const zones = _zones.map(z => ({ name: String(z.name || '').trim(), fee: Math.max(0, parseFloat(z.fee) || 0), min: Math.max(0, parseFloat(z.min) || 0) })).filter(z => z.name);
-    if (_hours) _hours.enabled = !!document.getElementById('admin-hours-enabled')?.checked;
-    const bannerPayload = {
-      ...currentBanner,
-      active: isCarouselActive,
-      slides: _slides,
-      category_images: _categoryImages,
+  // ── save ──────────────────────────────────────────────────────
+  function bannerPatchFromState() {
+    const zones = S.zones.map(z => ({ name: String(z.name || '').trim(), fee: Math.max(0, num(z.fee)), min: Math.max(0, num(z.min)) })).filter(z => z.name);
+    if (S.hours) S.hours.enabled = checked('dl-hours-on');
+    const brand = Object.assign({}, S.brand, {
+      phone: val('pf-phone'), maps_url: val('pf-maps'), instagram: val('pf-ig'), facebook: val('pf-fb'), tiktok: val('pf-tt'), email: val('pf-email')
+    });
+    return {
+      active: checked('bn-active'),
+      slides: S.slides,
+      online_offers: S.offers,
+      announcement: { active: checked('an-active'), text_ar: val('an-text-ar'), text_en: val('an-text-en') },
+      category_images: S.catImages,
       delivery_zones: zones,
-      allow_pickup: !!document.getElementById('admin-allow-pickup')?.checked,
-      opening_hours: _hours || _defaultHours()
+      allow_pickup: checked('dl-pickup'),
+      opening_hours: S.hours || defaultHours(),
+      show_header_badges: checked('pf-badges'),
+      brand
     };
-    // (everything else already stored, e.g. cash-box status from the POS, is kept as it is)
-
-    const payload = {
-      shop_name: document.getElementById('admin-shop-name').value.trim(),
-      slug: newSlug,
-      link_pos_stock: document.getElementById('admin-link-pos-stock').checked,
-      allow_out_of_stock: document.getElementById('admin-allow-out-of-stock').checked,
-      whatsapp_phone: document.getElementById('admin-whatsapp').value.trim(),
-      delivery_fee: parseFloat(document.getElementById('admin-delivery-fee').value) || 0,
-      min_order: parseFloat(document.getElementById('admin-min-order').value) || 0,
-      currency_lbp_rate: parseFloat(document.getElementById('admin-lbp-rate').value) || 89500,
-      address: document.getElementById('admin-address').value.trim(),
-      logo_url: document.getElementById('admin-shop-logo').value.trim() || null,
-      description_ar: document.getElementById('admin-desc-ar').value.trim(),
-      banner_url: JSON.stringify(bannerPayload),
-      updated_at: new Date().toISOString()
-    };
-
-    try {
-      const url = `${StorefrontAPI.getUrl()}/rest/v1/tenants?id=eq.${_tenant.id}`;
-      const res = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          "apikey": StorefrontAPI.getKey(),
-          "Authorization": `Bearer ${StorefrontAPI.getKey()}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        _tenant = { ..._tenant, ...payload };
-        localStorage.setItem('rs_last_shop_slug', newSlug);
-        showAlert(t('saveSuccess'), 'success');
+  }
+  // Re-read the stored JSON and merge: the POS keeps its own data in the same field (drawers, sync state…).
+  async function writeTenant(fields, bannerPatch) {
+    let body = Object.assign({}, fields || {});
+    if (bannerPatch) {
+      if (S.local) {
+        body.banner_url = JSON.stringify(bannerPatch); // the shop's server merges it with what it keeps
       } else {
-        const err = await res.text();
-        showAlert(t('saveError') + err, 'error');
-      }
-    } catch(e) {
-      showAlert('⚠️ Error: ' + e.message, 'error');
-    }
-
-    if (btn) { btn.disabled = false; btn.innerHTML = `<span>💾</span><span>${t('btnSaveSettings')}</span>`; }
-  }
-
-  function showAlert(msg, type) {
-    const el = document.getElementById('admin-alert');
-    if (el) {
-      el.className = 'save-alert ' + (type === 'success' ? 'success' : 'error');
-      el.style.display = 'block';
-      el.textContent = msg;
-      if (type === 'success') {
-        setTimeout(() => { el.style.display = 'none'; }, 5000);
+        let cur = {};
+        try { const fresh = await StorefrontAPI.fetchTenant(S.tenant.slug); cur = parseJSON(fresh && fresh.banner_url); } catch (e) { cur = Object.assign({}, S.banner); }
+        body.banner_url = JSON.stringify(Object.assign({}, cur, bannerPatch));
       }
     }
+    body.updated_at = new Date().toISOString();
+    await api('/rest/v1/tenants?id=eq.' + encodeURIComponent(S.tenant.id), { method: 'PATCH', body: JSON.stringify(body) });
   }
-
-  // ── ORDERS ──
-  async function loadOrders() {
-    if (!_tenant) return;
-    const container = document.getElementById('admin-orders-table');
-    if (!container) return;
-
+  async function save() {
+    const btn = $('btn-save'); btn.disabled = true;
     try {
-      const url = `${StorefrontAPI.getUrl()}/rest/v1/orders?shop_id=eq.${_tenant.id}&order=created_at.desc&limit=50`;
-      const res = await fetch(url, {
-        headers: {
-          "apikey": StorefrontAPI.getKey(),
-          "Authorization": `Bearer ${StorefrontAPI.getKey()}`
-        }
-      });
-      _orders = await res.json();
-      renderOrders();
-    } catch(e) {
-      container.innerHTML = '<div style="color:red">Failed to load orders: ' + e.message + '</div>';
-    }
+      const fee = Math.max(0, num(val('dl-fee'))), min = Math.max(0, num(val('dl-min')));
+      const wa = val('pf-wa');
+      if (wa && wa.replace(/\D/g, '').length < 7) throw new Error(L('The WhatsApp number looks too short.', 'رقم واتساب قصير جداً.'));
+      const fields = {
+        whatsapp_phone: wa, delivery_fee: fee, min_order: min,
+        description_ar: val('pf-desc-ar'), description_en: val('pf-desc-en'),
+        allow_out_of_stock: checked('pf-backorder')
+      };
+      if (!S.local) {
+        Object.assign(fields, { shop_name: val('pf-name') || S.tenant.shop_name, address: val('pf-address'), logo_url: val('pf-logo') || null, link_pos_stock: checked('pf-linkstock'), currency_lbp_rate: Math.max(0, num(val('dl-rate'), 89500)) || 89500 });
+      } else if (!$('pf-logo').readOnly) {
+        fields.logo_url = val('pf-logo') || null;
+      }
+      const patch = bannerPatchFromState();
+      await writeTenant(fields, patch);
+      Object.assign(S.tenant, fields);
+      S.banner = Object.assign({}, S.banner, patch);
+      S.tenant.banner_url = JSON.stringify(S.banner);
+      S.dirty = false; $('savebar').classList.remove('show');
+      renderAll();
+      toast(L('✅ Saved. Your store is updated.', '✅ تم الحفظ. تم تحديث متجرك.'), 'ok');
+      return true;
+    } catch (e) {
+      toast(L('Not saved: ', 'لم يتم الحفظ: ') + e.message, 'err');
+      return false;
+    } finally { btn.disabled = false; }
   }
 
+  // ── images ────────────────────────────────────────────────────
+  function syncPreview(inputId, prevId) {
+    const v = val(inputId), p = $(prevId);
+    if (p) p.style.backgroundImage = v ? `url("${v.replace(/"/g, '%22')}")` : '';
+  }
+  function clearImage(inputId, prevId) { setVal(inputId, ''); syncPreview(inputId, prevId); if (inputId.startsWith('pf-')) dirty(); }
+  function compress(file, maxDim, png) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onerror = () => reject(new Error('read'));
+      r.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error(L('Not a picture', 'ليست صورة')));
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) { if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; } else { w = Math.round(w * maxDim / h); h = maxDim; } }
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          const ctx = c.getContext('2d');
+          if (!png) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL(png ? 'image/png' : 'image/jpeg', 0.82));
+        };
+        img.src = r.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }
+  function pickImage(inputId, prevId, maxDim, onDone) {
+    const fp = $('file-picker');
+    fp.value = '';
+    fp.onchange = async () => {
+      const f = fp.files && fp.files[0]; if (!f) return;
+      if (f.size > 15 * 1024 * 1024) { toast(L('Picture is too large (max 15 MB).', 'الصورة كبيرة جداً (حد أقصى 15 ميغا).'), 'err'); return; }
+      try {
+        const data = await compress(f, maxDim || 800, inputId === 'pf-logo');
+        if (typeof onDone === 'function') onDone(data);
+        else { setVal(inputId, data); syncPreview(inputId, prevId); if (inputId.startsWith('pf-')) dirty(); }
+      } catch (e) { toast(e.message, 'err'); }
+    };
+    fp.click();
+  }
+
+  // ── links ─────────────────────────────────────────────────────
+  function storeLink() {
+    const slug = encodeURIComponent((S.tenant && S.tenant.slug) || getSlug());
+    try { return new URL('./?shop=' + slug, location.href).toString(); } catch (e) { return './?shop=' + slug; }
+  }
+  const isLanHost = () => /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname);
+  function qrUrl(data, size) { return 'https://api.qrserver.com/v1/create-qr-code/?size=' + (size || 220) + 'x' + (size || 220) + '&margin=6&data=' + encodeURIComponent(data); }
+  async function copyLink() {
+    const l = storeLink();
+    try { await navigator.clipboard.writeText(l); toast(L('Link copied', 'تم نسخ الرابط'), 'ok'); } catch (e) { prompt(L('Copy the link:', 'انسخ الرابط:'), l); }
+  }
+  function shareWhatsApp() {
+    const t = S.tenant;
+    const msg = L(`Order online from ${t.shop_name}: ${storeLink()}`, `اطلب أونلاين من ${t.shop_name}: ${storeLink()}`);
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  }
+  function openManagerApp() {
+    let link; try { link = new URL('./app.html?shop=' + encodeURIComponent(S.tenant.slug), location.href).toString(); } catch (e) { link = 'app.html'; }
+    $('m-app-qr').src = qrUrl(link, 240); setVal('m-app-link', link); $('m-app-open').href = link;
+    openModal('m-app');
+  }
+  function openModal(id) { $(id).classList.add('open'); }
+  function closeModal(id) { $(id).classList.remove('open'); }
+
+  // ── OVERVIEW ──────────────────────────────────────────────────
+  function isOpenNowHours(h) {
+    if (!h || !h.enabled || !h.days) return true;
+    let day, min;
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', { timeZone: h.tz || 'Asia/Beirut', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+      const g = k => (parts.find(p => p.type === k) || {}).value;
+      day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(g('weekday'));
+      min = ((parseInt(g('hour'), 10) || 0) % 24) * 60 + (parseInt(g('minute'), 10) || 0);
+    } catch (e) { const n = new Date(); day = n.getDay(); min = n.getHours() * 60 + n.getMinutes(); }
+    const toMin = s => { const m = /^(\d{1,2}):(\d{2})/.exec(String(s || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+    const inDay = (d, part) => {
+      if (!d || d.closed) return false;
+      const o = toMin(d.open), c = toMin(d.close); if (o == null || c == null) return true;
+      if (o === c) return true;
+      if (o < c) return part === 'today' && min >= o && min < c;
+      return part === 'today' ? min >= o : min < c;
+    };
+    return inDay(h.days[day], 'today') || inDay(h.days[(day + 6) % 7], 'yesterday');
+  }
+  function checklist() {
+    const t = S.tenant, b = S.banner;
+    const withImg = S.products.filter(p => p.image_url).length;
+    const items = [
+      { done: !!t.logo_url, en: 'Add your logo', ar: 'أضف شعار المتجر', sec: 'profile' },
+      { done: !!String(t.whatsapp_phone || '').replace(/\D/g, ''), en: 'Add a WhatsApp number', ar: 'أضف رقم واتساب', sec: 'profile' },
+      { done: S.local ? !!t.admin_pin_required : !!b.admin_password, en: S.local ? 'Set a manager PIN in the POS' : 'Change the default password', ar: S.local ? 'حدّد رمز المدير من برنامج الكاشير' : 'غيّر كلمة المرور الافتراضية', sec: 'security' },
+      { done: S.slides.some(s => s.active !== false && s.image_url), en: 'Add a banner with a picture', ar: 'أضف بانراً مع صورة', sec: 'banners' },
+      { done: num(t.delivery_fee) > 0 || (b.delivery_zones || []).length > 0 || b.allow_pickup === true, en: 'Set delivery charges or pickup', ar: 'حدّد أجور التوصيل أو الاستلام', sec: 'delivery' },
+      { done: !!(b.opening_hours && b.opening_hours.enabled), en: 'Set your opening hours', ar: 'حدّد أوقات العمل', sec: 'delivery' },
+      { done: !S.products.length || withImg / S.products.length >= 0.6, en: `Add pictures to products (${withImg}/${S.products.length})`, ar: `أضف صوراً للأصناف (${withImg}/${S.products.length})`, sec: 'products' },
+      { done: !!(S.brand.instagram || S.brand.facebook || S.brand.tiktok || S.brand.maps_url), en: 'Add social links or a map', ar: 'أضف روابط التواصل أو الخريطة', sec: 'profile' }
+    ];
+    return items;
+  }
+  function renderOverview() {
+    if (!S.tenant) return;
+    const online = S.orders.filter(isOnline);
+    const t0 = today0().getTime();
+    const m0 = new Date(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
+    const live = online.filter(o => o.order_status !== 'cancelled');
+    const todayO = online.filter(o => new Date(o.created_at).getTime() >= t0);
+    const todayLive = todayO.filter(o => o.order_status !== 'cancelled');
+    const monthLive = live.filter(o => new Date(o.created_at) >= m0);
+    $('ov-new').textContent = online.filter(o => o.order_status === 'received').length;
+    $('ov-today').textContent = todayO.length;
+    $('ov-today-sub').textContent = L(`${todayO.filter(o => o.order_status === 'completed').length} completed`, `${todayO.filter(o => o.order_status === 'completed').length} مكتمل`);
+    $('ov-rev-today').textContent = money(todayLive.reduce((s, o) => s + num(o.total), 0));
+    $('ov-rev-month').textContent = money(monthLive.reduce((s, o) => s + num(o.total), 0));
+    $('ov-month-sub').textContent = L(`${monthLive.length} orders`, `${monthLive.length} طلب`);
+
+    const openByHours = isOpenNowHours(S.banner.opening_hours);
+    const posOff = S.local && S.tenant.pos_online === false;
+    const st = $('ov-status');
+    if (posOff) { st.className = 'pill p-bad'; st.textContent = L('● Closed — POS is off', '● مغلق — الكاشير مطفأ'); }
+    else if (!openByHours) { st.className = 'pill p-warn'; st.textContent = L('● Closed (opening hours)', '● مغلق (خارج أوقات العمل)'); }
+    else { st.className = 'pill p-ok'; st.textContent = L('● Open for orders', '● مفتوح للطلبات'); }
+    const link = storeLink();
+    setVal('ov-link', link);
+    $('ov-qr').src = qrUrl(link, 260);
+    $('ov-qr-dl').href = qrUrl(link, 800);
+
+    const alerts = [];
+    if (!S.local && !S.banner.admin_password) alerts.push(`<div class="notice n-warn">⚠️ <span>${L('You are still using the default password. Anyone who knows it can change your store.', 'ما زلت تستخدم كلمة المرور الافتراضية. أي شخص يعرفها يستطيع تعديل متجرك.')} <a href="#security" onclick="Admin.go('security');return false" style="font-weight:900">${L('Change it now', 'غيّرها الآن')}</a></span></div>`);
+    if (S.local && isLanHost()) alerts.push(`<div class="notice n-info">ℹ️ <span>${L('You opened this page on the shop network, so the link below is a local address. Share your public store link (shown in the POS → Online orders) with customers.', 'فتحت هذه الصفحة من شبكة المحل، لذا الرابط أدناه عنوان محلي. شارك مع الزبائن رابط متجرك العام (يظهر في الكاشير ← الطلبات الأونلاين).')}</span></div>`);
+    if (posOff) alerts.push(`<div class="notice n-warn">⚠️ <span>${L('Customers cannot order now: no cash register is open in the shop. Open the POS to start taking orders.', 'لا يستطيع الزبائن الطلب الآن: لا يوجد كاشير مفتوح في المحل. افتح برنامج الكاشير لاستقبال الطلبات.')}</span></div>`);
+    $('ov-alerts').innerHTML = alerts.join('');
+
+    const latest = online.slice(0, 6);
+    $('ov-latest').innerHTML = latest.length ? `<div class="table-wrap"><table><tbody>${latest.map(o => {
+      const s = statusOf(o);
+      return `<tr style="cursor:pointer" onclick="Admin.openOrder('${esc(o.id)}')"><td><b>#${esc(o.order_number || '')}</b><div class="order-meta">${esc(o.customer_name || '')} · ${fmtTime(o.created_at)}</div></td><td><span class="pill ${s.cls}">${L(s.en, s.ar)}</span></td><td class="num"><b>${money(o.total)}</b></td></tr>`;
+    }).join('')}</tbody></table></div>` : `<div class="empty"><div class="big">🧾</div>${L('No online orders yet. Share your store link to get the first one.', 'لا توجد طلبات أونلاين بعد. شارك رابط متجرك لتصلك أول طلبية.')}</div>`;
+
+    const list = checklist();
+    const done = list.filter(x => x.done).length;
+    $('ov-score-text').textContent = L(`${done} of ${list.length} done`, `تم ${done} من ${list.length}`);
+    $('ov-checklist').innerHTML = list.map(x => `<li class="${x.done ? 'done' : 'todo'}"><span class="dot">${x.done ? '✓' : '!'}</span><span class="t">${L(x.en, x.ar)}</span>${x.done ? '' : `<span class="spacer"></span><button class="btn btn-sm" onclick="Admin.go('${x.sec}')">${L('Fix', 'إصلاح')}</button>`}</li>`).join('');
+  }
+
+  // ── ORDERS ────────────────────────────────────────────────────
+  function openOrder(id) { S.openOrders.add(String(id)); S.filter = 'all'; go('orders'); setTimeout(() => { const el = document.querySelector(`[data-order="${CSS.escape(String(id))}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60); }
+  function setFilter(f) { S.filter = f; renderOrders(); }
+  function toggleOrder(id) { id = String(id); if (S.openOrders.has(id)) S.openOrders.delete(id); else S.openOrders.add(id); renderOrders(); }
   function renderOrders() {
-    const container = document.getElementById('admin-orders-table');
-    if (!container) return;
-
-    // Filter to genuine online store orders (exclude POS in-store sales)
-    const onlineOrders = _orders.filter(o => {
-      if (o.pos_synced === true) return false;
-      if (o.order_number && (o.order_number.startsWith('INV-') || o.order_number.includes('-INV-'))) return false;
-      try {
-        const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
-        if (n.source === 'pos') return false;
-      } catch(e) {}
-      return true;
-    });
-
-    if (onlineOrders.length === 0) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">لا توجد طلبات أونلاين بعد (No online orders yet)</div>';
+    if (!S.tenant) return;
+    const online = S.orders.filter(isOnline);
+    const counts = { all: online.length };
+    Object.keys(STATUS).forEach(k => { counts[k] = online.filter(o => (o.order_status || 'received') === k).length; });
+    const chips = [['received', '🔔'], ['preparing', '👨‍🍳'], ['out_for_delivery', '🛵'], ['completed', '✅'], ['cancelled', '✕'], ['all', '']];
+    $('ord-chips').innerHTML = chips.map(([k, ic]) => `<button class="chip ${S.filter === k ? 'active' : ''}" onclick="Admin.setFilter('${k}')">${ic} ${k === 'all' ? L('All', 'الكل') : L(STATUS[k].en, STATUS[k].ar)} <span class="c">${counts[k] || 0}</span></button>`).join('');
+    const q = val('ord-search').toLowerCase();
+    let list = online.filter(o => S.filter === 'all' || (o.order_status || 'received') === S.filter);
+    if (q) list = list.filter(o => [o.order_number, o.customer_name, o.customer_phone, o.delivery_address].some(x => String(x || '').toLowerCase().includes(q)));
+    if (!list.length) {
+      $('ord-list').innerHTML = `<div class="card empty"><div class="big">🧾</div>${S.filter === 'received' ? L('No new orders right now. New orders appear here with a sound.', 'لا توجد طلبات جديدة الآن. تظهر الطلبات الجديدة هنا مع صوت تنبيه.') : L('No orders here.', 'لا توجد طلبات هنا.')}</div>`;
       return;
     }
-
-    container.innerHTML = `
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
-          <thead>
-            <tr style="border-bottom:2px solid var(--border-color);text-align:start">
-              <th style="padding:10px"># Order</th>
-              <th style="padding:10px">Customer</th>
-              <th style="padding:10px">Total ($)</th>
-              <th style="padding:10px">Status</th>
-              <th style="padding:10px">Time</th>
-              <th style="padding:10px">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${onlineOrders.map(o => `
-              <tr style="border-bottom:1px solid var(--border-color)">
-                <td style="padding:10px;font-weight:900">${o.order_number}</td>
-                <td style="padding:10px">
-                  <div style="font-weight:700">${o.customer_name || 'Anonymous'}</div>
-                  <div style="font-size:0.75rem;color:var(--text-muted)">${o.customer_phone || ''}</div>
-                </td>
-                <td style="padding:10px;font-weight:900;color:var(--brand-primary)">$${(parseFloat(o.total) || 0).toFixed(2)}</td>
-                <td style="padding:10px">
-                  <span style="background:var(--bg-secondary);padding:4px 8px;border-radius:12px;font-weight:800">${o.order_status}</span>
-                </td>
-                <td style="padding:10px;font-size:0.75rem;color:var(--text-muted)">${new Date(o.created_at).toLocaleTimeString()}</td>
-                <td style="padding:10px">
-                  <select onchange="Admin.updateOrderStatus('${o.id}', this.value)" style="padding:4px;border-radius:4px;font-size:0.78rem">
-                    <option value="received" ${o.order_status==='received'?'selected':''}>Received</option>
-                    <option value="preparing" ${o.order_status==='preparing'?'selected':''}>Preparing</option>
-                    <option value="out_for_delivery" ${o.order_status==='out_for_delivery'?'selected':''}>Out for Delivery</option>
-                    <option value="completed" ${o.order_status==='completed'?'selected':''}>Completed</option>
-                    <option value="cancelled" ${o.order_status==='cancelled'?'selected':''}>Cancelled</option>
-                  </select>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+    const lbp = num(S.tenant.currency_lbp_rate, 89500);
+    $('ord-list').innerHTML = list.map(o => {
+      const s = statusOf(o), id = String(o.id), open = S.openOrders.has(id);
+      const items = itemsOf(o);
+      const phone = String(o.customer_phone || '');
+      const steps = [1, 2, 3, 4].map(i => `<i class="${s.step >= i ? 'on' : ''}"></i>`).join('');
+      const next = {
+        received: [['preparing', '👨‍🍳 ' + L('Accept & prepare', 'قبول وتحضير'), 'btn-primary'], ['cancelled', L('Cancel', 'إلغاء'), 'btn-danger']],
+        preparing: [['out_for_delivery', '🛵 ' + L('Out for delivery', 'خرج للتوصيل'), 'btn-primary'], ['completed', '✅ ' + L('Completed', 'مكتمل'), ''], ['cancelled', L('Cancel', 'إلغاء'), 'btn-danger']],
+        out_for_delivery: [['completed', '✅ ' + L('Delivered', 'تم التسليم'), 'btn-ok'], ['cancelled', L('Cancel', 'إلغاء'), 'btn-danger']],
+        completed: [['preparing', L('Reopen', 'إعادة فتح'), '']],
+        cancelled: [['received', L('Restore', 'استرجاع'), '']]
+      }[o.order_status || 'received'] || [];
+      return `<div class="order ${open ? 'open' : ''} ${o.order_status === 'received' ? 'is-new' : ''}" data-order="${esc(id)}">
+        <div class="order-head" onclick="Admin.toggleOrder('${esc(id)}')">
+          <div><div class="order-no">#${esc(o.order_number || id.slice(0, 8))} <span class="pill ${s.cls}" style="margin-inline-start:6px">${L(s.en, s.ar)}</span>${o.pos_invoice_ref ? ` <span class="pill p-muted">🧾 ${esc(o.pos_invoice_ref)}</span>` : ''}</div>
+            <div class="order-meta">${esc(o.customer_name || '')} · ${esc(phone)} · ${fmtTime(o.created_at)} · ${items.length} ${L('items', 'أصناف')}</div></div>
+          <div class="order-total">${money(o.total)}</div>
+        </div>
+        <div class="order-body">
+          <div class="steps">${steps}</div>
+          <div class="grid g2">
+            <div>
+              <div class="lbl">${L('Customer', 'الزبون')}</div>
+              <div style="font-weight:800">${esc(o.customer_name || '—')}</div>
+              <div class="row" style="margin:6px 0 10px">
+                ${phone ? `<a class="btn btn-sm" href="tel:${esc(phone.replace(/[^\d+]/g, ''))}">📞 ${esc(phone)}</a><button class="btn btn-sm btn-wa" onclick="Admin.waCustomer('${esc(id)}')">💬 WhatsApp</button>` : ''}
+              </div>
+              <div class="lbl">${L('Address', 'العنوان')}</div>
+              <div style="margin-bottom:10px">${esc(o.delivery_address || '—')}</div>
+              ${o.notes && !notesOf(o).source ? `<div class="lbl">${L('Notes', 'ملاحظات')}</div><div style="margin-bottom:10px">${esc(o.notes)}</div>` : ''}
+            </div>
+            <div>
+              <table class="order-items"><tbody>${items.map(it => `<tr><td>${esc(num(it.quantity || it.qty, 1))} × ${esc(itemName(it))}</td><td class="num">${money(num(it.total_price) || num(it.unit_price || it.price) * num(it.quantity || it.qty, 1))}</td></tr>`).join('')}
+                <tr><td style="border-top:1px dashed var(--line);padding-top:6px;color:var(--muted)">${L('Subtotal', 'المجموع')}</td><td class="num" style="border-top:1px dashed var(--line);padding-top:6px">${money(o.subtotal || (num(o.total) - num(o.delivery_fee)))}</td></tr>
+                <tr><td style="color:var(--muted)">${L('Delivery', 'التوصيل')}</td><td class="num">${money(o.delivery_fee)}</td></tr>
+                <tr><td><b>${L('Total', 'الإجمالي')}</b></td><td class="num"><b>${money(o.total)}</b><div class="order-meta">≈ ${Math.round(num(o.total) * lbp).toLocaleString()} ${L('LBP', 'ل.ل')}</div></td></tr>
+              </tbody></table>
+            </div>
+          </div>
+          <div class="row" style="margin-top:6px">
+            ${next.map(([st, label, cls]) => `<button class="btn btn-sm ${cls}" onclick="Admin.setStatus('${esc(id)}','${st}')">${label}</button>`).join('')}
+            <span class="spacer"></span>
+            <button class="btn btn-sm" onclick="Admin.printOrder('${esc(id)}')">🖨️ ${L('Print', 'طباعة')}</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  async function setStatus(id, status) {
+    const o = S.orders.find(x => String(x.id) === String(id)); if (!o) return;
+    if (status === 'cancelled' && !confirm(L(`Cancel order #${o.order_number}?`, `إلغاء الطلب رقم ${o.order_number}؟`))) return;
+    try {
+      await api('/rest/v1/orders?id=eq.' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify({ order_status: status, updated_at: new Date().toISOString() }) });
+      o.order_status = status;
+      if (S.knownNew) S.knownNew.delete(String(id));
+      updateNewCount(); renderOrders();
+      toast(L('Order updated', 'تم تحديث الطلب'), 'ok');
+      if (['preparing', 'out_for_delivery', 'completed', 'cancelled'].includes(status) && o.customer_phone && confirm(L('Tell the customer on WhatsApp?', 'إبلاغ الزبون عبر واتساب؟'))) waCustomer(id);
+    } catch (e) { toast(L('Not updated: ', 'لم يتم التحديث: ') + e.message, 'err'); }
+  }
+  function waNumber(p) {
+    let d = String(p || '').replace(/\D/g, '');
+    if (d.startsWith('00')) d = d.slice(2);
+    if (d.length === 8 && !d.startsWith('961')) d = '961' + d;
+    if (d.length === 7) d = '961' + d;
+    return d;
+  }
+  function waCustomer(id) {
+    const o = S.orders.find(x => String(x.id) === String(id)); if (!o) return;
+    const shop = S.tenant.shop_name;
+    const msgs = {
+      received: [`Hello ${o.customer_name}, ${shop} received your order #${o.order_number}. Total ${money(o.total)}.`, `مرحباً ${o.customer_name}، استلم ${shop} طلبك رقم ${o.order_number}. الإجمالي ${money(o.total)}.`],
+      preparing: [`Hello ${o.customer_name}, ${shop} is preparing your order #${o.order_number}.`, `مرحباً ${o.customer_name}، ${shop} يحضّر طلبك رقم ${o.order_number} الآن.`],
+      out_for_delivery: [`Hello ${o.customer_name}, your order #${o.order_number} from ${shop} is on the way. Total ${money(o.total)}.`, `مرحباً ${o.customer_name}، طلبك رقم ${o.order_number} من ${shop} في الطريق إليك. الإجمالي ${money(o.total)}.`],
+      completed: [`Thank you ${o.customer_name}! Your order #${o.order_number} from ${shop} is complete. We hope to see you again.`, `شكراً ${o.customer_name}! تم تسليم طلبك رقم ${o.order_number} من ${shop}. نتمنى أن نراك مجدداً.`],
+      cancelled: [`Hello ${o.customer_name}, sorry, your order #${o.order_number} at ${shop} was cancelled. Contact us for help.`, `مرحباً ${o.customer_name}، نعتذر، تم إلغاء طلبك رقم ${o.order_number} لدى ${shop}. تواصل معنا للمساعدة.`]
+    }[o.order_status || 'received'];
+    const n = waNumber(o.customer_phone);
+    if (!n) { toast(L('No phone number on this order', 'لا يوجد رقم هاتف في هذا الطلب'), 'err'); return; }
+    window.open(`https://wa.me/${n}?text=${encodeURIComponent(L(msgs[0], msgs[1]))}`, '_blank', 'noopener');
+  }
+  function printOrder(id) {
+    const o = S.orders.find(x => String(x.id) === String(id)); if (!o) return;
+    const t = S.tenant, items = itemsOf(o);
+    const logo = t.logo_url ? `<img src="${esc(t.logo_url)}" style="max-width:70px;max-height:70px;display:block;margin:0 auto 6px">` : '';
+    const contact = [S.brand.phone || t.whatsapp_phone, t.address].filter(Boolean).map(esc).join(' · ');
+    $('print-area').innerHTML = `<div style="width:76mm;margin:0 auto;font-family:Arial,sans-serif;font-size:12px;color:#000;direction:${S.lang === 'ar' ? 'rtl' : 'ltr'}">
+      <div style="text-align:center">${logo}<div style="font-size:16px;font-weight:bold">${esc(t.shop_name)}</div><div>${contact}</div></div>
+      <div style="border-top:1px dashed #000;border-bottom:1px dashed #000;margin:8px 0;padding:6px 0">
+        <div style="font-size:15px;font-weight:bold;text-align:center">${L('Online order', 'طلب أونلاين')} #${esc(o.order_number)}</div>
+        <div>${fmtTime(o.created_at)}</div>
+        <div><b>${L('Customer', 'الزبون')}:</b> ${esc(o.customer_name)} — ${esc(o.customer_phone)}</div>
+        <div><b>${L('Address', 'العنوان')}:</b> ${esc(o.delivery_address || '—')}</div>
+        ${o.notes && !notesOf(o).source ? `<div><b>${L('Notes', 'ملاحظات')}:</b> ${esc(o.notes)}</div>` : ''}
       </div>
-    `;
+      <table style="width:100%;border-collapse:collapse">${items.map(it => `<tr><td style="padding:2px 0">${esc(num(it.quantity || it.qty, 1))} × ${esc(itemName(it))}</td><td style="text-align:end">${money(num(it.total_price) || num(it.unit_price || it.price) * num(it.quantity || it.qty, 1))}</td></tr>`).join('')}</table>
+      <div style="border-top:1px dashed #000;margin-top:6px;padding-top:4px">
+        <div style="display:flex;justify-content:space-between"><span>${L('Delivery', 'التوصيل')}</span><span>${money(o.delivery_fee)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:bold"><span>${L('Total', 'الإجمالي')}</span><span>${money(o.total)}</span></div>
+        <div style="text-align:center;margin-top:4px">${L('Cash on delivery', 'الدفع عند الاستلام')}</div>
+      </div>
+      <div style="text-align:center;margin-top:10px">${L('Thank you!', 'شكراً لكم!')}</div>
+      <div style="text-align:center;font-size:9px;color:#555;margin-top:6px">Powered by Red Shark</div>
+    </div>`;
+    setTimeout(() => window.print(), 80);
   }
 
-  async function updateOrderStatus(orderId, status) {
-    try {
-      const url = `${StorefrontAPI.getUrl()}/rest/v1/orders?id=eq.${orderId}`;
-      await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          "apikey": StorefrontAPI.getKey(),
-          "Authorization": `Bearer ${StorefrontAPI.getKey()}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ order_status: status, updated_at: new Date().toISOString() })
-      });
-      loadOrders();
-    } catch(e) {
-      alert('Error: ' + e.message);
-    }
+  // ── BANNERS ───────────────────────────────────────────────────
+  const today = () => new Date().toISOString().slice(0, 10);
+  function slideState(s) {
+    if (s.active === false) return ['p-muted', L('Off', 'متوقف')];
+    const d = today();
+    if (s.starts_at && s.starts_at > d) return ['p-info', L('Scheduled', 'مجدول')];
+    if (s.ends_at && s.ends_at < d) return ['p-bad', L('Ended', 'انتهى')];
+    return ['p-ok', L('Live', 'ظاهر الآن')];
   }
-
-  // ── TAB SWITCHER ──
-  function switchTab(tab) {
-    document.getElementById('tab-settings').style.display = tab === 'settings' ? 'block' : 'none';
-    document.getElementById('tab-banner').style.display = tab === 'banner' ? 'block' : 'none';
-    document.getElementById('tab-categories').style.display = tab === 'categories' ? 'block' : 'none';
-    document.getElementById('tab-catalog').style.display = tab === 'catalog' ? 'block' : 'none';
-    const repTab = document.getElementById('tab-reports');
-    if (repTab) repTab.style.display = tab === 'reports' ? 'block' : 'none';
-    document.getElementById('tab-orders').style.display = tab === 'orders' ? 'block' : 'none';
-
-    document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.getElementById('tab-btn-' + tab);
-    if (activeBtn) activeBtn.classList.add('active');
-
-    if (tab === 'reports') {
-      loadReports();
-    }
+  function linkOptions(s) {
+    const opt = (v, t) => `<option value="${v}" ${s.link_type === v ? 'selected' : ''}>${t}</option>`;
+    return opt('none', L('No link', 'بدون رابط')) + opt('offers', L('Open the offers', 'فتح العروض')) + opt('category', L('Open a category', 'فتح قسم')) + opt('product', L('Open a product', 'فتح صنف')) + opt('whatsapp', L('Chat on WhatsApp', 'محادثة واتساب')) + opt('url', L('Web link', 'رابط إنترنت'));
   }
-
-  
-  // ── Selective POS Synchronization ────────────────────────────────
-  function openPosSyncModal() {
-    const modal = document.getElementById('modal-pos-sync');
-    if (modal) {
-      modal.style.display = 'flex';
-      const msg = document.getElementById('pos-sync-status-msg');
-      if (msg) msg.style.display = 'none';
-      const btn = document.getElementById('btn-confirm-pos-sync');
-      if (btn) btn.disabled = false;
-      const btnTxt = document.getElementById('btn-confirm-sync-text');
-      if (btnTxt) btnTxt.textContent = _lang === 'ar' ? 'إرسال المزامنة للكاشير الآن' : 'Push Sync to POS Now';
-    }
+  function linkValueField(s, i) {
+    if (s.link_type === 'category') return `<select class="input" onchange="Admin.slideSet(${i},'link_value',this.value)"><option value="">—</option>${S.categories.map(c => `<option value="${esc(c.id)}" ${String(s.link_value) === String(c.id) ? 'selected' : ''}>${esc(nameOf(c))}</option>`).join('')}</select>`;
+    if (s.link_type === 'product') return `<select class="input" onchange="Admin.slideSet(${i},'link_value',this.value)"><option value="">—</option>${S.products.slice().sort((a, b) => nameOf(a).localeCompare(nameOf(b))).map(p => `<option value="${esc(p.id)}" ${String(s.link_value) === String(p.id) ? 'selected' : ''}>${esc(nameOf(p))}</option>`).join('')}</select>`;
+    if (s.link_type === 'url') return `<input class="input ltr" value="${esc(s.link_value || '')}" placeholder="https://…" oninput="Admin.slideSet(${i},'link_value',this.value,true)">`;
+    return '';
   }
-
-  function closePosSyncModal() {
-    const modal = document.getElementById('modal-pos-sync');
-    if (modal) modal.style.display = 'none';
+  function slidePreviewHtml(s) {
+    const ar = S.lang === 'ar';
+    const title = (!ar && s.title_en) ? s.title_en : (s.title || s.title_en || '');
+    const sub = (!ar && s.subtitle_en) ? s.subtitle_en : (s.subtitle || s.subtitle_en || '');
+    const btn = (!ar && s.button_text_en) ? s.button_text_en : (s.button_text || s.button_text_en || '');
+    return `<div class="slide-prev" style="${s.image_url ? `background-image:url('${String(s.image_url).replace(/'/g, '%27')}')` : ''}"><div>
+      ${s.badge ? `<span class="sb">${esc(s.badge)}</span>` : ''}<div class="st">${esc(title || L('Banner title', 'عنوان البانر'))}</div>${sub ? `<div class="ss">${esc(sub)}</div>` : ''}${btn && s.link_type && s.link_type !== 'none' ? `<span class="sbtn">${esc(btn)}</span>` : ''}</div></div>`;
   }
-
-  async function triggerPosSync() {
-    const isAR = _lang === 'ar';
-    const btn = document.getElementById('btn-confirm-pos-sync');
-    const btnTxt = document.getElementById('btn-confirm-sync-text');
-    const msg = document.getElementById('pos-sync-status-msg');
-
-    const syncItems = document.getElementById('sync-chk-items')?.checked;
-    const syncStock = document.getElementById('sync-chk-stock')?.checked;
-    const syncCats = document.getElementById('sync-chk-categories')?.checked;
-    const syncOffers = document.getElementById('sync-chk-offers')?.checked;
-
-    const selectedTables = [];
-    if (syncItems) selectedTables.push('items');
-    if (syncStock) selectedTables.push('stock');
-    if (syncCats) selectedTables.push('categories');
-    if (syncOffers) selectedTables.push('offers');
-
-    if (selectedTables.length === 0) {
-      alert(isAR ? 'يرجى تحديد عنصر واحد على الأقل للمزامنة' : 'Please select at least one item to sync');
+  function renderSlides() {
+    $('bn-count').textContent = L(`${S.slides.length} banner(s) · ${S.slides.filter(s => slideState(s)[0] === 'p-ok').length} live`, `${S.slides.length} بانر · ${S.slides.filter(s => slideState(s)[0] === 'p-ok').length} ظاهر الآن`);
+    if (!S.slides.length) {
+      $('bn-list').innerHTML = `<div class="card empty"><div class="big">🖼️</div>${L('No banners yet. Add one to promote your offers on the store home page.', 'لا توجد بانرات بعد. أضف بانراً للترويج لعروضك في الصفحة الرئيسية.')}<div style="margin-top:12px"><button class="btn btn-primary" onclick="Admin.addSlide()">➕ ${L('Add banner', 'إضافة بانر')}</button></div></div>`;
       return;
     }
+    $('bn-list').innerHTML = S.slides.map((s, i) => {
+      const [cls, label] = slideState(s);
+      return `<div class="slide-ed ${s.active === false ? 'off' : ''}">
+        <div>
+          <div id="sp-${i}">${slidePreviewHtml(s)}</div>
+          <div class="slide-tools">
+            <button class="btn btn-sm" onclick="Admin.slideImage(${i})">📁 ${L('Picture', 'صورة')}</button>
+            ${s.image_url ? `<button class="btn btn-sm btn-ghost" onclick="Admin.slideSet(${i},'image_url','')">🗑️</button>` : ''}
+            <span class="spacer"></span>
+            <button class="btn btn-sm" ${i === 0 ? 'disabled' : ''} onclick="Admin.moveSlide(${i},-1)" title="${L('Move up', 'تحريك للأعلى')}">▲</button>
+            <button class="btn btn-sm" ${i === S.slides.length - 1 ? 'disabled' : ''} onclick="Admin.moveSlide(${i},1)" title="${L('Move down', 'تحريك للأسفل')}">▼</button>
+            <button class="btn btn-sm" onclick="Admin.copySlide(${i})" title="${L('Duplicate', 'نسخ')}">⧉</button>
+            <button class="btn btn-sm btn-danger" onclick="Admin.removeSlide(${i})" title="${L('Delete', 'حذف')}">🗑️</button>
+          </div>
+          <div class="hint">${L('Best size: 1200 × 500 px.', 'أفضل مقاس: 1200 × 500 بكسل.')}</div>
+        </div>
+        <div>
+          <div class="row" style="margin-bottom:10px"><b>${L('Banner', 'بانر')} ${i + 1}</b><span class="pill ${cls}">${label}</span><span class="spacer"></span>
+            <label class="row" style="gap:6px;font-size:.82rem;font-weight:700">${L('Visible', 'ظاهر')}<span class="switch"><input type="checkbox" ${s.active !== false ? 'checked' : ''} onchange="Admin.slideSet(${i},'active',this.checked)"><span></span></span></label></div>
+          <div class="grid g2">
+            <div class="field"><label>${L('Title (Arabic)', 'العنوان (عربي)')}</label><input class="input" value="${esc(s.title || '')}" oninput="Admin.slideSet(${i},'title',this.value,true)"></div>
+            <div class="field"><label>${L('Title (English)', 'العنوان (إنجليزي)')}</label><input class="input ltr" value="${esc(s.title_en || '')}" oninput="Admin.slideSet(${i},'title_en',this.value,true)"></div>
+            <div class="field"><label>${L('Subtitle (Arabic)', 'النص الفرعي (عربي)')}</label><input class="input" value="${esc(s.subtitle || '')}" oninput="Admin.slideSet(${i},'subtitle',this.value,true)"></div>
+            <div class="field"><label>${L('Subtitle (English)', 'النص الفرعي (إنجليزي)')}</label><input class="input ltr" value="${esc(s.subtitle_en || '')}" oninput="Admin.slideSet(${i},'subtitle_en',this.value,true)"></div>
+            <div class="field"><label>${L('Small tag', 'شارة صغيرة')}</label><input class="input" value="${esc(s.badge || '')}" placeholder="🔥 ${L('Limited time', 'لفترة محدودة')}" oninput="Admin.slideSet(${i},'badge',this.value,true)"></div>
+            <div class="field"><label>${L('When tapped', 'عند الضغط')}</label><select class="input" onchange="Admin.slideSet(${i},'link_type',this.value)">${linkOptions(s)}</select></div>
+            ${s.link_type && s.link_type !== 'none' ? `
+            ${linkValueField(s, i) ? `<div class="field"><label>${L('Target', 'الوجهة')}</label>${linkValueField(s, i)}</div>` : ''}
+            <div class="field"><label>${L('Button text (Arabic)', 'نص الزر (عربي)')}</label><input class="input" value="${esc(s.button_text || '')}" placeholder="${L('Shop now', 'تسوّق الآن')}" oninput="Admin.slideSet(${i},'button_text',this.value,true)"></div>
+            <div class="field"><label>${L('Button text (English)', 'نص الزر (إنجليزي)')}</label><input class="input ltr" value="${esc(s.button_text_en || '')}" placeholder="Shop now" oninput="Admin.slideSet(${i},'button_text_en',this.value,true)"></div>` : ''}
+            <div class="field"><label>${L('Show from', 'يظهر من')}</label><input type="date" class="input ltr" value="${esc(s.starts_at || '')}" onchange="Admin.slideSet(${i},'starts_at',this.value)"></div>
+            <div class="field"><label>${L('Until', 'حتى')}</label><input type="date" class="input ltr" value="${esc(s.ends_at || '')}" onchange="Admin.slideSet(${i},'ends_at',this.value)"></div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  function slideSet(i, k, v, soft) {
+    const s = S.slides[i]; if (!s) return;
+    s[k] = typeof v === 'string' ? (soft ? v : v.trim()) : v;
+    dirty();
+    if (soft) { const p = $('sp-' + i); if (p) p.innerHTML = slidePreviewHtml(s); }
+    else renderSlides();
+  }
+  function slideImage(i) { pickImage(null, null, 1400, (data) => { slideSet(i, 'image_url', data); }); }
+  function addSlide() {
+    S.slides.push({ id: uid(), active: true, title: '', title_en: '', subtitle: '', subtitle_en: '', badge: '', image_url: '', link_type: 'none' });
+    dirty(); renderSlides();
+    setTimeout(() => { const all = document.querySelectorAll('.slide-ed'); const last = all[all.length - 1]; if (last) last.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+  }
+  function removeSlide(i) { if (!confirm(L('Delete this banner?', 'حذف هذا البانر؟'))) return; S.slides.splice(i, 1); dirty(); renderSlides(); }
+  function moveSlide(i, d) { const j = i + d; if (j < 0 || j >= S.slides.length) return; const t = S.slides[i]; S.slides[i] = S.slides[j]; S.slides[j] = t; dirty(); renderSlides(); }
+  function copySlide(i) { const c = JSON.parse(JSON.stringify(S.slides[i])); c.id = uid(); S.slides.splice(i + 1, 0, c); dirty(); renderSlides(); }
 
-    if (btn) btn.disabled = true;
-    if (btnTxt) btnTxt.textContent = isAR ? 'جارِ الإرسال...' : 'Sending Sync...';
-
-    try {
-      // 1. Update last sync request in Supabase for this tenant
-      if (typeof SUPABASE_URL !== 'undefined') {
-        try {
-          await fetch(`${SUPABASE_URL}/rest/v1/tenants?slug=eq.${encodeURIComponent(_activeSlug)}`, {
-            method: 'PATCH',
-            headers: getHeaders(),
-            body: JSON.stringify({
-              last_pos_sync_at: new Date().toISOString(),
-              pos_sync_tables: selectedTables
-            })
-          });
-        } catch(e) {}
-      }
-
-      if (msg) {
-        msg.style.display = 'block';
-        msg.style.background = 'rgba(16,185,129,0.1)';
-        msg.style.border = '1px solid rgba(16,185,129,0.3)';
-        msg.style.padding = '10px 14px';
-        msg.style.borderRadius = '8px';
-        msg.style.color = '#059669';
-        msg.style.fontSize = '0.86rem';
-        msg.style.fontWeight = '700';
-        msg.innerHTML = isAR 
-          ? '✅ تم إرسال إشعار المزامنة بنجاح! سيتم تحديث شاشات الكاشير في المحل تلقائياً.'
-          : '✅ Sync signal pushed successfully! Cash registers will auto-update.';
-      }
-
-      setTimeout(() => {
-        closePosSyncModal();
-      }, 1800);
-    } catch(err) {
-      if (msg) {
-        msg.style.display = 'block';
-        msg.style.background = 'rgba(239,68,68,0.1)';
-        msg.style.border = '1px solid rgba(239,68,68,0.3)';
-        msg.style.padding = '10px 14px';
-        msg.style.borderRadius = '8px';
-        msg.style.color = '#dc2626';
-        msg.style.fontSize = '0.86rem';
-        msg.textContent = isAR ? '❌ تعذر إرسال إشارة المزامنة' : '❌ Failed to push sync';
-      }
-    } finally {
-      if (btn) btn.disabled = false;
-      if (btnTxt) btnTxt.textContent = isAR ? 'إرسال المزامنة للكاشير الآن' : 'Push Sync to POS Now';
+  // ── OFFERS ────────────────────────────────────────────────────
+  const productById = (id) => S.products.find(p => String(p.id) === String(id));
+  function offerState(o) {
+    if (o.active === false) return ['p-muted', L('Stopped', 'متوقف')];
+    const d = today();
+    if (o.starts_at && o.starts_at > d) return ['p-info', L('Scheduled', 'مجدول')];
+    if (o.ends_at && o.ends_at < d) return ['p-bad', L('Ended', 'انتهى')];
+    const p = productById(o.product_id);
+    if (p && num(o.price) >= num(p.price)) return ['p-warn', L('Not cheaper', 'ليس أرخص')];
+    return ['p-ok', L('Live', 'فعّال')];
+  }
+  function renderOffers() {
+    if (!S.offers.length) {
+      $('of-list').innerHTML = `<div class="empty"><div class="big">🏷️</div>${L('No offers yet. Create one and it shows on your store with the old price crossed out.', 'لا توجد عروض بعد. أنشئ عرضاً ليظهر في متجرك مع شطب السعر القديم.')}</div>`;
+      return;
     }
+    $('of-list').innerHTML = `<div class="table-wrap"><table><thead><tr><th>${L('Product', 'الصنف')}</th><th class="num">${L('Price', 'السعر')}</th><th>${L('Dates', 'المدة')}</th><th>${L('Status', 'الحالة')}</th><th></th></tr></thead><tbody>${S.offers.map((o, i) => {
+      const p = productById(o.product_id);
+      const reg = p ? num(p.price) : num(o.regular_price);
+      const pct = reg > 0 ? Math.round((1 - num(o.price) / reg) * 100) : 0;
+      const [cls, label] = offerState(o);
+      return `<tr>
+        <td><div class="row" style="flex-wrap:nowrap">${p && p.image_url ? `<img class="thumb" src="${esc(p.image_url)}" alt="">` : '<div class="thumb">📦</div>'}<div><b>${esc(p ? nameOf(p) : (o.name || L('Product removed', 'صنف محذوف')))}</b>${o.label ? `<div class="order-meta">${esc(o.label)}</div>` : ''}</div></div></td>
+        <td class="num"><span class="strike">${money(reg)}</span> <b style="color:var(--brand)">${money(o.price)}</b>${pct > 0 ? ` <span class="pill p-bad">−${pct}%</span>` : ''}</td>
+        <td style="font-size:.8rem;color:var(--muted)">${o.starts_at || o.ends_at ? `${esc(o.starts_at || '…')} → ${esc(o.ends_at || '…')}` : L('No end date', 'بدون تاريخ انتهاء')}</td>
+        <td><span class="pill ${cls}">${label}</span></td>
+        <td class="num"><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">
+          <label class="switch" title="${L('On / off', 'تشغيل / إيقاف')}"><input type="checkbox" ${o.active !== false ? 'checked' : ''} onchange="Admin.toggleOffer(${i},this.checked)"><span></span></label>
+          <button class="btn btn-sm" onclick="Admin.openOfferModal(${i})">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="Admin.removeOffer(${i})">🗑️</button></div></td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+  }
+  function openOfferModal(i, productId) {
+    const o = (typeof i === 'number' && S.offers[i]) ? S.offers[i] : null;
+    setVal('mo-id', o ? o.id : '');
+    setVal('mo-search', '');
+    setVal('mo-product', o ? o.product_id : (productId || ''));
+    setVal('mo-price', o ? o.price : '');
+    setVal('mo-label', o ? (o.label || '') : '');
+    setVal('mo-start', o ? (o.starts_at || '') : '');
+    setVal('mo-end', o ? (o.ends_at || '') : '');
+    $('m-offer-title').textContent = o ? L('Edit offer', 'تعديل العرض') : L('New offer', 'عرض جديد');
+    offerProductChanged();
+    renderOfferPicker();
+    openModal('m-offer');
+    if (o && val('mo-price')) offerFromPrice();
+  }
+  function renderOfferPicker() {
+    const q = val('mo-search').toLowerCase();
+    const sel = val('mo-product');
+    let list = S.products.filter(p => p.is_published !== false);
+    if (q) list = list.filter(p => [p.name, p.name_ar, p.name_en, p.barcode].some(x => String(x || '').toLowerCase().includes(q)));
+    else if (sel) list = list.filter(p => String(p.id) === sel).concat(list.filter(p => String(p.id) !== sel));
+    list = list.slice(0, 40);
+    $('mo-picker').innerHTML = list.length ? list.map(p => `<div onclick="Admin.pickOfferProduct('${esc(p.id)}')" style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;cursor:pointer;${String(p.id) === sel ? 'background:color-mix(in srgb,var(--brand) 12%,transparent);font-weight:800' : ''}">
+      ${p.image_url ? `<img class="thumb" style="width:34px;height:34px" src="${esc(p.image_url)}" alt="">` : '<div class="thumb" style="width:34px;height:34px">📦</div>'}<span style="flex:1">${esc(nameOf(p))}</span><span class="num">${money(p.price)}</span></div>`).join('')
+      : `<div class="hint" style="padding:8px">${L('No product found', 'لم يتم العثور على صنف')}</div>`;
+  }
+  function pickOfferProduct(id) { setVal('mo-product', id); offerProductChanged(); renderOfferPicker(); offerFromPct(); }
+  function offerProductChanged() { const p = productById(val('mo-product')); setVal('mo-regular', p ? money(p.price) : ''); }
+  function offerFromPct() {
+    const p = productById(val('mo-product')); const pct = num(val('mo-pct'));
+    if (p && pct > 0 && pct < 100) setVal('mo-price', (num(p.price) * (1 - pct / 100)).toFixed(2));
+  }
+  function offerFromPrice() {
+    const p = productById(val('mo-product')); const pr = num(val('mo-price'), NaN);
+    if (p && isFinite(pr) && num(p.price) > 0) setVal('mo-pct', Math.max(0, Math.round((1 - pr / num(p.price)) * 100)) || '');
+  }
+  async function saveOffer() {
+    const pid = val('mo-product'); const p = productById(pid);
+    const price = num(val('mo-price'), NaN);
+    if (!p) { toast(L('Choose a product', 'اختر صنفاً'), 'err'); return; }
+    if (!isFinite(price) || price < 0) { toast(L('Enter the offer price', 'أدخل سعر العرض'), 'err'); return; }
+    if (price >= num(p.price)) { toast(L('The offer price must be lower than the regular price.', 'سعر العرض يجب أن يكون أقل من السعر العادي.'), 'err'); return; }
+    const st = val('mo-start'), en = val('mo-end');
+    if (st && en && en < st) { toast(L('The end date is before the start date.', 'تاريخ الانتهاء قبل تاريخ البدء.'), 'err'); return; }
+    const id = val('mo-id');
+    const rec = { id: id || uid(), product_id: p.id, name: nameOf(p), regular_price: num(p.price), price: Math.round(price * 100) / 100, label: val('mo-label'), starts_at: st, ends_at: en, active: true };
+    const dup = S.offers.findIndex(o => String(o.product_id) === String(p.id) && o.id !== rec.id);
+    if (dup >= 0) { if (!confirm(L('This product already has an offer. Replace it?', 'هذا الصنف عليه عرض. استبداله؟'))) return; S.offers.splice(dup, 1); }
+    const idx = S.offers.findIndex(o => o.id === rec.id);
+    if (idx >= 0) S.offers[idx] = Object.assign({}, S.offers[idx], rec); else S.offers.unshift(rec);
+    closeModal('m-offer');
+    renderOffers();
+    if (await save()) renderOffers();
+  }
+  async function toggleOffer(i, on) { if (!S.offers[i]) return; S.offers[i].active = !!on; renderOffers(); await save(); }
+  async function removeOffer(i) { if (!confirm(L('Delete this offer?', 'حذف هذا العرض؟'))) return; S.offers.splice(i, 1); renderOffers(); await save(); }
+
+  // ── PRODUCTS ──────────────────────────────────────────────────
+  function activeOfferFor(pid) {
+    const d = today();
+    return S.offers.find(o => String(o.product_id) === String(pid) && o.active !== false && (!o.starts_at || o.starts_at <= d) && (!o.ends_at || o.ends_at >= d));
+  }
+  function renderProducts() {
+    const catSel = $('pr-cat');
+    const curCat = catSel.value;
+    catSel.innerHTML = `<option value="">${L('All categories', 'كل الأقسام')}</option>` + S.categories.map(c => `<option value="${esc(c.id)}">${esc(nameOf(c))}</option>`).join('');
+    catSel.value = curCat;
+    $('pr-local-note').innerHTML = S.local ? `<div class="notice n-info">ℹ️ <span>${L('Products, prices, stock and pictures come from your POS. Edit them in the POS (Items) and they update here within a minute. Here you can put products on offer.', 'الأصناف والأسعار والمخزون والصور تأتي من برنامج الكاشير. عدّلها من الكاشير (الأصناف) وستتحدث هنا خلال دقيقة. من هنا يمكنك وضع عروض على الأصناف.')}</span></div>` : '';
+    const q = val('pr-search').toLowerCase(), f = val('pr-filter') || 'all';
+    let list = S.products.slice();
+    if (curCat) list = list.filter(p => String(p.category_id) === String(curCat));
+    if (q) list = list.filter(p => [p.name, p.name_ar, p.name_en, p.barcode].some(x => String(x || '').toLowerCase().includes(q)));
+    if (f === 'noimg') list = list.filter(p => !p.image_url);
+    if (f === 'low') list = list.filter(p => num(p.stock_quantity ?? p.stock) <= 5);
+    if (f === 'hidden') list = list.filter(p => p.is_published === false);
+    if (f === 'offer') list = list.filter(p => activeOfferFor(p.id));
+    list.sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
+    const total = list.length;
+    list = list.slice(0, 300);
+    if (!total) { $('pr-list').innerHTML = `<div class="card empty"><div class="big">📦</div>${S.products.length ? L('No product matches.', 'لا يوجد صنف مطابق.') : L('No products yet.', 'لا توجد أصناف بعد.')}</div>`; return; }
+    const catName = (id) => { const c = S.categories.find(x => String(x.id) === String(id)); return c ? nameOf(c) : '—'; };
+    $('pr-list').innerHTML = `<div class="hint" style="margin-bottom:6px">${L(`${total} product(s)`, `${total} صنف`)}${total > 300 ? L(' — showing the first 300, search to narrow down', ' — يظهر أول 300، استخدم البحث') : ''}</div>
+      <div class="table-wrap"><table><thead><tr><th></th><th>${L('Product', 'الصنف')}</th><th>${L('Category', 'القسم')}</th><th class="num">${L('Price', 'السعر')}</th><th class="num">${L('Stock', 'المخزون')}</th><th>${L('Status', 'الحالة')}</th><th></th></tr></thead><tbody>${list.map(p => {
+        const off = activeOfferFor(p.id), stock = num(p.stock_quantity ?? p.stock);
+        return `<tr>
+          <td style="width:56px">${p.image_url ? `<img class="thumb" src="${esc(p.image_url)}" alt="" loading="lazy">` : '<div class="thumb">📦</div>'}</td>
+          <td><b>${esc(nameOf(p))}</b>${p.barcode ? `<div class="order-meta ltr">${esc(p.barcode)}</div>` : ''}</td>
+          <td style="color:var(--muted)">${esc(catName(p.category_id))}</td>
+          <td class="num">${off ? `<span class="strike">${money(p.price)}</span> <b style="color:var(--brand)">${money(off.price)}</b>` : `<b>${money(p.price)}</b>`}</td>
+          <td class="num" style="font-weight:800;color:${stock <= 0 ? 'var(--bad)' : (stock <= 5 ? 'var(--warn)' : 'var(--ok)')}">${stock}</td>
+          <td>${p.is_published === false ? `<span class="pill p-muted">${L('Hidden', 'مخفي')}</span>` : `<span class="pill p-ok">${L('Online', 'ظاهر')}</span>`}</td>
+          <td class="num"><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">
+            <button class="btn btn-sm" onclick="Admin.offerForProduct('${esc(p.id)}')">🏷️ ${off ? L('Offer', 'العرض') : L('Put on offer', 'عرض')}</button>
+            ${S.local ? '' : `<button class="btn btn-sm" onclick="Admin.openProductModal('${esc(p.id)}')">✏️</button>`}</div></td>
+        </tr>`;
+      }).join('')}</tbody></table></div>`;
+  }
+  function offerForProduct(pid) {
+    const i = S.offers.findIndex(o => String(o.product_id) === String(pid));
+    go('offers');
+    openOfferModal(i >= 0 ? i : undefined, pid);
+  }
+  function fillCatSelect(id, cur) {
+    $(id).innerHTML = `<option value="">${L('— No category —', '— بدون قسم —')}</option>` + S.categories.map(c => `<option value="${esc(c.id)}" ${String(c.id) === String(cur) ? 'selected' : ''}>${esc(nameOf(c))}</option>`).join('');
+  }
+  function openProductModal(id) {
+    const p = id ? productById(id) : null;
+    setVal('mp-id', p ? p.id : '');
+    setVal('mp-name-ar', p ? (p.name_ar || p.name || '') : '');
+    setVal('mp-name-en', p ? (p.name_en || '') : '');
+    fillCatSelect('mp-cat', p ? p.category_id : '');
+    setVal('mp-price', p ? num(p.price) : '');
+    setVal('mp-stock', p ? num(p.stock_quantity) : 10);
+    setVal('mp-barcode', p ? (p.barcode || '') : '');
+    setVal('mp-img', p ? (p.image_url || '') : ''); syncPreview('mp-img', 'mp-img-prev');
+    setVal('mp-desc', p ? (p.description || p.description_ar || '') : '');
+    setChecked('mp-pub', p ? p.is_published !== false : true);
+    $('mp-delete').classList.toggle('hidden', !p);
+    $('m-product-title').textContent = p ? L('Edit product', 'تعديل الصنف') : L('New product', 'صنف جديد');
+    openModal('m-product');
+  }
+  async function saveProduct() {
+    const id = val('mp-id');
+    const nameAr = val('mp-name-ar'), nameEn = val('mp-name-en');
+    const price = num(val('mp-price'), NaN);
+    if (!nameAr && !nameEn) { toast(L('Enter the product name', 'أدخل اسم الصنف'), 'err'); return; }
+    if (!isFinite(price) || price < 0) { toast(L('Enter a valid price', 'أدخل سعراً صحيحاً'), 'err'); return; }
+    const body = {
+      name: nameAr || nameEn, name_ar: nameAr || nameEn, name_en: nameEn || nameAr,
+      category_id: val('mp-cat') || null, price, stock_quantity: Math.round(num(val('mp-stock'))),
+      barcode: val('mp-barcode') || null, image_url: val('mp-img') || null,
+      description: val('mp-desc'), description_ar: val('mp-desc'), is_published: checked('mp-pub'), updated_at: new Date().toISOString()
+    };
+    const btn = $('mp-save'); btn.disabled = true;
+    try {
+      if (id) await api('/rest/v1/products?id=eq.' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(body) });
+      else await api('/rest/v1/products', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(Object.assign({ shop_id: S.tenant.id, track_inventory: true }, body)) });
+      closeModal('m-product');
+      S.products = await loadAllCloudProducts();
+      renderProducts();
+      toast(L('Product saved', 'تم حفظ الصنف'), 'ok');
+    } catch (e) { toast(L('Not saved: ', 'لم يتم الحفظ: ') + e.message, 'err'); }
+    finally { btn.disabled = false; }
+  }
+  async function deleteProduct() {
+    const id = val('mp-id'); if (!id) return;
+    if (!confirm(L('Delete this product from the online store?', 'حذف هذا الصنف من المتجر الإلكتروني؟'))) return;
+    try {
+      await api('/rest/v1/products?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
+      closeModal('m-product');
+      S.products = S.products.filter(p => String(p.id) !== String(id));
+      const before = S.offers.length;
+      S.offers = S.offers.filter(o => String(o.product_id) !== String(id));
+      if (S.offers.length !== before) await save();
+      renderProducts();
+      toast(L('Product deleted', 'تم حذف الصنف'), 'ok');
+    } catch (e) { toast(e.message, 'err'); }
   }
 
-  // ── Reports & Analytics Dashboard ───────────────────────────────
-// Implementation of loadReports,
-    filterReportsInvoices, openMobileAppModal, closeMobileAppModal
-
-async function loadReports() {
-  if (!_tenant) return;
-  const isAR = _lang === 'ar';
-  const dateFilter = document.getElementById('reports-date-filter')?.value || 'month';
-  const branchFilter = document.getElementById('reports-branch-filter')?.value || 'all';
-  const topBody = document.getElementById('reports-top-products-body');
-  const lowStockBody = document.getElementById('reports-low-stock-body');
-  const invoicesBody = document.getElementById('reports-invoices-body');
-
-  if (topBody) topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ معالجة البيانات والتقارير...' : 'Calculating reports...') + '</td></tr>';
-  if (lowStockBody) lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ فحص المخزون...' : 'Checking inventory...') + '</td></tr>';
-  if (invoicesBody) invoicesBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'جارِ جلب الفواتير...' : 'Loading invoices...') + '</td></tr>';
-
-  try {
-    // 1. Fetch Orders & POS Sales from Supabase for this tenant
-    let orders = [];
+  // ── CATEGORIES ────────────────────────────────────────────────
+  function renderCategories() {
+    $('ct-local-note').innerHTML = S.local ? `<div class="notice n-info">ℹ️ <span>${L('Category names come from your POS. Here you choose the cover picture customers see.', 'أسماء الأقسام تأتي من برنامج الكاشير. من هنا تختار صورة الغلاف التي يراها الزبون.')}</span></div>` : '';
+    if (!S.categories.length) { $('ct-list').innerHTML = `<div class="card empty"><div class="big">🗂️</div>${L('No categories yet.', 'لا توجد أقسام بعد.')}</div>`; return; }
+    $('ct-list').innerHTML = `<div class="grid g4">${S.categories.map(c => {
+      const img = S.catImages[c.id] || c.image_url;
+      const count = S.products.filter(p => String(p.category_id) === String(c.id)).length;
+      return `<div class="card" style="padding:0;overflow:hidden;margin:0;cursor:pointer" onclick="Admin.openCategoryModal('${esc(c.id)}')">
+        <div style="height:110px;background:${img ? `url('${String(img).replace(/'/g, '%27')}') center/cover` : 'var(--surface-2)'};display:flex;align-items:center;justify-content:center;font-size:2rem">${img ? '' : '🗂️'}</div>
+        <div style="padding:10px 12px"><b>${esc(nameOf(c))}</b><div class="order-meta">${count} ${L('products', 'صنف')}${img ? '' : ' · ' + L('no cover', 'بدون غلاف')}</div></div></div>`;
+    }).join('')}</div>`;
+  }
+  function openCategoryModal(id) {
+    const c = id ? S.categories.find(x => String(x.id) === String(id)) : null;
+    setVal('mc-id', c ? c.id : '');
+    setVal('mc-name-ar', c ? (c.name_ar || c.name || '') : '');
+    setVal('mc-name-en', c ? (c.name_en || '') : '');
+    setVal('mc-img', c ? (S.catImages[c.id] || c.image_url || '') : ''); syncPreview('mc-img', 'mc-img-prev');
+    $('mc-name-ar').readOnly = S.local; $('mc-name-en').readOnly = S.local;
+    $('mc-delete').classList.toggle('hidden', !c || S.local);
+    $('m-category-title').textContent = c ? (S.local ? L('Category cover', 'غلاف القسم') : L('Edit category', 'تعديل القسم')) : L('New category', 'قسم جديد');
+    openModal('m-category');
+  }
+  async function saveCategory() {
+    const id = val('mc-id'), nameAr = val('mc-name-ar'), nameEn = val('mc-name-en'), img = val('mc-img');
+    if (!S.local && !nameAr && !nameEn) { toast(L('Enter the category name', 'أدخل اسم القسم'), 'err'); return; }
+    const btn = $('mc-save'); btn.disabled = true;
     try {
-      const url = StorefrontAPI.getUrl() + '/rest/v1/orders?shop_id=eq.' + encodeURIComponent(_tenant.id) + '&order=created_at.desc&limit=300';
-      const res = await fetch(url, {
-        headers: {
-          "apikey": StorefrontAPI.getKey(),
-          "Authorization": "Bearer " + StorefrontAPI.getKey()
+      let catId = id;
+      if (!S.local) {
+        const body = { name: nameAr || nameEn, name_ar: nameAr || nameEn, name_en: nameEn || nameAr };
+        if (id) await api('/rest/v1/categories?id=eq.' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(body) });
+        else {
+          const slug = (nameEn || nameAr).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cat';
+          const created = await api('/rest/v1/categories', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(Object.assign({ shop_id: S.tenant.id, slug: slug + '-' + uid().slice(0, 4), is_active: true, display_order: S.categories.length }, body)) });
+          catId = created && created[0] && created[0].id;
         }
-      });
-      if (res.ok) {
-        const rawOrders = await res.json();
-        // Deduplicate orders by order_number and filter out stale POS-1 test orders
-        const seenOrderRefs = new Set();
-        orders = (rawOrders || []).filter(o => {
-          const num = String(o.order_number || o.id || '').trim();
-          if (!num) return true;
-          if (seenOrderRefs.has(num)) return false;
-          seenOrderRefs.add(num);
-          return true;
-        });
       }
-    } catch(e) {
-      console.warn('Orders fetch error in loadReports:', e);
-    }
-
-    // Populate branch selector from real configured stores & warehouses
-    const branchSel = document.getElementById('reports-branch-filter');
-    if (branchSel) {
-      const bSet = new Set();
-      try {
-        const bp = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : (_tenant.banner_url || {});
-        const whs = bp?.pos_cloud_tables?.warehouses || [];
-        whs.forEach(w => {
-          const name = w.name || w.name_ar || w.code;
-          if (name) bSet.add(name);
-        });
-        (bp?.connected_branches || []).forEach(cb => {
-          const name = cb.name || cb.branchId;
-          if (name && name !== 'SRV-01' && name !== 'POS-1' && name !== 'main') bSet.add(name);
-        });
-      } catch(e) {}
-
-      (cBoxes || []).forEach(cb => {
-        const b = cb.branch_name || cb.branch_id;
-        if (b && b !== 'main' && b !== 'POS-1' && b !== 'SRV-01') bSet.add(b);
-      });
-      orders.forEach(o => {
-        try {
-          const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
-          const b = n.branch_id || n.branch_name;
-          if (b && b !== 'main' && b !== 'POS-1' && b !== 'SRV-01') bSet.add(b);
-        } catch(e) {}
-      });
-
-      if (bSet.size === 0) bSet.add('main');
-
-      let bOpts = '<option value="all">' + (isAR ? '🌐 كافة الفروع والمحطات (All Branches)' : '🌐 All Branches & Terminals') + '</option>';
-      bSet.forEach(b => {
-        const bName = b === 'main' ? (isAR ? '📍 الفرع الرئيسي (Main Branch)' : '📍 Main Branch') : ('📍 ' + b);
-        bOpts += '<option value="' + b + '" ' + (branchFilter === b ? 'selected' : '') + '>' + bName + '</option>';
-      });
-      branchSel.innerHTML = bOpts;
-    }
-
-    // 2. Filter orders by selected branch & date range
-    const now = new Date();
-    const filteredOrders = orders.filter(o => {
-      // Branch filter
-      if (branchFilter !== 'all') {
-        let bMatch = false;
-        try {
-          const n = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {});
-          if (n.branch_id === branchFilter || n.terminal_id === branchFilter) bMatch = true;
-        } catch(e) {}
-        if (o.delivery_address === branchFilter) bMatch = true;
-        if (!bMatch) return false;
-      }
-
-      // Date filter
-      if (!o.created_at) return true;
-      const d = new Date(o.created_at);
-      if (dateFilter === 'today') {
-        return d.toDateString() === now.toDateString();
-      } else if (dateFilter === 'week') {
-        return (now - d) <= (7 * 24 * 60 * 60 * 1000);
-      } else if (dateFilter === 'month') {
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      }
-      return true;
-    });
-
-    // 3. Compute totals
-    let totalSales = 0;
-    let totalCost = 0;
-    let completedCount = 0;
-    const productCounts = {};
-
-    filteredOrders.forEach(o => {
-      const amount = parseFloat(o.total || 0);
-      totalSales += amount;
-      if (o.order_status === 'completed' || o.order_status === 'out_for_delivery') {
-        completedCount++;
-      }
-
-      let meta = {};
-      try { meta = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {}); } catch(e) {}
-      totalCost += parseFloat(meta.cost || 0);
-
-      let items = [];
-      try {
-        items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []);
-      } catch(e) {}
-
-      items.forEach(it => {
-        const name = it.product_name || it.name || it.item_name || 'Product';
-        const qty = parseFloat(it.quantity || it.qty || 1);
-        const price = parseFloat(it.unit_price || it.price || 0);
-        if (!productCounts[name]) productCounts[name] = { qty: 0, revenue: 0 };
-        productCounts[name].qty += qty;
-        productCounts[name].revenue += (qty * price);
-      });
-    });
-
-    const netProfit = totalSales - totalCost;
-    const avgOrder = filteredOrders.length > 0 ? (totalSales / filteredOrders.length) : 0;
-    const rate = parseFloat(_tenant.currency_lbp_rate || 89500);
-
-    // Update KPI cards
-    const elSales = document.getElementById('kpi-total-sales');
-    if (elSales) elSales.textContent = '$' + totalSales.toFixed(2);
-    const elSalesLbp = document.getElementById('kpi-total-sales-lbp');
-    if (elSalesLbp) elSalesLbp.textContent = Math.round(totalSales * rate).toLocaleString() + ' ' + (isAR ? 'ل.ل' : 'LBP');
-
-    const elOrders = document.getElementById('kpi-total-orders');
-    if (elOrders) elOrders.textContent = filteredOrders.length;
-    const elCompleted = document.getElementById('kpi-completed-orders');
-    if (elCompleted) elCompleted.textContent = completedCount + ' ' + (isAR ? 'فاتورة مكتملة' : 'completed');
-
-    const elAvg = document.getElementById('kpi-avg-order');
-    if (elAvg) elAvg.textContent = '$' + avgOrder.toFixed(2);
-
-    // 4. Update Live Cashbox Drawer
+      if (catId) { if (img) S.catImages[catId] = img; else delete S.catImages[catId]; }
+      await writeTenant(null, { category_images: S.catImages });
+      S.banner.category_images = Object.assign({}, S.catImages);
+      closeModal('m-category');
+      if (!S.local) S.categories = await StorefrontAPI.fetchCategories(S.tenant.id);
+      renderCategories();
+      toast(L('Category saved', 'تم حفظ القسم'), 'ok');
+    } catch (e) { toast(L('Not saved: ', 'لم يتم الحفظ: ') + e.message, 'err'); }
+    finally { btn.disabled = false; }
+  }
+  async function deleteCategory() {
+    const id = val('mc-id'); if (!id || S.local) return;
+    if (!confirm(L('Delete this category? Its products stay, without a category.', 'حذف هذا القسم؟ تبقى أصنافه بدون قسم.'))) return;
     try {
-      let bObj = {};
-      try { bObj = typeof _tenant.banner_url === 'string' ? JSON.parse(_tenant.banner_url) : (_tenant.banner_url || {}); } catch(e) {}
-      const cBoxes = bObj.pos_cashboxes || [];
-      const cb = cBoxes[0] || { balance_usd: 100.95, cashier_name: 'Administrator', status: 'open' };
-
-      const elDrawer = document.getElementById('rpt-drawer-total');
-      if (elDrawer) elDrawer.textContent = '$' + parseFloat(cb.balance_usd || totalSales).toFixed(2);
-      const elDrawerLbp = document.getElementById('rpt-drawer-lbp');
-      if (elDrawerLbp) elDrawerLbp.textContent = '≈ ' + Math.round(parseFloat(cb.balance_usd || totalSales) * rate).toLocaleString() + ' ' + (isAR ? 'ل.ل' : 'LBP');
-      const elCashier = document.getElementById('rpt-drawer-cashier');
-      if (elCashier) elCashier.textContent = cb.cashier_name || 'Administrator';
-    } catch(e) {}
-
-    // 5. Render Invoices Table
-    if (invoicesBody) {
-      if (filteredOrders.length === 0) {
-        invoicesBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'لا توجد فواتير مسجلة في هذه الفترة' : 'No invoices in this period') + '</td></tr>';
-      } else {
-        invoicesBody.innerHTML = filteredOrders.map(o => {
-          let meta = {};
-          try { meta = typeof o.notes === 'string' ? JSON.parse(o.notes) : (o.notes || {}); } catch(e) {}
-          const isPos = meta.source === 'pos' || o.pos_synced;
-          const branchBadge = meta.terminal_id || meta.branch_id || 'الفرع الرئيسي';
-          const cashier = meta.cashier || (isPos ? 'Administrator' : 'Online Store');
-          const cost = parseFloat(meta.cost || 0);
-          const total = parseFloat(o.total || 0);
-          const profit = total - cost;
-          const time = new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-          return '<tr style="border-bottom:1px solid #e2e8f0">' +
-            '<td style="padding:8px;font-weight:900;color:var(--brand-primary)">' + o.order_number + '</td>' +
-            '<td style="padding:8px"><div style="font-weight:700">' + branchBadge + '</div><div style="font-size:0.75rem;color:var(--text-muted)">' + time + '</div></td>' +
-            '<td style="padding:8px"><div style="font-weight:700">' + (o.customer_name || 'عميل عابر') + '</div><div style="font-size:0.75rem;color:var(--text-muted)">' + cashier + '</div></td>' +
-            '<td style="padding:8px;text-align:end;font-weight:900">$' + total.toFixed(2) + '</td>' +
-            '<td style="padding:8px;text-align:end;color:#d97706;font-weight:700">$' + cost.toFixed(2) + '</td>' +
-            '<td style="padding:8px;text-align:end;color:#059669;font-weight:900">+$' + profit.toFixed(2) + '</td>' +
-          '</tr>';
-        }).join('');
-      }
-    }
-
-    // 6. Render Top Selling Items
-    const sortedProducts = Object.keys(productCounts).map(k => Object.assign({ name: k }, productCounts[k]))
-      .sort((a,b) => b.qty - a.qty);
-
-    if (topBody) {
-      if (sortedProducts.length === 0) {
-        topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:var(--text-muted)">' + (isAR ? 'لا توجد مبيعات مسجلة في هذه الفترة' : 'No sales records in this period') + '</td></tr>';
-      } else {
-        topBody.innerHTML = sortedProducts.slice(0, 10).map(p => 
-          '<tr style="border-bottom:1px solid #e2e8f0">' +
-            '<td style="padding:10px 8px;font-weight:700">' + p.name + '</td>' +
-            '<td style="padding:10px 8px;text-align:center"><span style="background:rgba(59,130,246,0.1);color:#2563eb;padding:3px 10px;border-radius:12px;font-weight:800">' + p.qty + '</span></td>' +
-            '<td style="padding:10px 8px;text-align:end;font-weight:800;color:#059669">$' + p.revenue.toFixed(2) + '</td>' +
-          '</tr>'
-        ).join('');
-      }
-    }
-
-    // 7. Check Low Stock from Catalog
-    if (!_products || _products.length === 0) {
-      try { _products = await StorefrontAPI.fetchProducts(_tenant.id); } catch(e) {}
-    }
-
-    const lowStockItems = (_products || []).filter(p => {
-      const stk = parseFloat(p.stock !== undefined ? p.stock : 999);
-      return stk <= 5;
-    }).sort((a, b) => (parseFloat(a.stock || 0) - parseFloat(b.stock || 0)));
-
-    const elLowCount = document.getElementById('kpi-low-stock');
-    if (elLowCount) elLowCount.textContent = lowStockItems.length;
-
-    if (lowStockBody) {
-      if (lowStockItems.length === 0) {
-        lowStockBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:#059669;font-weight:700">✅ ' + (isAR ? 'جميع الأصناف متوفرة بمخزون كافٍ وممتاز' : 'All items have healthy stock') + '</td></tr>';
-      } else {
-        lowStockBody.innerHTML = lowStockItems.slice(0, 10).map(it => {
-          const stk = parseFloat(it.stock || 0);
-          const isZero = stk <= 0;
-          const badgeBg = isZero ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)';
-          const badgeColor = isZero ? '#dc2626' : '#d97706';
-          const label = isZero ? (isAR ? 'نفد (0)' : 'Out (0)') : stk;
-          const pName = isAR ? (it.name_ar || it.name || it.item_name) : (it.name_en || it.name || it.item_name);
-
-          return '<tr style="border-bottom:1px solid #e2e8f0">' +
-            '<td style="padding:10px 8px;font-weight:700">' + pName + '</td>' +
-            '<td style="padding:10px 8px;text-align:center"><span style="background:' + badgeBg + ';color:' + badgeColor + ';padding:3px 10px;border-radius:12px;font-weight:800">' + label + '</span></td>' +
-            '<td style="padding:10px 8px;text-align:end;font-weight:700">$' + parseFloat(it.price || 0).toFixed(2) + '</td>' +
-          '</tr>';
-        }).join('');
-      }
-    }
-  } catch(err) {
-    console.error('Error calculating reports:', err);
-    if (topBody) topBody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:18px;color:#dc2626">Failed to load reports: ' + err.message + '</td></tr>';
+      await api('/rest/v1/categories?id=eq.' + encodeURIComponent(id), { method: 'DELETE' });
+      delete S.catImages[id];
+      await writeTenant(null, { category_images: S.catImages });
+      closeModal('m-category');
+      S.categories = S.categories.filter(c => String(c.id) !== String(id));
+      renderCategories();
+      toast(L('Category deleted', 'تم حذف القسم'), 'ok');
+    } catch (e) { toast(e.message, 'err'); }
   }
-}
 
-function filterReportsInvoices() {
-  const q = document.getElementById('admin-inv-search')?.value.toLowerCase().trim() || '';
-  const rows = document.querySelectorAll('#reports-invoices-body tr');
-  rows.forEach(r => {
-    if (!q) { r.style.display = ''; return; }
-    const txt = r.textContent.toLowerCase();
-    r.style.display = txt.includes(q) ? '' : 'none';
-  });
-}
-
-
-  // ── Mobile Admin App Modal Handlers ─────────────────────────────
-  function openMobileAppModal() {
-  const modal = document.getElementById('modal-mobile-app');
-  if (modal && _tenant) {
-    modal.style.display = 'flex';
-    const origin = window.location.origin || '';
-    const appUrl = origin + '/app?shop=' + encodeURIComponent(_tenant.slug || 'shop101');
-    
-    const qrImg = document.getElementById('modal-app-qr-img');
-    if (qrImg) qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(appUrl);
-    const linkEl = document.getElementById('btn-open-mobile-app-link');
-    if (linkEl) linkEl.href = appUrl;
-
-    const textEl = document.getElementById('app-direct-url-text');
-    if (textEl) textEl.textContent = appUrl;
-
-    const storeNameEl = document.getElementById('modal-app-store-name');
-    if (storeNameEl) storeNameEl.textContent = (_tenant.shop_name || _tenant.slug) + (_lang === 'ar' ? ' — تطبيق المدير الذكي' : ' — Mobile Admin App');
+  // ── DELIVERY ──────────────────────────────────────────────────
+  const DAYS = [['Sunday', 'الأحد'], ['Monday', 'الاثنين'], ['Tuesday', 'الثلاثاء'], ['Wednesday', 'الأربعاء'], ['Thursday', 'الخميس'], ['Friday', 'الجمعة'], ['Saturday', 'السبت']];
+  function defaultHours() { const days = {}; for (let i = 0; i < 7; i++) days[i] = { open: '09:00', close: '22:00', closed: false }; return { enabled: false, tz: 'Asia/Beirut', days }; }
+  function renderZones() {
+    const box = $('dl-zones');
+    if (!S.zones.length) { box.innerHTML = `<div class="hint" style="padding:4px 0 8px">${L('No delivery areas — the delivery fee above applies to everyone.', 'لا توجد مناطق — تُطبّق أجرة التوصيل أعلاه على الجميع.')}</div>`; return; }
+    box.innerHTML = `<div class="table-wrap"><table><thead><tr><th>${L('Area', 'المنطقة')}</th><th>${L('Fee ($)', 'الأجرة ($)')}</th><th>${L('Minimum ($)', 'الحد الأدنى ($)')}</th><th></th></tr></thead><tbody>${S.zones.map((z, i) => `<tr>
+      <td><input class="input" value="${esc(z.name)}" placeholder="${L('e.g. Hamra', 'مثال: الحمرا')}" oninput="Admin.setZone(${i},'name',this.value)"></td>
+      <td style="width:130px"><input class="input ltr" type="number" step="0.25" min="0" value="${esc(z.fee)}" oninput="Admin.setZone(${i},'fee',this.value)"></td>
+      <td style="width:130px"><input class="input ltr" type="number" step="0.5" min="0" value="${esc(z.min)}" oninput="Admin.setZone(${i},'min',this.value)"></td>
+      <td style="width:50px"><button class="btn btn-sm btn-danger" onclick="Admin.removeZone(${i})">🗑️</button></td></tr>`).join('')}</tbody></table></div>`;
   }
-}
+  function addZone() { S.zones.push({ name: '', fee: '', min: '' }); dirty(); renderZones(); }
+  function setZone(i, k, v) { if (S.zones[i]) { S.zones[i][k] = v; dirty(); } }
+  function removeZone(i) { S.zones.splice(i, 1); dirty(); renderZones(); }
+  function renderHours() {
+    if (!S.hours || !S.hours.days) S.hours = defaultHours();
+    const on = checked('dl-hours-on');
+    S.hours.enabled = on;
+    const box = $('dl-hours');
+    box.style.opacity = on ? '1' : '.5';
+    box.innerHTML = DAYS.map(([en, ar], i) => {
+      const d = S.hours.days[i] || S.hours.days[String(i)] || { open: '09:00', close: '22:00', closed: false };
+      return `<div class="row" style="padding:7px 0;border-bottom:1px solid var(--line);flex-wrap:nowrap">
+        <b style="width:110px;font-size:.88rem">${L(en, ar)}</b>
+        <label class="row" style="gap:6px;font-size:.82rem;width:110px;flex-wrap:nowrap"><span class="switch"><input type="checkbox" ${d.closed ? '' : 'checked'} ${on ? '' : 'disabled'} onchange="Admin.setDay(${i},'closed',!this.checked)"><span></span></span>${d.closed ? L('Closed', 'مغلق') : L('Open', 'مفتوح')}</label>
+        <input class="input ltr" type="time" style="max-width:130px" value="${esc(d.open)}" ${d.closed || !on ? 'disabled' : ''} onchange="Admin.setDay(${i},'open',this.value)">
+        <span style="color:var(--muted)">→</span>
+        <input class="input ltr" type="time" style="max-width:130px" value="${esc(d.close)}" ${d.closed || !on ? 'disabled' : ''} onchange="Admin.setDay(${i},'close',this.value)">
+      </div>`;
+    }).join('') + `<div class="hint">${L('A closing time after midnight (e.g. 18:00 → 02:00) counts for the same day. Same open and close time = open all day.', 'وقت إغلاق بعد منتصف الليل (مثلاً 18:00 ← 02:00) يُحسب لليوم نفسه. نفس وقت الفتح والإغلاق = مفتوح طوال اليوم.')}</div>`;
+  }
+  function setDay(i, k, v) { if (!S.hours) S.hours = defaultHours(); S.hours.days[i] = Object.assign({}, S.hours.days[i] || {}, { [k]: v }); dirty(); if (k === 'closed') renderHours(); }
 
-function closeMobileAppModal() {
-  const modal = document.getElementById('modal-mobile-app');
-  if (modal) modal.style.display = 'none';
-}
+  // ── REPORTS ───────────────────────────────────────────────────
+  function renderReports() {
+    if (!S.tenant) return;
+    const period = val('rp-period') || 'month', source = val('rp-source') || 'online';
+    const now = new Date();
+    const inPeriod = (o) => {
+      const d = new Date(o.created_at || 0);
+      if (period === 'today') return d.toDateString() === now.toDateString();
+      if (period === 'week') return now - d <= 7 * 864e5;
+      if (period === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      return true;
+    };
+    let list = S.orders.filter(o => o.order_status !== 'cancelled' && inPeriod(o));
+    if (source === 'online') list = list.filter(isOnline);
+    else if (source === 'pos') list = list.filter(isPosSale);
+    else list = list.filter(o => isPosSale(o) || !(o.pos_synced || o.pos_invoice_ref)); // a converted online order is already in the POS sales
+    const sales = list.reduce((s, o) => s + num(o.total), 0);
+    const rate = num(S.tenant.currency_lbp_rate, 89500);
+    const costOfP = new Map(S.products.map(p => [String(p.id), num(p.cost_price, NaN)]));
+    let cost = 0, costKnown = 0;
+    list.forEach(o => {
+      const n = notesOf(o);
+      if (n.cost != null && isFinite(num(n.cost, NaN))) { cost += num(n.cost); costKnown++; return; }
+      let c = 0, ok = true;
+      itemsOf(o).forEach(it => { const pc = costOfP.get(String(it.product_id)); if (isFinite(pc) && pc > 0) c += pc * num(it.quantity || it.qty, 1); else ok = false; });
+      if (ok && itemsOf(o).length) { cost += c; costKnown++; }
+    });
+    $('rp-sales').textContent = money(sales);
+    $('rp-sales-lbp').textContent = '≈ ' + Math.round(sales * rate).toLocaleString() + ' ' + L('LBP', 'ل.ل');
+    $('rp-count').textContent = list.length;
+    $('rp-count-sub').textContent = source === 'pos' ? L('shop sales', 'مبيعات المحل') : L(`${list.filter(o => o.order_status === 'completed').length} completed`, `${list.filter(o => o.order_status === 'completed').length} مكتمل`);
+    $('rp-avg').textContent = money(list.length ? sales / list.length : 0);
+    if (costKnown && costKnown === list.length) { $('rp-profit').textContent = money(sales - cost); $('rp-profit-sub').textContent = L('sales − cost of goods', 'المبيعات − كلفة البضاعة'); }
+    else if (costKnown) { $('rp-profit').textContent = '≈ ' + money(sales - cost); $('rp-profit-sub').textContent = L(`cost known for ${costKnown}/${list.length} orders`, `الكلفة معروفة لـ ${costKnown}/${list.length} طلب`); }
+    else { $('rp-profit').textContent = '—'; $('rp-profit-sub').textContent = L('no cost prices yet', 'لا توجد أسعار كلفة'); }
 
+    const boxes = Array.isArray(S.banner.pos_cashboxes) ? S.banner.pos_cashboxes : [];
+    $('rp-drawers-card').classList.toggle('hidden', !boxes.length);
+    $('rp-drawers').innerHTML = boxes.map(b => `<div class="kpi" style="box-shadow:none"><div class="k-lbl">🏬 ${esc(b.branch_name || b.name || b.branch_id || '')} <span class="pill ${b.status === 'open' ? 'p-ok' : 'p-muted'}">${b.status === 'open' ? L('Open', 'مفتوح') : L('Closed', 'مغلق')}</span></div>
+      <div class="k-val">${money(b.balance_usd ?? b.current_balance)}</div><div class="k-sub">${esc(b.cashier_name || '')}${b.last_updated ? ' · ' + fmtTime(b.last_updated) : ''}</div></div>`).join('');
+
+    const agg = {};
+    list.forEach(o => itemsOf(o).forEach(it => {
+      const p = it.product_id != null ? productById(it.product_id) : null;
+      const k = p ? 'id:' + p.id : (it.product_name || it.name || it.item_name || '—');
+      agg[k] = agg[k] || { q: 0, r: 0, name: p ? nameOf(p) : k };
+      const q = num(it.quantity || it.qty, 1);
+      agg[k].q += q; agg[k].r += num(it.total_price) || num(it.unit_price || it.price) * q;
+    }));
+    const top = Object.values(agg).sort((a, b) => b.q - a.q).slice(0, 10);
+    $('rp-top').innerHTML = top.length ? `<div class="table-wrap"><table><thead><tr><th>${L('Product', 'الصنف')}</th><th class="num">${L('Qty', 'الكمية')}</th><th class="num">${L('Sales', 'المبيعات')}</th></tr></thead><tbody>${top.map(v => `<tr><td>${esc(v.name)}</td><td class="num"><b>${v.q}</b></td><td class="num">${money(v.r)}</td></tr>`).join('')}</tbody></table></div>` : `<div class="empty">${L('No sales in this period.', 'لا توجد مبيعات في هذه الفترة.')}</div>`;
+
+    const low = S.products.filter(p => p.is_published !== false && num(p.stock_quantity ?? p.stock) <= 5).sort((a, b) => num(a.stock_quantity ?? a.stock) - num(b.stock_quantity ?? b.stock)).slice(0, 12);
+    $('rp-low').innerHTML = low.length ? `<div class="table-wrap"><table><thead><tr><th>${L('Product', 'الصنف')}</th><th class="num">${L('Left', 'المتبقي')}</th></tr></thead><tbody>${low.map(p => { const s = num(p.stock_quantity ?? p.stock); return `<tr><td>${esc(nameOf(p))}</td><td class="num"><span class="pill ${s <= 0 ? 'p-bad' : 'p-warn'}">${s <= 0 ? L('Out', 'نفد') : s}</span></td></tr>`; }).join('')}</tbody></table></div>` : `<div class="empty">✅ ${L('All products have enough stock.', 'كل الأصناف متوفرة بكمية كافية.')}</div>`;
+  }
+
+  // ── SECURITY ──────────────────────────────────────────────────
+  function renderSecurity() {
+    $('sc-default-warn').innerHTML = (!S.local && !S.banner.admin_password) ? `<div class="notice n-warn">⚠️ <span>${L('You are using the default password (1234). Set your own now.', 'تستخدم كلمة المرور الافتراضية (1234). ضع كلمة مرور خاصة بك الآن.')}</span></div>` : '';
+  }
+  async function changePassword() {
+    const a = val('sc-new'), b = val('sc-new2');
+    if (a.length < 6) { toast(L('Use at least 6 characters.', 'استخدم 6 أحرف على الأقل.'), 'err'); return; }
+    if (a !== b) { toast(L('The two passwords are different.', 'كلمتا المرور غير متطابقتين.'), 'err'); return; }
+    if (a === '1234' || a === '123456') { toast(L('That password is too easy to guess.', 'كلمة المرور هذه سهلة التخمين.'), 'err'); return; }
+    try {
+      await writeTenant(null, { admin_password: a });
+      S.banner.admin_password = a;
+      setVal('sc-new', ''); setVal('sc-new2', '');
+      renderSecurity();
+      toast(L('✅ Password changed. Use it next time you sign in.', '✅ تم تغيير كلمة المرور. استخدمها عند الدخول المرة القادمة.'), 'ok');
+    } catch (e) { toast(L('Not changed: ', 'لم يتم التغيير: ') + e.message, 'err'); }
+  }
+
+  // ── start ─────────────────────────────────────────────────────
+  async function init() {
+    applyTheme(localStorage.getItem('rs_admin_theme') || '');
+    applyLang();
+    const slug = getSlug();
+    setVal('login-slug', slug);
+    window.addEventListener('beforeunload', (e) => { if (S.dirty) { e.preventDefault(); e.returnValue = ''; } });
+    const s = getSession();
+    if (s && s.slug && (!slug || s.slug === slug)) {
+      try { await enter(); return; } catch (e) { setSession(null); }
+    }
+    $('login').classList.remove('hidden');
+    if (slug) previewLoginShop();
+    setTimeout(() => { const p = $('login-pwd'); if (p) p.focus(); }, 50);
+  }
 
   return {
+    init, login, logout, togglePwd, previewLoginShop, toggleLang, toggleTheme, toggleMenu, go,
+    dirty, discard, save, setColor, syncPreview, clearImage, pickImage,
+    copyLink, shareWhatsApp, openManagerApp, closeModal,
+    loadOrders, renderOrders, setFilter, toggleOrder, openOrder, setStatus, waCustomer, printOrder, saveSoundPref,
+    addSlide, slideSet, slideImage, removeSlide, moveSlide, copySlide,
+    openOfferModal, renderOfferPicker, pickOfferProduct, offerFromPct, offerFromPrice, saveOffer, toggleOffer, removeOffer,
+    renderProducts, offerForProduct, openProductModal, saveProduct, deleteProduct,
+    openCategoryModal, saveCategory, deleteCategory,
     addZone, setZone, removeZone, renderHours, setDay,
-    openStorefront,
-    init,
-    verifyCredentials,
-    verifyPin: verifyCredentials,
-    toggleLoginPwdVisibility,
-    logout,
-    toggleLang,
-    handleFileUpload,
-    handleSlideUpload,
-    saveSettings,
-    addNewSlide,
-    removeSlide,
-    updateSlideField,
-    updateBannerStatusBadge,
-    loadCategories,
-    openAddCategoryModal,
-    openEditCategoryModal,
-    closeCategoryModal,
-    submitCategoryForm,
-    deleteCategory,
-    loadCatalog,
-    openAddItemModal,
-    closeAddItemModal,
-    submitNewItem,
-    openEditItemModal,
-    closeEditItemModal,
-    submitEditItem,
-    deleteProduct,
-    confirmClearAllProducts,
-    loadOrders,
-    updateOrderStatus,
-    switchTab,
-    openPosSyncModal,
-    closePosSyncModal,
-    triggerPosSync,
-    loadReports,
-    openMobileAppModal,
-    closeMobileAppModal
+    renderReports, changePassword
   };
 })();
 
 window.Admin = Admin;
-document.addEventListener('DOMContentLoaded', () => {
-  Admin.init();
-  // Auto-refresh reports and orders every 8 seconds
-  setInterval(() => {
-    const repTab = document.getElementById('tab-reports');
-    if (repTab && repTab.style.display !== 'none') {
-      Admin.loadReports();
-    }
-  }, 8000);
-});
+document.addEventListener('DOMContentLoaded', () => Admin.init());

@@ -22,6 +22,35 @@ const Storefront = (() => {
   let _currentSlideIndex = 0;
   let _carouselTimer = null;
 
+  // What the store manager saved (tenants.banner_url JSON): offers, brand, announcement…
+  let _banner = {};
+  const _esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const _attrUrl = (u) => String(u || '').replace(/"/g, '%22').replace(/'/g, '%27');
+  function parseBanner(t) { try { const r = t && t.banner_url; if (r && typeof r === 'object') return r; const s = String(r || '').trim(); return s.startsWith('{') ? JSON.parse(s) : {}; } catch (e) { return {}; } }
+  // Product ids are numbers on a shop's own server and text in the cloud: compare them as text.
+  function normProd(p) { if (p && p.id != null) p.id = String(p.id); return p; }
+  const findProd = (id) => _products.find(p => String(p.id) === String(id));
+  function shopDate() {
+    try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Beirut', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+    catch (e) { return new Date().toISOString().slice(0, 10); }
+  }
+  const inDates = (x) => { const d = shopDate(); return (!x.starts_at || x.starts_at <= d) && (!x.ends_at || x.ends_at >= d); };
+  function activeOffer(prod) {
+    if (!prod) return null;
+    const list = Array.isArray(_banner.online_offers) ? _banner.online_offers : [];
+    const o = list.find(x => x && String(x.product_id) === String(prod.id) && x.active !== false && inDates(x));
+    if (!o) return null;
+    const reg = parseFloat(prod.price) || 0, p = parseFloat(o.price);
+    return (isFinite(p) && p >= 0 && p < reg) ? o : null;
+  }
+  function effPrice(prod) { const o = activeOffer(prod); return o ? parseFloat(o.price) : (parseFloat(prod && prod.price) || 0); }
+  function shopWhatsApp() {
+    let d = String((_tenant && (_tenant.whatsapp_phone || _tenant.owner_phone)) || '').replace(/\D/g, '');
+    if (d.startsWith('00')) d = d.slice(2);
+    if (d.length === 8 || d.length === 7) d = '961' + d;
+    return d.length >= 8 ? d : '';
+  }
+
   const DEFAULT_CAT_IMAGES = {
     'fruits': 'assets/categories/fruits_vegetables.jpg',
     'dairy': 'assets/categories/dairy_cheese.jpg',
@@ -220,6 +249,8 @@ const Storefront = (() => {
       let extra = '';
       if (tenant && tenant.shop_name) extra += '&name=' + encodeURIComponent(tenant.shop_name);
       if (tenant && tenant.logo_url) extra += '&logo=' + encodeURIComponent(tenant.logo_url);
+      const bc = (parseBanner(tenant).brand || {}).color;
+      if (/^#[0-9a-f]{6}$/i.test(bc || '')) extra += '&color=' + encodeURIComponent(bc);
       link.href = 'manifest.json?shop=' + cleanSlug + extra + '&v=26.9';
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
@@ -229,7 +260,7 @@ const Storefront = (() => {
   async function init() {
     _paintCachedBrand();
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '27.0';
+    const APP_VERSION = '28.0';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -282,6 +313,10 @@ const Storefront = (() => {
 
       document.title = _tenant.shop_name || document.title;
       _saveBrandCache(_tenant);
+      _banner = parseBanner(_tenant);
+      applyShopBrand();
+      renderAnnouncement();
+      renderFooter();
 
       // 1. Fetch categories and first batch of products in parallel for INSTANT display
       const [cats, initialProds] = await Promise.all([
@@ -290,7 +325,7 @@ const Storefront = (() => {
       ]);
 
       _categories = cats || [];
-      _products = initialProds || [];
+      _products = (initialProds || []).map(normProd);
       _isLoadingProducts = false;
 
       // Merge custom category cover images
@@ -319,11 +354,13 @@ const Storefront = (() => {
             const updated = await StorefrontAPI.fetchUpdatedProducts(_tenant.id, _lastStorefrontCheck);
             if (Array.isArray(updated) && updated.length > 0) {
               _lastStorefrontCheck = new Date().toISOString();
+              updated.forEach(normProd);
               const updateMap = new Map(updated.map(p => [p.id, p]));
               _products = _products.map(p => updateMap.get(p.id) || p);
               for (const u of updated) {
                 if (!_products.some(p => p.id === u.id)) _products.push(u);
               }
+              renderOffersStrip();
               renderBigCategoriesGrid();
               if (_viewMode === 'products') renderGroupedProducts();
               console.log('[Storefront] Real-time updated products:', updated.length);
@@ -340,7 +377,8 @@ const Storefront = (() => {
       // Concurrently fetch remainder of catalog if any
       StorefrontAPI.fetchProducts(_tenant.id).then(allProds => {
         if (allProds && allProds.length > 0) {
-          _products = allProds;
+          _products = allProds.map(normProd);
+          renderOffersStrip();
           renderBigCategoriesGrid();
           if (_viewMode === 'products') renderGroupedProducts();
         }
@@ -382,7 +420,7 @@ const Storefront = (() => {
     if (brandName) brandName.textContent = _tenant.shop_name;
     if (brandLogo) {
       if (_tenant.logo_url) {
-        brandLogo.innerHTML = `<img src="${_tenant.logo_url}" alt="${_tenant.shop_name}" style="width:100%;height:100%;object-fit:contain;border-radius:10px;">`;
+        brandLogo.innerHTML = `<img src="${_attrUrl(_tenant.logo_url)}" alt="${_esc(_tenant.shop_name)}" style="width:100%;height:100%;object-fit:contain;border-radius:10px;">`;
       } else {
         brandLogo.textContent = String(_tenant.shop_name || '🏪').trim().charAt(0).toUpperCase();
       }
@@ -416,61 +454,41 @@ const Storefront = (() => {
     if (!wrap || !track || !_tenant) return;
 
     _carouselSlides = [];
-
-    if (_tenant.banner_url) {
-      const trimmed = _tenant.banner_url.trim();
-      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-        try {
-          const parsed = JSON.parse(trimmed);
-          if (parsed.active === false) {
-            wrap.style.display = 'none';
-            return;
-          }
-          if (Array.isArray(parsed.slides) && parsed.slides.length > 0) {
-            _carouselSlides = parsed.slides.filter(s => s.active !== false);
-          } else if (parsed.title || parsed.image_url) {
-            _carouselSlides = [parsed];
-          }
-        } catch(e) {}
-      } else if (trimmed.startsWith('http')) {
-        _carouselSlides = [{ active: true, title: '', subtitle: '', image_url: trimmed }];
-      }
+    const raw = String(_tenant.banner_url || '').trim();
+    if (raw.startsWith('{')) {
+      if (_banner.active === false) { wrap.style.display = 'none'; return; }
+      if (Array.isArray(_banner.slides)) _carouselSlides = _banner.slides.filter(s => s && s.active !== false && inDates(s));
+      else if (_banner.title || _banner.image_url) _carouselSlides = [_banner];
+    } else if (raw.startsWith('http')) {
+      _carouselSlides = [{ active: true, title: '', subtitle: '', image_url: raw }];
     }
 
-    // Default Fallback Offers
+    // Only the shop's own banners: nothing is shown until the shop adds one.
     if (_carouselSlides.length === 0) {
-      _carouselSlides = [
-        {
-          active: true,
-          title: '🔥 عروض نهاية الأسبوع: خصومات حصرية تصل إلى 25% على المنتجات الغذائية!',
-          subtitle: 'اطلب الآن واستفد من التوصيل السريع والأسعار المميزة مباشرة إلى باب منزلك • كود الخصم SHARK25',
-          badge: '🔥 عرض خاص لفترة محدودة',
-          image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80'
-        },
-        {
-          active: true,
-          title: '🍎 قسم الخضار والفواكه والمواد التموينية: طازجة يومياً من المزارع إليكم',
-          subtitle: 'عروض يومية متجددة وتوصيل سريع يحافظ على جودة ونضارة كل صنف',
-          badge: '🌿 طازج وصحي',
-          image_url: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=1200&q=80'
-        }
-      ];
+      wrap.style.display = 'none';
+      if (_carouselTimer) clearInterval(_carouselTimer);
+      return;
     }
 
     wrap.style.display = 'block';
-
-    track.innerHTML = _carouselSlides.map((slide) => {
+    const en = _currentLang === 'en';
+    track.innerHTML = _carouselSlides.map((slide, i) => {
       const hasImage = Boolean(slide.image_url);
+      const title = (en && slide.title_en) ? slide.title_en : (slide.title || slide.title_en || '');
+      const sub = (en && slide.subtitle_en) ? slide.subtitle_en : (slide.subtitle || slide.subtitle_en || '');
+      const btn = (en && slide.button_text_en) ? slide.button_text_en : (slide.button_text || slide.button_text_en || '');
+      const linked = slide.link_type && slide.link_type !== 'none';
       return `
-        <div class="carousel-slide ${hasImage ? 'has-image' : ''}">
+        <div class="carousel-slide ${hasImage ? 'has-image' : ''}" ${linked ? `onclick="Storefront.openSlide(${i})" style="cursor:pointer"` : ''}>
           <div class="slide-content">
-            ${slide.badge ? `<span class="slide-badge">${slide.badge}</span>` : ''}
-            ${slide.title ? `<h3 class="slide-title">${slide.title}</h3>` : ''}
-            ${slide.subtitle ? `<p class="slide-sub">${slide.subtitle}</p>` : ''}
+            ${slide.badge ? `<span class="slide-badge">${_esc(slide.badge)}</span>` : ''}
+            ${title ? `<h3 class="slide-title">${_esc(title)}</h3>` : ''}
+            ${sub ? `<p class="slide-sub">${_esc(sub)}</p>` : ''}
+            ${linked ? `<span class="slide-cta" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:#fff;color:#111;padding:7px 16px;border-radius:10px;font-weight:900;font-size:.85rem;box-shadow:0 4px 12px rgba(0,0,0,.18)">${_esc(btn || (en ? 'Shop now' : 'تسوّق الآن'))} ${en ? '→' : '←'}</span>` : ''}
           </div>
           ${hasImage ? `
             <div class="slide-image-side">
-              <img src="${slide.image_url}" alt="${slide.title || 'Special Offer'}" loading="lazy">
+              <img src="${_attrUrl(slide.image_url)}" alt="${_esc(title || _tenant.shop_name || '')}" loading="lazy">
             </div>
           ` : ''}
         </div>
@@ -488,6 +506,161 @@ const Storefront = (() => {
     if (_carouselSlides.length > 1) {
       _carouselTimer = setInterval(() => nextSlide(), 4500);
     }
+  }
+
+  // A banner the shop linked to its offers, a category, a product, WhatsApp or a web page.
+  function openSlide(i) {
+    const s = _carouselSlides[i]; if (!s) return;
+    const v = s.link_value;
+    if (s.link_type === 'offers') return showOffers();
+    if (s.link_type === 'category' && v) return selectCategory(String(v));
+    if (s.link_type === 'product' && v) return openProduct(String(v));
+    if (s.link_type === 'whatsapp') { const wa = shopWhatsApp(); if (wa) window.open('https://wa.me/' + wa, '_blank', 'noopener'); return; }
+    if (s.link_type === 'url' && /^https?:\/\//i.test(String(v || ''))) window.open(String(v), '_blank', 'noopener');
+  }
+  function openProduct(id) {
+    const p = findProd(id); if (!p) return;
+    if (p.category_id) selectCategory(String(p.category_id)); else showAllProducts();
+    setTimeout(() => {
+      const card = document.querySelector(`.product-card[data-product-id="${CSS.escape(String(id))}"]`);
+      if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); card.style.outline = '3px solid var(--shop-brand, #dc2626)'; setTimeout(() => { card.style.outline = ''; }, 2200); }
+    }, 120);
+  }
+
+  // ── Shop identity: brand colour, announcement bar, footer ──
+  function applyShopBrand() {
+    const c = _banner.brand && _banner.brand.color;
+    const root = document.documentElement;
+    if (/^#[0-9a-f]{6}$/i.test(c || '')) {
+      root.style.setProperty('--shop-brand', c);
+      root.setAttribute('data-shop-brand', '1');
+      const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', c);
+    } else {
+      root.style.removeProperty('--shop-brand');
+      root.removeAttribute('data-shop-brand');
+    }
+    if (_tenant && _tenant.logo_url) {
+      document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(l => { l.href = _tenant.logo_url; });
+    }
+  }
+  function renderAnnouncement() {
+    let bar = document.getElementById('sf-announcement');
+    const a = _banner.announcement || {};
+    const text = _currentLang === 'en' ? (a.text_en || a.text_ar) : (a.text_ar || a.text_en);
+    if (!a.active || !text) { if (bar) bar.remove(); return; }
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'sf-announcement';
+      bar.style.cssText = 'background:var(--shop-brand, #dc2626);color:#fff;text-align:center;font-weight:800;font-size:.86rem;padding:8px 14px;line-height:1.4';
+      document.body.insertBefore(bar, document.body.firstChild);
+    }
+    bar.textContent = text;
+  }
+  function footerHoursText() {
+    const h = storeCfg().hours; if (!h || !h.days) return '';
+    const ar = _currentLang === 'ar';
+    const names = ar ? ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const rows = [];
+    for (let i = 0; i < 7; i++) {
+      const d = h.days[i] || h.days[String(i)] || {};
+      rows.push(`<div style="display:flex;justify-content:space-between;gap:12px"><span>${names[i]}</span><span style="direction:ltr">${d.closed ? (ar ? 'مغلق' : 'Closed') : (d.open && d.open === d.close ? (ar ? 'مفتوح 24 ساعة' : 'Open 24 hours') : _esc((d.open || '') + ' – ' + (d.close || '')))}</span></div>`);
+    }
+    return rows.join('');
+  }
+  function renderFooter() {
+    let f = document.getElementById('sf-footer');
+    const powered = document.getElementById('rs-powered-by');
+    if (!f) {
+      f = document.createElement('footer');
+      f.id = 'sf-footer';
+      if (powered && powered.parentNode) powered.parentNode.insertBefore(f, powered); else document.body.appendChild(f);
+    }
+    const t = _tenant || {}, b = _banner.brand || {}, ar = _currentLang === 'ar';
+    const wa = shopWhatsApp();
+    const desc = ar ? (t.description_ar || t.description_en || '') : (t.description_en || t.description_ar || '');
+    const phone = b.phone || _banner.phone || '';
+    const addr = t.address || _banner.address || '';
+    const safeUrl = (u) => /^https?:\/\//i.test(String(u || '')) ? _attrUrl(u) : '';
+    const socials = [['instagram', 'Instagram', '📸'], ['facebook', 'Facebook', '📘'], ['tiktok', 'TikTok', '🎵']]
+      .filter(([k]) => safeUrl(b[k])).map(([k, n, ic]) => `<a href="${safeUrl(b[k])}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--border-color);border-radius:10px;font-weight:800;font-size:.8rem;text-decoration:none;color:var(--text-main);background:var(--bg-surface)">${ic} ${n}</a>`).join('');
+    const logo = t.logo_url ? `<img src="${_attrUrl(t.logo_url)}" alt="" style="width:52px;height:52px;border-radius:14px;object-fit:contain;background:#fff;border:1px solid var(--border-color)">` : `<div style="width:52px;height:52px;border-radius:14px;background:var(--shop-brand, #dc2626);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.4rem">${_esc(String(t.shop_name || '?').trim().charAt(0).toUpperCase())}</div>`;
+    const line = (ic, html) => html ? `<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px"><span>${ic}</span><span>${html}</span></div>` : '';
+    const hours = footerHoursText();
+    f.style.cssText = 'max-width:1200px;margin:28px auto 0;padding:22px 16px 6px;border-top:1px solid var(--border-color);color:var(--text-muted);font-size:.86rem';
+    f.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px">
+        <div>
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">${logo}<div><div style="font-weight:900;font-size:1.05rem;color:var(--text-main)">${_esc(t.shop_name || '')}</div>${desc ? `<div style="font-size:.8rem">${_esc(desc)}</div>` : ''}</div></div>
+          ${socials ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${socials}</div>` : ''}
+        </div>
+        <div>
+          <div style="font-weight:900;color:var(--text-main);margin-bottom:8px">${ar ? 'تواصل معنا' : 'Contact us'}</div>
+          ${line('📍', addr ? (safeUrl(b.maps_url) ? `<a href="${safeUrl(b.maps_url)}" target="_blank" rel="noopener" style="color:inherit">${_esc(addr)}</a>` : _esc(addr)) : (safeUrl(b.maps_url) ? `<a href="${safeUrl(b.maps_url)}" target="_blank" rel="noopener" style="color:inherit">${ar ? 'موقعنا على الخريطة' : 'Find us on the map'}</a>` : ''))}
+          ${line('📞', phone ? `<a href="tel:${_esc(String(phone).replace(/[^\d+]/g, ''))}" style="color:inherit;direction:ltr;unicode-bidi:embed">${_esc(phone)}</a>` : '')}
+          ${line('💬', wa ? `<a href="https://wa.me/${wa}" target="_blank" rel="noopener" style="color:#16a34a;font-weight:800">WhatsApp</a>` : '')}
+          ${line('✉️', b.email ? `<a href="mailto:${_esc(b.email)}" style="color:inherit">${_esc(b.email)}</a>` : '')}
+        </div>
+        ${hours ? `<div><div style="font-weight:900;color:var(--text-main);margin-bottom:8px">${ar ? 'أوقات العمل' : 'Opening hours'}</div><div style="max-width:240px">${hours}</div></div>` : ''}
+      </div>
+      <div style="text-align:center;font-size:.75rem;margin-top:18px">© ${new Date().getFullYear()} ${_esc(t.shop_name || '')}</div>`;
+    if (powered) powered.innerHTML = '<span style="opacity:.8">Powered by</span> <strong>🦈 Red Shark</strong>';
+    // WhatsApp ordering only when the shop has a number
+    document.querySelectorAll('.btn-checkout-whatsapp').forEach(btn => { btn.style.display = wa ? '' : 'none'; });
+  }
+
+  // ── Offers: a strip on the home page and a full list ──
+  function offerProducts() { return _products.filter(p => p.is_published !== false && activeOffer(p)); }
+  function priceHtml(prod, big) {
+    const o = activeOffer(prod);
+    const lbpRate = parseFloat(_tenant && _tenant.currency_lbp_rate) || 89500;
+    const now = effPrice(prod);
+    const lbp = Math.round(now * lbpRate).toLocaleString();
+    const pct = o ? Math.round((1 - now / (parseFloat(prod.price) || 1)) * 100) : 0;
+    return `<span class="price-usd" style="font-size:${big ? '1.1rem' : '1rem'} !important;font-weight:900 !important;color:var(--shop-brand, #dc2626) !important;">$${now.toFixed(2)}</span>` +
+      (o ? `<span style="font-size:.72rem;color:var(--text-subtle);text-decoration:line-through;font-weight:700;margin-inline-start:4px">$${(parseFloat(prod.price) || 0).toFixed(2)}</span>` : `<span class="price-lbp" style="font-size: 0.65rem !important; color: var(--text-muted) !important; font-weight: 600 !important;">${lbp} ${t('currencyLBP') || 'L.L.'}</span>`) +
+      (o && pct > 0 ? `<span style="position:absolute;top:8px;inset-inline-start:8px;background:var(--shop-brand, #dc2626);color:#fff;font-size:.7rem;font-weight:900;padding:2px 8px;border-radius:99px;z-index:2">−${pct}%</span>` : '');
+  }
+  function renderOffersStrip() {
+    let box = document.getElementById('sf-offers-strip');
+    const big = document.getElementById('categories-big-view');
+    const list = offerProducts();
+    if (!list.length || !big) { if (box) box.remove(); return; }
+    if (!box) { box = document.createElement('div'); box.id = 'sf-offers-strip'; big.parentNode.insertBefore(box, big); }
+    box.style.display = _viewMode === 'categories' && !_searchQuery.trim() ? 'block' : 'none';
+    const ar = _currentLang === 'ar';
+    box.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 2px 10px">
+        <h2 style="font-size:1.1rem;font-weight:900;margin:0">🔥 ${ar ? 'العروض' : 'Offers'}</h2>
+        <button onclick="Storefront.showOffers()" style="background:none;border:0;color:var(--shop-brand, #dc2626);font-weight:900;cursor:pointer;font-size:.85rem">${ar ? 'عرض الكل ←' : 'See all →'}</button>
+      </div>
+      <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;scroll-snap-type:x mandatory">
+        ${list.slice(0, 12).map(p => {
+          const name = _currentLang === 'ar' ? (p.name_ar || p.name) : (p.name_en || p.name);
+          const o = activeOffer(p);
+          return `<div onclick="Storefront.openProduct('${_esc(p.id)}')" style="flex:0 0 150px;scroll-snap-align:start;cursor:pointer;background:var(--bg-surface);border:1.5px solid var(--border-color);border-radius:14px;padding:8px;position:relative">
+            <div style="height:95px;border-radius:10px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:6px">${p.image_url ? `<img src="${_attrUrl(p.image_url)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:contain">` : '📦'}</div>
+            <div style="font-size:.8rem;font-weight:800;line-height:1.3;height:2.6em;overflow:hidden">${_esc(name)}</div>
+            ${o && o.label ? `<div style="font-size:.68rem;color:var(--shop-brand, #dc2626);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_esc(o.label)}</div>` : ''}
+            <div style="display:flex;align-items:baseline;gap:4px;flex-wrap:wrap">${priceHtml(p)}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+  function showOffers() {
+    _viewMode = 'products';
+    _selectedCategory = '__offers__';
+    const bigView = document.getElementById('categories-big-view');
+    const prodsView = document.getElementById('products-view');
+    if (bigView) bigView.style.display = 'none';
+    if (prodsView) prodsView.style.display = 'block';
+    const strip = document.getElementById('sf-offers-strip'); if (strip) strip.style.display = 'none';
+    const vTitle = document.getElementById('current-view-title');
+    const vCount = document.getElementById('current-view-count');
+    if (vTitle) vTitle.textContent = '🔥 ' + (_currentLang === 'ar' ? 'العروض' : 'Offers');
+    if (vCount) vCount.textContent = `${offerProducts().length} ${t('itemsCount')}`;
+    renderCategoriesSlider();
+    renderGroupedProducts();
+    if (prodsView) prodsView.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function updateSlidePosition() {
@@ -568,9 +741,9 @@ const Storefront = (() => {
     const tabCats = document.getElementById('tab-btn-categories');
     const tabAll = document.getElementById('tab-btn-all');
     if (tabCats && tabAll) {
-      tabCats.style.background = '#dc2626';
+      tabCats.style.background = 'var(--shop-brand, #dc2626)';
       tabCats.style.color = '#fff';
-      tabCats.style.borderColor = '#dc2626';
+      tabCats.style.borderColor = 'var(--shop-brand, #dc2626)';
       tabAll.style.background = 'var(--bg-surface)';
       tabAll.style.color = 'var(--text-main)';
       tabAll.style.borderColor = 'var(--border-color)';
@@ -588,6 +761,7 @@ const Storefront = (() => {
     }
 
     renderCategoriesSlider();
+    renderOffersStrip();
     renderBigCategoriesGrid();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -600,6 +774,7 @@ const Storefront = (() => {
     const prodsView = document.getElementById('products-view');
 
     if (bigView) bigView.style.display = 'none';
+    const strip = document.getElementById('sf-offers-strip'); if (strip) strip.style.display = 'none';
 
     const catSlider = document.getElementById('categories-slider');
     if (catSlider) {
@@ -631,9 +806,9 @@ const Storefront = (() => {
     const tabCats = document.getElementById('tab-btn-categories');
     const tabAll = document.getElementById('tab-btn-all');
     if (tabCats && tabAll) {
-      tabAll.style.background = '#dc2626';
+      tabAll.style.background = 'var(--shop-brand, #dc2626)';
       tabAll.style.color = '#fff';
-      tabAll.style.borderColor = '#dc2626';
+      tabAll.style.borderColor = 'var(--shop-brand, #dc2626)';
       tabCats.style.background = 'var(--bg-surface)';
       tabCats.style.color = 'var(--text-main)';
       tabCats.style.borderColor = 'var(--border-color)';
@@ -644,6 +819,7 @@ const Storefront = (() => {
 
     if (bigView) bigView.style.display = 'none';
     if (prodsView) prodsView.style.display = 'block';
+    const strip = document.getElementById('sf-offers-strip'); if (strip) strip.style.display = 'none';
 
     const vTitle = document.getElementById('current-view-title');
     const vCount = document.getElementById('current-view-count');
@@ -663,14 +839,15 @@ const Storefront = (() => {
     if (_products.length === 0 && _isLoadingProducts) {
       container.innerHTML = `
         <div style="text-align:center;padding:50px 20px;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:var(--radius-lg)">
-          <div style="display:inline-block;width:34px;height:34px;border:3px solid rgba(220,38,38,0.2);border-top-color:#dc2626;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+          <div style="display:inline-block;width:34px;height:34px;border:3px solid color-mix(in srgb, var(--shop-brand, #dc2626) 20%, transparent);border-top-color:var(--shop-brand, #dc2626);border-radius:50%;animation:spin 0.8s linear infinite"></div>
           <h3 style="font-size:1.05rem;font-weight:800;margin-top:12px;color:var(--text-main);">${_currentLang === 'ar' ? 'جاري تحميل قائمة المنتجات...' : 'Loading products...'}</h3>
         </div>
       `;
       return;
     }
 
-    let filtered = _products;
+    const offersMode = _selectedCategory === '__offers__';
+    let filtered = offersMode ? offerProducts() : _products;
     if (_searchQuery.trim() !== '') {
       const q = _searchQuery.toLowerCase();
       filtered = filtered.filter(p => {
@@ -693,7 +870,7 @@ const Storefront = (() => {
     }
 
     const catGroups = new Map();
-    const activeCats = _selectedCategory === 'all' 
+    const activeCats = (_selectedCategory === 'all' || offersMode)
       ? _categories 
       : _categories.filter(c => String(c.id) === String(_selectedCategory));
 
@@ -708,7 +885,7 @@ const Storefront = (() => {
     });
 
     const uncategorizedProds = filtered.filter(p => !p.category_id || !catGroups.has(String(p.category_id)));
-    if (uncategorizedProds.length > 0 && (_selectedCategory === 'all' || _searchQuery.trim() !== '')) {
+    if (uncategorizedProds.length > 0 && (_selectedCategory === 'all' || offersMode || _searchQuery.trim() !== '')) {
       catGroups.set('uncat', {
         name: t('uncategorized') || (_currentLang === 'ar' ? 'أصناف عامة' : 'General Items'),
         products: uncategorizedProds
@@ -723,8 +900,8 @@ const Storefront = (() => {
         <section class="category-group-section" id="cat-group-${catId}" style="margin-bottom:22px;">
           <div class="category-group-header" style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; padding:0 4px;">
             <h3 class="category-group-title" style="margin:0; font-size:1.1rem; font-weight:900; display:flex; align-items:center; gap:8px; color:var(--text-main);">
-              <span style="color:#dc2626;">✦</span>
-              <span>${group.name}</span>
+              <span style="color:var(--shop-brand, #dc2626);">✦</span>
+              <span>${_esc(group.name)}</span>
             </h3>
             <span class="category-group-count" style="font-size:0.8rem; font-weight:700; color:var(--text-muted); background:var(--bg-surface); padding:3px 10px; border-radius:12px; border:1px solid var(--border-color);">${group.products.length} ${_currentLang === 'ar' ? 'صنف' : 'items'}</span>
           </div>
@@ -734,16 +911,16 @@ const Storefront = (() => {
               const name = _currentLang === 'ar' ? (prod.name_ar || prod.name) : (prod.name_en || prod.name);
               const priceUSD = (parseFloat(prod.price) || 0).toFixed(2);
               const priceLBP = Math.round((parseFloat(prod.price) || 0) * lbpRate).toLocaleString();
-              const inCart = _cart.find(c => c.productId === prod.id);
+              const inCart = _cart.find(c => String(c.productId) === String(prod.id));
               const cartQty = inCart ? inCart.quantity : 0;
 
               return `
-                <div class="product-card ${cartQty > 0 ? 'has-cart' : ''}" data-product-id="${prod.id}" style="min-width: 0 !important; width: 100% !important; box-sizing: border-box !important; border-radius: 14px !important; padding: 10px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; background: var(--bg-surface) !important; border: 1.5px solid var(--border-color) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important;">
+                <div class="product-card ${cartQty > 0 ? 'has-cart' : ''}" data-product-id="${_esc(prod.id)}" style="position: relative !important; min-width: 0 !important; width: 100% !important; box-sizing: border-box !important; border-radius: 14px !important; padding: 10px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; background: var(--bg-surface) !important; border: 1.5px solid var(--border-color) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important;">
                   
                   <div class="product-img-wrap" style="height: 115px !important; min-height: 115px !important; max-height: 115px !important; width: 100% !important; border-radius: 10px !important; overflow: hidden !important; position: relative !important; display: flex !important; align-items: center !important; justify-content: center !important; background: #f8fafc !important; margin-bottom: 8px !important;">
-                    ${prod.image_url ? `<img src="${prod.image_url}" alt="${name}" loading="lazy" style="height: 100% !important; width: 100% !important; object-fit: contain !important; padding: 4px !important;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-                    <div class="prod-no-img" style="${prod.image_url ? 'display:none !important;' : 'display:flex !important;'} height: 100% !important; width: 100% !important; align-items: center !important; justify-content: center !important; background: rgba(220, 38, 38, 0.04) !important;">
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5">
+                    ${prod.image_url ? `<img src="${_attrUrl(prod.image_url)}" alt="${_esc(name)}" loading="lazy" style="height: 100% !important; width: 100% !important; object-fit: contain !important; padding: 4px !important;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                    <div class="prod-no-img" style="${prod.image_url ? 'display:none !important;' : 'display:flex !important;'} height: 100% !important; width: 100% !important; align-items: center !important; justify-content: center !important; background: color-mix(in srgb, var(--shop-brand, #dc2626) 4%, transparent) !important;">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style="stroke:var(--shop-brand, #dc2626)" stroke-width="1.5">
                         <path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
                         <path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>
                       </svg>
@@ -751,23 +928,22 @@ const Storefront = (() => {
                   </div>
 
                   <div class="product-info" style="flex: 1 !important; min-width: 0 !important; margin-bottom: 6px !important;">
-                    <h4 class="product-title" title="${name}" style="font-size: 0.88rem !important; font-weight: 800 !important; line-height: 1.35 !important; height: 2.7em !important; overflow: hidden !important; text-overflow: ellipsis !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; margin: 0 0 4px 0 !important; color: var(--text-main) !important;">${name}</h4>
+                    <h4 class="product-title" title="${_esc(name)}" style="font-size: 0.88rem !important; font-weight: 800 !important; line-height: 1.35 !important; height: 2.7em !important; overflow: hidden !important; text-overflow: ellipsis !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; margin: 0 0 4px 0 !important; color: var(--text-main) !important;">${_esc(name)}</h4>
                   </div>
 
                   <div class="product-footer" style="display: flex !important; flex-direction: column !important; gap: 8px !important; margin-top: auto !important; padding-top: 6px !important; border-top: 1px dashed rgba(0, 0, 0, 0.08) !important;">
                     <div class="product-price" style="display: flex !important; justify-content: space-between !important; align-items: baseline !important;">
-                      <span class="price-usd" style="font-size: 1.1rem !important; font-weight: 900 !important; color: #dc2626 !important;">$${priceUSD}</span>
-                      <span class="price-lbp" style="font-size: 0.65rem !important; color: var(--text-muted) !important; font-weight: 600 !important;">${priceLBP} ${t('currencyLBP') || 'L.L.'}</span>
+                      ${priceHtml(prod, true)}
                     </div>
                     
                     ${cartQty > 0 ? `
-                      <div class="card-qty-stepper" style="display: flex !important; align-items: center !important; justify-content: space-between !important; background: #fef2f2 !important; border: 1.5px solid #dc2626 !important; border-radius: 8px !important; padding: 4px 8px !important;">
-                        <button onclick="Storefront.updateCartQty('${prod.id}', -1)" aria-label="Decrease" style="width: 26px !important; height: 26px !important; border-radius: 6px !important; background: #dc2626 !important; color: #fff !important; border: none !important; font-weight: 900 !important; font-size: 0.95rem !important; cursor: pointer !important;">−</button>
-                        <span style="font-size: 0.95rem !important; font-weight: 900 !important; color: #dc2626 !important;">${cartQty}</span>
-                        <button onclick="Storefront.updateCartQty('${prod.id}', 1)" aria-label="Increase" style="width: 26px !important; height: 26px !important; border-radius: 6px !important; background: #dc2626 !important; color: #fff !important; border: none !important; font-weight: 900 !important; font-size: 0.95rem !important; cursor: pointer !important;">+</button>
+                      <div class="card-qty-stepper" style="display: flex !important; align-items: center !important; justify-content: space-between !important; background: color-mix(in srgb, var(--shop-brand, #dc2626) 8%, #fff) !important; border: 1.5px solid var(--shop-brand, #dc2626) !important; border-radius: 8px !important; padding: 4px 8px !important;">
+                        <button onclick="Storefront.updateCartQty('${prod.id}', -1)" aria-label="Decrease" style="width: 26px !important; height: 26px !important; border-radius: 6px !important; background: var(--shop-brand, #dc2626) !important; color: #fff !important; border: none !important; font-weight: 900 !important; font-size: 0.95rem !important; cursor: pointer !important;">−</button>
+                        <span style="font-size: 0.95rem !important; font-weight: 900 !important; color: var(--shop-brand, #dc2626) !important;">${cartQty}</span>
+                        <button onclick="Storefront.updateCartQty('${prod.id}', 1)" aria-label="Increase" style="width: 26px !important; height: 26px !important; border-radius: 6px !important; background: var(--shop-brand, #dc2626) !important; color: #fff !important; border: none !important; font-weight: 900 !important; font-size: 0.95rem !important; cursor: pointer !important;">+</button>
                       </div>
                     ` : `
-                      <button class="btn-add-cart" onclick="Storefront.addToCart('${prod.id}')" style="display: flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; width: 100% !important; padding: 8px 10px !important; border-radius: 8px !important; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important; color: #fff !important; border: none !important; font-size: 0.85rem !important; font-weight: 800 !important; cursor: pointer !important; box-shadow: 0 3px 8px rgba(220, 38, 38, 0.25) !important;">
+                      <button class="btn-add-cart" onclick="Storefront.addToCart('${prod.id}')" style="display: flex !important; align-items: center !important; justify-content: center !important; gap: 4px !important; width: 100% !important; padding: 8px 10px !important; border-radius: 8px !important; background: linear-gradient(135deg, var(--shop-brand, #dc2626) 0%, color-mix(in srgb, var(--shop-brand, #dc2626) 82%, #000) 100%) !important; color: #fff !important; border: none !important; font-size: 0.85rem !important; font-weight: 800 !important; cursor: pointer !important; box-shadow: 0 3px 8px color-mix(in srgb, var(--shop-brand, #dc2626) 25%, transparent) !important;">
                         <span>+</span>
                         <span>${t('addToCart')}</span>
                       </button>
@@ -797,6 +973,9 @@ const Storefront = (() => {
         <span>${t('allProducts')}</span>
       </button>
     `;
+    if (offerProducts().length) {
+      html += `<button class="cat-chip ${_selectedCategory === '__offers__' ? 'active' : ''}" onclick="Storefront.showOffers()"><span>🔥</span><span>${_currentLang === 'ar' ? 'العروض' : 'Offers'}</span></button>`;
+    }
 
     _categories.forEach(cat => {
       const catName = _currentLang === 'ar' ? (cat.name_ar || cat.name) : (cat.name_en || cat.name);
@@ -871,17 +1050,22 @@ const Storefront = (() => {
   }
 
   function addToCart(productId) {
-    const prod = _products.find(p => p.id === productId);
+    const prod = findProd(productId);
     if (!prod) return;
 
-    const existing = _cart.find(c => c.productId === productId);
+    const stock = parseInt(prod.stock_quantity) || 0;
+    const existing = _cart.find(c => String(c.productId) === String(productId));
+    if (_tenant.link_pos_stock && !_tenant.allow_out_of_stock && ((existing ? existing.quantity : 0) + 1) > stock) {
+      alert(_currentLang === 'ar' ? 'عذراً، هذا الصنف غير متوفر حالياً' : 'Sorry, this item is out of stock');
+      return;
+    }
     if (existing) {
       existing.quantity += 1;
     } else {
       _cart.push({
-        productId: prod.id,
+        productId: String(prod.id),
         name: _currentLang === 'ar' ? (prod.name_ar || prod.name) : (prod.name_en || prod.name),
-        price: parseFloat(prod.price) || 0,
+        price: effPrice(prod),
         quantity: 1,
         imageUrl: prod.image_url || null
       });
@@ -891,10 +1075,10 @@ const Storefront = (() => {
   }
 
   function updateCartQty(productId, delta) {
-    const item = _cart.find(c => c.productId === productId);
+    const item = _cart.find(c => String(c.productId) === String(productId));
     if (!item) return;
 
-    const prod = _products.find(p => p.id === productId);
+    const prod = findProd(productId);
     const stock = prod ? (parseInt(prod.stock_quantity) || 0) : 9999;
 
     if (delta > 0 && _tenant.link_pos_stock && !_tenant.allow_out_of_stock && (item.quantity + delta) > stock) {
@@ -904,14 +1088,14 @@ const Storefront = (() => {
 
     item.quantity += delta;
     if (item.quantity <= 0) {
-      _cart = _cart.filter(c => c.productId !== productId);
+      _cart = _cart.filter(c => String(c.productId) !== String(productId));
     }
 
     saveCart();
   }
 
   function deleteItem(productId) {
-    const idx = _cart.findIndex(c => c.productId === productId);
+    const idx = _cart.findIndex(c => String(c.productId) === String(productId));
     if (idx !== -1) {
       _cart.splice(idx, 1);
       saveCart();
@@ -927,6 +1111,11 @@ const Storefront = (() => {
   }
 
   function updateLiveCart() {
+    // Prices follow the shop: an offer that started or ended, or a new price, updates the cart.
+    if (_products.length) {
+      _cart.forEach(c => { const p = findProd(c.productId); if (p) c.price = effPrice(p); });
+      try { sessionStorage.setItem('rs_cart', JSON.stringify(_cart)); } catch (e) { }
+    }
     const totalCount = _cart.reduce((sum, it) => sum + it.quantity, 0);
     const subtotal = _cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
     const deliveryFee = currentDeliveryFee();
@@ -1217,7 +1406,10 @@ const Storefront = (() => {
       _cart = [];
       saveCart();
       closeMobileCartModal();
-      showSuccessModal(orderNumber, grandTotal);
+      // The shop's server re-checks prices and may change the number: show what it saved.
+      const saved = res.order || {};
+      showSuccessModal(saved.order_number || orderNumber, parseFloat(saved.total) || grandTotal);
+      try { localStorage.setItem('rs_last_order_' + _tenant.id, saved.order_number || orderNumber); } catch (e) { }
     } else {
       alert((_currentLang === 'ar' ? 'فشل إرسال الطلب: ' : 'Error submitting order: ') + res.error);
     }
@@ -1266,7 +1458,11 @@ const Storefront = (() => {
       return;
     }
 
-    const targetPhone = (_tenant?.whatsapp_phone || _tenant?.owner_phone || '+96170123456').replace(/[^0-9+]/g, '');
+    const targetPhone = shopWhatsApp();
+    if (!targetPhone) {
+      alert(_currentLang === 'ar' ? 'هذا المتجر لا يستقبل الطلبات عبر واتساب. استخدم زر تأكيد الطلب.' : 'This store does not take WhatsApp orders. Please use the Place order button.');
+      return;
+    }
     const subtotal = _cart.reduce((s, it) => s + (it.price * it.quantity), 0);
     const block = orderBlockReason(subtotal);
     if (block) { alert(block); return; }
@@ -1356,6 +1552,9 @@ const Storefront = (() => {
 
     // Search bar
     setPlaceholder('search-catalog', t('searchPlaceholder'));
+    document.querySelectorAll('.track-btn-label').forEach(el => { el.textContent = lang === 'ar' ? 'تتبع طلبك' : 'Track order'; });
+    setText('tab-txt-cats', lang === 'ar' ? 'التصنيفات' : 'Categories');
+    setText('tab-txt-all', lang === 'ar' ? 'كل الأصناف' : 'All products');
 
     // Filter pills
     setText('pill-cats-text', t('browseCategories'));
@@ -1418,7 +1617,10 @@ const Storefront = (() => {
     if (_tenant) {
       renderHeader();
       initCarousel();
+      renderAnnouncement();
+      renderFooter();
       renderCategoriesSlider();
+      renderOffersStrip();
       renderBigCategoriesGrid();
       if (_viewMode === 'products') renderGroupedProducts();
       updateLiveCart();
@@ -1655,8 +1857,8 @@ const Storefront = (() => {
 
     if (inst) {
       inst.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      inst.style.border = '2px solid #dc2626';
-      inst.style.boxShadow = '0 0 15px rgba(220, 38, 38, 0.4)';
+      inst.style.border = '2px solid var(--shop-brand, #dc2626)';
+      inst.style.boxShadow = '0 0 15px color-mix(in srgb, var(--shop-brand, #dc2626) 40%, transparent)';
       setTimeout(() => { inst.style.border = ''; inst.style.boxShadow = ''; }, 3500);
     }
   }
@@ -1695,7 +1897,7 @@ const Storefront = (() => {
     }
 
     resEl.style.display = 'block';
-    resEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);"><div style="display:inline-block;width:30px;height:30px;border:3px solid rgba(220,38,38,0.2);border-top-color:#dc2626;border-radius:50%;animation:spin 0.8s linear infinite"></div><div style="margin-top:10px;font-weight:700;">جاري البحث عن طلبك...</div></div>';
+    resEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);"><div style="display:inline-block;width:30px;height:30px;border:3px solid color-mix(in srgb, var(--shop-brand, #dc2626) 20%, transparent);border-top-color:var(--shop-brand, #dc2626);border-radius:50%;animation:spin 0.8s linear infinite"></div><div style="margin-top:10px;font-weight:700;">جاري البحث عن طلبك...</div></div>';
 
     try {
       const cleanQ = raw.replace(/[^a-zA-Z0-9_-]/g, '');
@@ -1761,19 +1963,19 @@ const Storefront = (() => {
             '</span>' +
           '</div>' +
           '<div style="display:flex; gap:4px; margin:14px 0 10px 0;">' +
-            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 1 ? '#dc2626' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
-            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 2 ? '#dc2626' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
-            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 3 ? '#dc2626' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
+            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 1 ? 'var(--shop-brand, #dc2626)' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
+            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 2 ? 'var(--shop-brand, #dc2626)' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
+            '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 3 ? 'var(--shop-brand, #dc2626)' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
             '<div style="flex:1; height:7px; border-radius:4px; background:' + (st.step >= 4 ? '#10b981' : '#e2e8f0') + '; transition:all 0.3s;"></div>' +
           '</div>' +
-          '<p style="font-size:0.86rem; color:var(--text-main); font-weight:800; margin:8px 0 12px 0; background:rgba(220,38,38,0.04); padding:8px 10px; border-radius:8px;">' +
+          '<p style="font-size:0.86rem; color:var(--text-main); font-weight:800; margin:8px 0 12px 0; background:color-mix(in srgb, var(--shop-brand, #dc2626) 4%, transparent); padding:8px 10px; border-radius:8px;">' +
             st.desc +
           '</p>' +
           (itemsList ? '<div style="background:var(--bg-primary); border-radius:8px; padding:8px 10px; margin-bottom:10px;">' + itemsList + '</div>' : '') +
           (ord.delivery_address ? '<div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">📍 العنوان: <strong>' + ord.delivery_address + '</strong></div>' : '') +
           '<div style="display:flex; justify-content:space-between; align-items:center; font-size:0.9rem; border-top:1px dashed var(--border-color); padding-top:10px;">' +
-            '<span>المجموع الكلي: <strong style="color:#dc2626; font-size:1.05rem;">$' + total + '</strong></span>' +
-            '<a href="https://wa.me/' + ((_tenant.whatsapp_phone || _tenant.owner_phone || '').replace(/[^0-9]/g, '')) + '?text=' + encodeURIComponent('مرحباً، أتابع طلبي رقم #' + (ord.order_number || ord.id)) + '" target="_blank" style="background:#25d366; color:#fff; font-size:0.78rem; font-weight:900; text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; box-shadow:0 2px 6px rgba(37,211,102,0.3);">' +
+            '<span>المجموع الكلي: <strong style="color:var(--shop-brand, #dc2626); font-size:1.05rem;">$' + total + '</strong></span>' +
+            '<a href="https://wa.me/' + shopWhatsApp() + '?text=' + encodeURIComponent('مرحباً، أتابع طلبي رقم #' + (ord.order_number || ord.id)) + '" target="_blank" style="background:#25d366; color:#fff; font-size:0.78rem; font-weight:900; text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; box-shadow:0 2px 6px rgba(37,211,102,0.3);">' +
               '<span>💬 متابعة واتساب</span>' +
             '</a>' +
           '</div>' +
@@ -1787,6 +1989,9 @@ const Storefront = (() => {
   }
 
   return {
+    openSlide,
+    openProduct,
+    showOffers,
     onZoneChange,
     copyDirectAppLink,
     openTrackOrderModal,

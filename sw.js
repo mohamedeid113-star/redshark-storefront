@@ -1,5 +1,5 @@
 // Red Shark Storefront – Service Worker v26.5
-const CACHE_NAME = 'rs-storefront-v26.9';
+const CACHE_NAME = 'rs-storefront-v28.0';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -49,7 +49,7 @@ self.addEventListener('fetch', (event) => {
       scope: scope,
       display: "standalone",
       background_color: "#09101d",
-      theme_color: "#dc2626",
+      theme_color: /^#[0-9a-f]{6}$/i.test(url.searchParams.get('color') || '') ? url.searchParams.get('color') : "#dc2626",
       orientation: "portrait",
       icons
     };
