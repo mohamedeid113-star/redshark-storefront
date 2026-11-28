@@ -10,6 +10,7 @@ const Admin = (() => {
     lang: localStorage.getItem('rs_admin_lang') || 'ar',
     tenant: null, banner: {}, local: false,
     slides: [], offers: [], zones: [], hours: null, catImages: {}, brand: {}, announcement: {},
+    vis: {}, hiddenCats: new Set(), selected: new Set(), listedIds: [],
     categories: [], products: [], orders: [],
     section: 'overview', dirty: false, filter: 'received', openOrders: new Set(),
     knownNew: null, timer: null
@@ -198,6 +199,8 @@ const Admin = (() => {
     S.catImages = (b.category_images && typeof b.category_images === 'object') ? Object.assign({}, b.category_images) : {};
     S.brand = Object.assign({}, b.brand || {});
     S.announcement = Object.assign({ active: false, text_ar: '', text_en: '' }, b.announcement || {});
+    S.vis = (b.product_visibility && typeof b.product_visibility === 'object') ? Object.assign({}, b.product_visibility) : {};
+    S.hiddenCats = new Set((Array.isArray(b.hidden_categories) ? b.hidden_categories : []).map(String));
   }
   async function loadCatalog() {
     const id = S.tenant.id;
@@ -868,7 +871,7 @@ const Admin = (() => {
   function renderOfferPicker() {
     const q = val('mo-search').toLowerCase();
     const sel = val('mo-product');
-    let list = S.products.filter(p => p.is_published !== false);
+    let list = S.products.filter(p => isShown(p));
     if (q) list = list.filter(p => [p.name, p.name_ar, p.name_en, p.barcode].some(x => String(x || '').toLowerCase().includes(q)));
     else if (sel) list = list.filter(p => String(p.id) === sel).concat(list.filter(p => String(p.id) !== sel));
     list = list.slice(0, 40);
@@ -917,35 +920,114 @@ const Admin = (() => {
     const curCat = catSel.value;
     catSel.innerHTML = `<option value="">${L('All categories', 'كل الأقسام')}</option>` + S.categories.map(c => `<option value="${esc(c.id)}">${esc(nameOf(c))}</option>`).join('');
     catSel.value = curCat;
-    $('pr-local-note').innerHTML = S.local ? `<div class="notice n-info">ℹ️ <span>${L('Products, prices, stock and pictures come from your POS. Edit them in the POS (Items) and they update here within a minute. Here you can put products on offer.', 'الأصناف والأسعار والمخزون والصور تأتي من برنامج الكاشير. عدّلها من الكاشير (الأصناف) وستتحدث هنا خلال دقيقة. من هنا يمكنك وضع عروض على الأصناف.')}</span></div>` : '';
+    $('pr-local-note').innerHTML = S.local ? `<div class="notice n-info">ℹ️ <span>${L('Products, prices, stock and pictures come from your POS and update here within a minute. Here you choose which products customers see, and put products on offer.', 'الأصناف والأسعار والمخزون والصور تأتي من برنامج الكاشير وتتحدث هنا خلال دقيقة. من هنا تختار الأصناف التي يراها الزبون وتضع عروضاً عليها.')}</span></div>` : '';
     const q = val('pr-search').toLowerCase(), f = val('pr-filter') || 'all';
     let list = S.products.slice();
     if (curCat) list = list.filter(p => String(p.category_id) === String(curCat));
     if (q) list = list.filter(p => [p.name, p.name_ar, p.name_en, p.barcode].some(x => String(x || '').toLowerCase().includes(q)));
     if (f === 'noimg') list = list.filter(p => !p.image_url);
     if (f === 'low') list = list.filter(p => num(p.stock_quantity ?? p.stock) <= 5);
-    if (f === 'hidden') list = list.filter(p => p.is_published === false);
+    if (f === 'hidden') list = list.filter(p => !isShown(p));
+    if (f === 'shown') list = list.filter(p => isShown(p));
     if (f === 'offer') list = list.filter(p => activeOfferFor(p.id));
     list.sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
     const total = list.length;
+    S.listedIds = list.map(p => String(p.id));
     list = list.slice(0, 300);
     if (!total) { $('pr-list').innerHTML = `<div class="card empty"><div class="big">📦</div>${S.products.length ? L('No product matches.', 'لا يوجد صنف مطابق.') : L('No products yet.', 'لا توجد أصناف بعد.')}</div>`; return; }
     const catName = (id) => { const c = S.categories.find(x => String(x.id) === String(id)); return c ? nameOf(c) : '—'; };
-    $('pr-list').innerHTML = `<div class="hint" style="margin-bottom:6px">${L(`${total} product(s)`, `${total} صنف`)}${total > 300 ? L(' — showing the first 300, search to narrow down', ' — يظهر أول 300، استخدم البحث') : ''}</div>
-      <div class="table-wrap"><table><thead><tr><th></th><th>${L('Product', 'الصنف')}</th><th>${L('Category', 'القسم')}</th><th class="num">${L('Price', 'السعر')}</th><th class="num">${L('Stock', 'المخزون')}</th><th>${L('Status', 'الحالة')}</th><th></th></tr></thead><tbody>${list.map(p => {
+    const shownCount = S.products.filter(isShown).length;
+    S.selected = new Set([...(S.selected || [])].filter(id => S.listedIds.includes(id)));
+    const nSel = S.selected.size;
+    $('pr-list').innerHTML = `
+      <div class="row" style="margin-bottom:8px">
+        <span class="hint" style="margin:0">${L(`${total} product(s) listed · ${shownCount} of ${S.products.length} shown in your store`, `${total} صنف في القائمة · ${shownCount} من ${S.products.length} ظاهر في متجرك`)}${total > 300 ? L(' — showing the first 300, search to narrow down', ' — يظهر أول 300، استخدم البحث') : ''}</span>
+        <span class="spacer"></span>
+        ${nSel ? `<b style="font-size:.84rem">${L(`${nSel} selected`, `${nSel} محدد`)}</b>
+          <button class="btn btn-sm btn-ok" onclick="Admin.setSelectedVisible(true)">👁️ ${L('Show selected', 'إظهار المحدد')}</button>
+          <button class="btn btn-sm" onclick="Admin.setSelectedVisible(false)">🚫 ${L('Hide selected', 'إخفاء المحدد')}</button>
+          <button class="btn btn-sm btn-ghost" onclick="Admin.clearSelection()">✕</button>`
+        : `<button class="btn btn-sm" onclick="Admin.setListedVisible(true)">👁️ ${L(`Show all ${total} listed`, `إظهار كل الـ ${total}`)}</button>
+          <button class="btn btn-sm" onclick="Admin.setListedVisible(false)">🚫 ${L(`Hide all ${total} listed`, `إخفاء كل الـ ${total}`)}</button>`}
+      </div>
+      <div class="table-wrap"><table><thead><tr><th style="width:34px"><input type="checkbox" title="${L('Select all listed', 'تحديد الكل')}" ${nSel && nSel === Math.min(total, 300) ? 'checked' : ''} onchange="Admin.selectAllListed(this.checked)"></th><th></th><th>${L('Product', 'الصنف')}</th><th>${L('Category', 'القسم')}</th><th class="num">${L('Price', 'السعر')}</th><th class="num">${L('Stock', 'المخزون')}</th><th>${L('In store', 'في المتجر')}</th><th></th></tr></thead><tbody>${list.map(p => {
         const off = activeOfferFor(p.id), stock = num(p.stock_quantity ?? p.stock);
-        return `<tr>
+        const own = shownSelf(p), catHidden = S.hiddenCats.has(String(p.category_id));
+        return `<tr style="${isShown(p) ? '' : 'opacity:.6'}">
+          <td><input type="checkbox" ${S.selected.has(String(p.id)) ? 'checked' : ''} onchange="Admin.toggleSelect('${esc(p.id)}',this.checked)"></td>
           <td style="width:56px">${p.image_url ? `<img class="thumb" src="${esc(p.image_url)}" alt="" loading="lazy">` : '<div class="thumb">📦</div>'}</td>
           <td><b>${esc(nameOf(p))}</b>${p.barcode ? `<div class="order-meta ltr">${esc(p.barcode)}</div>` : ''}</td>
           <td style="color:var(--muted)">${esc(catName(p.category_id))}</td>
           <td class="num">${off ? `<span class="strike">${money(p.price)}</span> <b style="color:var(--brand)">${money(off.price)}</b>` : `<b>${money(p.price)}</b>`}</td>
           <td class="num" style="font-weight:800;color:${stock <= 0 ? 'var(--bad)' : (stock <= 5 ? 'var(--warn)' : 'var(--ok)')}">${stock}</td>
-          <td>${p.is_published === false ? `<span class="pill p-muted">${L('Hidden', 'مخفي')}</span>` : `<span class="pill p-ok">${L('Online', 'ظاهر')}</span>`}</td>
+          <td><div class="row" style="flex-wrap:nowrap;gap:6px"><label class="switch" title="${L('Show in the online store', 'إظهار في المتجر')}"><input type="checkbox" ${own ? 'checked' : ''} onchange="Admin.setProductsVisible(['${esc(p.id)}'],this.checked)"><span></span></label>
+            ${catHidden ? `<span class="pill p-warn" title="${L('Its category is hidden', 'قسمه مخفي')}">${L('Category hidden', 'القسم مخفي')}</span>` : ''}</div></td>
           <td class="num"><div class="row" style="justify-content:flex-end;flex-wrap:nowrap">
             <button class="btn btn-sm" onclick="Admin.offerForProduct('${esc(p.id)}')">🏷️ ${off ? L('Offer', 'العرض') : L('Put on offer', 'عرض')}</button>
             ${S.local ? '' : `<button class="btn btn-sm" onclick="Admin.openProductModal('${esc(p.id)}')">✏️</button>`}</div></td>
         </tr>`;
       }).join('')}</tbody></table></div>`;
+  }
+
+  // ── What customers see: products and categories the owner shows or hides ──
+  // Kept in the store settings (product_visibility / hidden_categories) so a POS catalogue sync
+  // never undoes them. In the cloud the product's own "published" flag is kept in step too.
+  function shownSelf(p) { const v = S.vis[String(p.id)]; return typeof v === 'boolean' ? v : p.is_published !== false; }
+  function isShown(p) { return shownSelf(p) && !S.hiddenCats.has(String(p.category_id)); }
+  function toggleSelect(id, on) { S.selected = S.selected || new Set(); if (on) S.selected.add(String(id)); else S.selected.delete(String(id)); renderProducts(); }
+  function selectAllListed(on) { S.selected = new Set(on ? S.listedIds.slice(0, 300) : []); renderProducts(); }
+  function clearSelection() { S.selected = new Set(); renderProducts(); }
+  async function setProductsVisible(ids, on) {
+    ids = ids.map(String);
+    if (!ids.length) return;
+    const prev = {};
+    ids.forEach(id => { prev[id] = S.vis[id]; S.vis[id] = !!on; });
+    renderProducts();
+    try {
+      if (!S.local) {
+        for (let i = 0; i < ids.length; i += 80) {
+          const chunk = ids.slice(i, i + 80).map(id => '"' + id.replace(/"/g, '') + '"').join(',');
+          await api('/rest/v1/products?id=in.(' + encodeURIComponent(chunk) + ')', { method: 'PATCH', body: JSON.stringify({ is_published: !!on, updated_at: new Date().toISOString() }) });
+        }
+        S.products.forEach(p => { if (ids.includes(String(p.id))) p.is_published = !!on; });
+      }
+      await writeTenant(null, { product_visibility: S.vis });
+      S.banner.product_visibility = Object.assign({}, S.vis);
+      if (ids.length > 1) toast(on ? L(`${ids.length} products shown in the store`, `تم إظهار ${ids.length} صنف في المتجر`) : L(`${ids.length} products hidden from the store`, `تم إخفاء ${ids.length} صنف من المتجر`), 'ok');
+      else toast(on ? L('Shown in the store', 'ظاهر في المتجر') : L('Hidden from the store', 'مخفي من المتجر'), 'ok');
+    } catch (e) {
+      ids.forEach(id => { if (prev[id] === undefined) delete S.vis[id]; else S.vis[id] = prev[id]; });
+      renderProducts();
+      toast(L('Not saved: ', 'لم يتم الحفظ: ') + e.message, 'err');
+    }
+  }
+  async function setSelectedVisible(on) { const ids = [...(S.selected || [])]; S.selected = new Set(); await setProductsVisible(ids, on); }
+  async function setListedVisible(on) {
+    const ids = S.listedIds || [];
+    if (ids.length > 1 && !confirm(on ? L(`Show all ${ids.length} listed products in the store?`, `إظهار كل الأصناف المعروضة (${ids.length}) في المتجر؟`) : L(`Hide all ${ids.length} listed products from the store?`, `إخفاء كل الأصناف المعروضة (${ids.length}) من المتجر؟`))) return;
+    await setProductsVisible(ids, on);
+  }
+  async function setCategoryVisible(id, on) {
+    id = String(id);
+    const had = S.hiddenCats.has(id);
+    if (on) S.hiddenCats.delete(id); else S.hiddenCats.add(id);
+    renderCategories();
+    try {
+      await writeTenant(null, { hidden_categories: [...S.hiddenCats] });
+      S.banner.hidden_categories = [...S.hiddenCats];
+      toast(on ? L('Category shown in the store', 'القسم ظاهر في المتجر') : L('Category and its products hidden from the store', 'تم إخفاء القسم وأصنافه من المتجر'), 'ok');
+    } catch (e) {
+      if (had) S.hiddenCats.add(id); else S.hiddenCats.delete(id);
+      renderCategories();
+      toast(L('Not saved: ', 'لم يتم الحفظ: ') + e.message, 'err');
+    }
+  }
+  function manageCategoryProducts(catId) {
+    go('products');
+    setVal('pr-search', ''); setVal('pr-filter', 'all');
+    $('pr-cat').value = String(catId);
+    S.selected = new Set();
+    renderProducts();
   }
   function offerForProduct(pid) {
     const i = S.offers.findIndex(o => String(o.product_id) === String(pid));
@@ -966,7 +1048,7 @@ const Admin = (() => {
     setVal('mp-barcode', p ? (p.barcode || '') : '');
     setVal('mp-img', p ? (p.image_url || '') : ''); syncPreview('mp-img', 'mp-img-prev');
     setVal('mp-desc', p ? (p.description || p.description_ar || '') : '');
-    setChecked('mp-pub', p ? p.is_published !== false : true);
+    setChecked('mp-pub', p ? shownSelf(p) : true);
     $('mp-delete').classList.toggle('hidden', !p);
     $('m-product-title').textContent = p ? L('Edit product', 'تعديل الصنف') : L('New product', 'صنف جديد');
     openModal('m-product');
@@ -985,8 +1067,13 @@ const Admin = (() => {
     };
     const btn = $('mp-save'); btn.disabled = true;
     try {
+      let pid = id;
       if (id) await api('/rest/v1/products?id=eq.' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify(body) });
-      else await api('/rest/v1/products', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(Object.assign({ shop_id: S.tenant.id, track_inventory: true }, body)) });
+      else { const cr = await api('/rest/v1/products', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(Object.assign({ shop_id: S.tenant.id, track_inventory: true }, body)) }); pid = cr && cr[0] && cr[0].id; }
+      if (pid && typeof S.vis[String(pid)] === 'boolean' && S.vis[String(pid)] !== body.is_published) {
+        S.vis[String(pid)] = body.is_published;
+        await writeTenant(null, { product_visibility: S.vis });
+      }
       closeModal('m-product');
       S.products = await loadAllCloudProducts();
       renderProducts();
@@ -1011,14 +1098,24 @@ const Admin = (() => {
 
   // ── CATEGORIES ────────────────────────────────────────────────
   function renderCategories() {
-    $('ct-local-note').innerHTML = S.local ? `<div class="notice n-info">ℹ️ <span>${L('Category names come from your POS. Here you choose the cover picture customers see.', 'أسماء الأقسام تأتي من برنامج الكاشير. من هنا تختار صورة الغلاف التي يراها الزبون.')}</span></div>` : '';
+    $('ct-local-note').innerHTML = S.local ? `<div class="notice n-info">ℹ️ <span>${L('Category names come from your POS. Here you choose which categories customers see and their cover picture.', 'أسماء الأقسام تأتي من برنامج الكاشير. من هنا تختار الأقسام التي يراها الزبون وصورة غلافها.')}</span></div>` : '';
     if (!S.categories.length) { $('ct-list').innerHTML = `<div class="card empty"><div class="big">🗂️</div>${L('No categories yet.', 'لا توجد أقسام بعد.')}</div>`; return; }
     $('ct-list').innerHTML = `<div class="grid g4">${S.categories.map(c => {
       const img = S.catImages[c.id] || c.image_url;
-      const count = S.products.filter(p => String(p.category_id) === String(c.id)).length;
-      return `<div class="card" style="padding:0;overflow:hidden;margin:0;cursor:pointer" onclick="Admin.openCategoryModal('${esc(c.id)}')">
-        <div style="height:110px;background:${img ? `url('${String(img).replace(/'/g, '%27')}') center/cover` : 'var(--surface-2)'};display:flex;align-items:center;justify-content:center;font-size:2rem">${img ? '' : '🗂️'}</div>
-        <div style="padding:10px 12px"><b>${esc(nameOf(c))}</b><div class="order-meta">${count} ${L('products', 'صنف')}${img ? '' : ' · ' + L('no cover', 'بدون غلاف')}</div></div></div>`;
+      const prods = S.products.filter(p => String(p.category_id) === String(c.id));
+      const shown = prods.filter(shownSelf).length;
+      const hidden = S.hiddenCats.has(String(c.id));
+      return `<div class="card" style="padding:0;overflow:hidden;margin:0;${hidden ? 'opacity:.6' : ''}">
+        <div onclick="Admin.openCategoryModal('${esc(c.id)}')" style="cursor:pointer;height:110px;background:${img ? `url('${String(img).replace(/'/g, '%27')}') center/cover` : 'var(--surface-2)'};display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative">${img ? '' : '🗂️'}${hidden ? `<span class="pill p-bad" style="position:absolute;top:8px;inset-inline-start:8px">${L('Hidden', 'مخفي')}</span>` : ''}</div>
+        <div style="padding:10px 12px">
+          <div class="row" style="flex-wrap:nowrap"><b style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(nameOf(c))}</b>
+            <label class="switch" title="${L('Show in the online store', 'إظهار في المتجر')}"><input type="checkbox" ${hidden ? '' : 'checked'} onchange="Admin.setCategoryVisible('${esc(c.id)}',this.checked)"><span></span></label></div>
+          <div class="order-meta">${prods.length ? L(`${shown} of ${prods.length} products shown`, `${shown} من ${prods.length} صنف ظاهر`) : L('Empty — not shown to customers', 'فارغ — لا يظهر للزبائن')}${img ? '' : ' · ' + L('no cover', 'بدون غلاف')}</div>
+          <div class="row" style="margin-top:8px;gap:6px">
+            <button class="btn btn-sm" onclick="Admin.openCategoryModal('${esc(c.id)}')">🖼️ ${L('Cover', 'الغلاف')}</button>
+            <button class="btn btn-sm" onclick="Admin.manageCategoryProducts('${esc(c.id)}')">📦 ${L('Products', 'الأصناف')}</button>
+          </div>
+        </div></div>`;
     }).join('')}</div>`;
   }
   function openCategoryModal(id) {
@@ -1203,6 +1300,7 @@ const Admin = (() => {
     addSlide, slideSet, slideImage, removeSlide, moveSlide, copySlide,
     openOfferModal, renderOfferPicker, pickOfferProduct, offerFromPct, offerFromPrice, saveOffer, toggleOffer, removeOffer,
     renderProducts, offerForProduct, openProductModal, saveProduct, deleteProduct,
+    setProductsVisible, setSelectedVisible, setListedVisible, setCategoryVisible, toggleSelect, selectAllListed, clearSelection, manageCategoryProducts,
     openCategoryModal, saveCategory, deleteCategory,
     addZone, setZone, removeZone, renderHours, setDay,
     renderReports, changePassword

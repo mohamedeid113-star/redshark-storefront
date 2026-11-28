@@ -30,6 +30,20 @@ const Storefront = (() => {
   // Product ids are numbers on a shop's own server and text in the cloud: compare them as text.
   function normProd(p) { if (p && p.id != null) p.id = String(p.id); return p; }
   const findProd = (id) => _products.find(p => String(p.id) === String(id));
+  // Products and categories the shop chose to show (store manager → Products / Categories).
+  function hiddenCatSet() { return new Set((Array.isArray(_banner.hidden_categories) ? _banner.hidden_categories : []).map(String)); }
+  function visibleProd(p) {
+    if (!p) return false;
+    if (p.category_id != null && hiddenCatSet().has(String(p.category_id))) return false;
+    const vis = _banner.product_visibility || {};
+    const v = vis[String(p.id)];
+    return typeof v === 'boolean' ? v : p.is_published !== false;
+  }
+  // Hidden categories, and categories with nothing to sell, are not shown to customers.
+  function shownCategories() {
+    const hid = hiddenCatSet();
+    return _categories.filter(c => !hid.has(String(c.id)) && (_isLoadingProducts || _products.some(p => String(p.category_id) === String(c.id))));
+  }
   function shopDate() {
     try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Beirut', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
     catch (e) { return new Date().toISOString().slice(0, 10); }
@@ -236,7 +250,7 @@ const Storefront = (() => {
     } catch (e) {}
   }
 
-      function applyDynamicManifest(tenant, slug) {
+  async function applyDynamicManifest(tenant, slug) {
     try {
       const cleanSlug = encodeURIComponent(slug || 'bobmarket');
       let link = document.querySelector('link[rel="manifest"]');
@@ -248,23 +262,86 @@ const Storefront = (() => {
       // The shop's own name and logo go into the installed app (not Red Shark's).
       let extra = '';
       if (tenant && tenant.shop_name) extra += '&name=' + encodeURIComponent(tenant.shop_name);
-      if (tenant && tenant.logo_url) extra += '&logo=' + encodeURIComponent(tenant.logo_url);
-      const bc = (parseBanner(tenant).brand || {}).color;
+      // A SQUARE icon only (phones refuse to install with a wide logo): the shop server's app icon,
+      // or one this page draws from the shop logo and hands to the service worker.
+      const brand0 = parseBanner(tenant).brand || {};
+      let icon = (tenant && tenant.app_icon_url) || '';
+      if (!icon && tenant && tenant.logo_url) icon = await makeShopIcon(tenant, slug);
+      if (icon) extra += '&icon=' + encodeURIComponent(icon);
+      const bc = brand0.color;
       if (/^#[0-9a-f]{6}$/i.test(bc || '')) extra += '&color=' + encodeURIComponent(bc);
-      link.href = 'manifest.json?shop=' + cleanSlug + extra + '&v=26.9';
+      // the service worker answers manifest requests with this shop's own app (name, icon, start page)
+      const controlled = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+      link.href = 'manifest.json?shop=' + cleanSlug + extra + '&v=28.2' + (controlled ? '&sw=1' : '');
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
   }
 
+  // The shop logo drawn on a 512×512 square, kept in the browser (IndexedDB) for the service
+  // worker, which hands it to the phone as the installed app's icon.
+  const ICON_CACHE = 'rs-shop-icon';
+  function iconDb() {
+    return new Promise((resolve, reject) => {
+      const rq = indexedDB.open('rs-shop-icons', 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('icons');
+      rq.onsuccess = () => resolve(rq.result);
+      rq.onerror = () => reject(rq.error);
+    });
+  }
+  async function iconDbOp(mode, fn) {
+    const db = await iconDb();
+    try {
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction('icons', mode);
+        const rq = fn(tx.objectStore('icons'));
+        tx.oncomplete = () => resolve(rq && rq.result);
+        tx.onerror = () => reject(tx.error);
+      });
+    } finally { db.close(); }
+  }
+  async function makeShopIcon(tenant, slug) {
+    try {
+      if (!window.indexedDB || !navigator.serviceWorker || !navigator.serviceWorker.controller) return '';
+      const src = String(tenant.logo_url || '');
+      let h = 0; for (let i = 0; i < src.length; i += 61) h = (h * 31 + src.charCodeAt(i)) | 0;
+      const url = new URL('shop-icon/' + encodeURIComponent(slug || 'shop') + '.png?v=' + (src.length + '-' + (h >>> 0)), location.href).toString();
+      const key = new URL(url).pathname + new URL(url).search;
+      if (await iconDbOp('readonly', s => s.get(key))) return url;
+      const img = await new Promise((resolve, reject) => {
+        const im = new Image();
+        if (!/^data:/i.test(src)) im.crossOrigin = 'anonymous';
+        im.onload = () => resolve(im); im.onerror = reject; im.src = src;
+      });
+      const S = 512, box = S * 0.8, sc = Math.min(box / img.width, box / img.height);
+      const w = Math.round(img.width * sc), hh = Math.round(img.height * sc);
+      const c = document.createElement('canvas'); c.width = S; c.height = S;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, S, S);
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, Math.round((S - w) / 2), Math.round((S - hh) / 2), w, hh);
+      const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+      if (!blob) return '';
+      // one icon per shop: replace this shop's older icons
+      const prefix = new URL(url).pathname;
+      await iconDbOp('readwrite', s => {
+        const cur = s.openCursor();
+        cur.onsuccess = () => { const c = cur.result; if (!c) return; if (String(c.key).startsWith(prefix)) c.delete(); c.continue(); };
+        return cur;
+      });
+      await iconDbOp('readwrite', s => s.put(blob, key));
+      return url;
+    } catch (e) { return ''; }   // logo from another site that forbids drawing: the default icon is used
+  }
+
   async function init() {
     _paintCachedBrand();
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '28.0';
+    const APP_VERSION = '28.2';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
-        caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {});
+        caches.keys().then(keys => keys.forEach(k => { if (k !== ICON_CACHE) caches.delete(k); })).catch(() => {});
       }
     }
 
@@ -272,7 +349,7 @@ const Storefront = (() => {
     if ('serviceWorker' in navigator && !isLocal) {
       // scope './' = the folder the store is served from ("/" on the cloud site, "/storefront/"
       // on a shop's own server): the store page must be inside it to be installable.
-      navigator.serviceWorker.register('sw.js?v=26.9', { scope: './' }).then(reg => {
+      navigator.serviceWorker.register('sw.js?v=28.2', { scope: './' }).then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -309,6 +386,11 @@ const Storefront = (() => {
         return;
       }
       applyDynamicManifest(_tenant, _tenant.slug || slug);
+      // First visit: the service worker only takes over now. Until then the phone saw the shared
+      // site file (not installable): ask again so it gets THIS shop's app.
+      if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => applyDynamicManifest(_tenant, _tenant.slug || slug), { once: true });
+      }
       try { setupCheckoutOptions(); } catch (e) { console.warn('[Storefront] checkout options', e); }
 
       document.title = _tenant.shop_name || document.title;
@@ -325,7 +407,7 @@ const Storefront = (() => {
       ]);
 
       _categories = cats || [];
-      _products = (initialProds || []).map(normProd);
+      _products = (initialProds || []).map(normProd).filter(visibleProd);
       _isLoadingProducts = false;
 
       // Merge custom category cover images
@@ -360,6 +442,7 @@ const Storefront = (() => {
               for (const u of updated) {
                 if (!_products.some(p => p.id === u.id)) _products.push(u);
               }
+              _products = _products.filter(visibleProd);
               renderOffersStrip();
               renderBigCategoriesGrid();
               if (_viewMode === 'products') renderGroupedProducts();
@@ -377,7 +460,7 @@ const Storefront = (() => {
       // Concurrently fetch remainder of catalog if any
       StorefrontAPI.fetchProducts(_tenant.id).then(allProds => {
         if (allProds && allProds.length > 0) {
-          _products = allProds.map(normProd);
+          _products = allProds.map(normProd).filter(visibleProd);
           renderOffersStrip();
           renderBigCategoriesGrid();
           if (_viewMode === 'products') renderGroupedProducts();
@@ -697,12 +780,12 @@ const Storefront = (() => {
     const container = document.getElementById('categories-big-grid');
     if (!container) return;
 
-    if (_categories.length === 0) {
+    if (shownCategories().length === 0) {
       container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">لا توجد أقسام مسجلة</div>';
       return;
     }
 
-    container.innerHTML = _categories.map(cat => {
+    container.innerHTML = shownCategories().map(cat => {
       const name = _currentLang === 'ar' ? (cat.name_ar || cat.name) : (cat.name_en || cat.name);
       const count = _products.filter(p => String(p.category_id) === String(cat.id)).length;
       
@@ -871,7 +954,7 @@ const Storefront = (() => {
 
     const catGroups = new Map();
     const activeCats = (_selectedCategory === 'all' || offersMode)
-      ? _categories 
+      ? shownCategories() 
       : _categories.filter(c => String(c.id) === String(_selectedCategory));
 
     activeCats.forEach(cat => {
@@ -977,7 +1060,7 @@ const Storefront = (() => {
       html += `<button class="cat-chip ${_selectedCategory === '__offers__' ? 'active' : ''}" onclick="Storefront.showOffers()"><span>🔥</span><span>${_currentLang === 'ar' ? 'العروض' : 'Offers'}</span></button>`;
     }
 
-    _categories.forEach(cat => {
+    shownCategories().forEach(cat => {
       const catName = _currentLang === 'ar' ? (cat.name_ar || cat.name) : (cat.name_en || cat.name);
       const isActive = _viewMode === 'products' && String(_selectedCategory) === String(cat.id) ? 'active' : '';
       html += `
@@ -991,15 +1074,17 @@ const Storefront = (() => {
   }
 
   // ── 6. CART MANAGEMENT ──
+  // One cart per shop: on the shared cloud site, visiting another shop never carries items over.
+  function cartKey() { return 'rs_cart_' + (getShopSlug() || 'shop'); }
   function loadCart() {
     try {
-      const s = sessionStorage.getItem('rs_cart');
+      const s = sessionStorage.getItem(cartKey());
       if (s) _cart = JSON.parse(s);
     } catch(e) { _cart = []; }
   }
 
   function saveCart() {
-    sessionStorage.setItem('rs_cart', JSON.stringify(_cart));
+    sessionStorage.setItem(cartKey(), JSON.stringify(_cart));
     updateLiveCart();
     updateProductCardButtons();
   }
@@ -1114,7 +1199,7 @@ const Storefront = (() => {
     // Prices follow the shop: an offer that started or ended, or a new price, updates the cart.
     if (_products.length) {
       _cart.forEach(c => { const p = findProd(c.productId); if (p) c.price = effPrice(p); });
-      try { sessionStorage.setItem('rs_cart', JSON.stringify(_cart)); } catch (e) { }
+      try { sessionStorage.setItem(cartKey(), JSON.stringify(_cart)); } catch (e) { }
     }
     const totalCount = _cart.reduce((sum, it) => sum + it.quantity, 0);
     const subtotal = _cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
