@@ -272,7 +272,7 @@ const Storefront = (() => {
       if (/^#[0-9a-f]{6}$/i.test(bc || '')) extra += '&color=' + encodeURIComponent(bc);
       // the service worker answers manifest requests with this shop's own app (name, icon, start page)
       const controlled = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
-      link.href = 'manifest.json?shop=' + cleanSlug + extra + '&v=28.2' + (controlled ? '&sw=1' : '');
+      link.href = 'manifest.json?shop=' + cleanSlug + extra + '&v=28.3' + (controlled ? '&sw=1' : '');
     } catch(e) {
       console.warn('[Storefront] Dynamic manifest error:', e);
     }
@@ -337,7 +337,7 @@ const Storefront = (() => {
   async function init() {
     _paintCachedBrand();
     // Purge any stale cache on client load if version changed
-    const APP_VERSION = '28.2';
+    const APP_VERSION = '28.3';
     if (localStorage.getItem('rs_client_ver') !== APP_VERSION) {
       localStorage.setItem('rs_client_ver', APP_VERSION);
       if ('caches' in window) {
@@ -349,7 +349,7 @@ const Storefront = (() => {
     if ('serviceWorker' in navigator && !isLocal) {
       // scope './' = the folder the store is served from ("/" on the cloud site, "/storefront/"
       // on a shop's own server): the store page must be inside it to be installable.
-      navigator.serviceWorker.register('sw.js?v=28.2', { scope: './' }).then(reg => {
+      navigator.serviceWorker.register('sw.js?v=28.3', { scope: './' }).then(reg => {
         reg.update();
       }).catch(() => {});
     }
@@ -430,6 +430,48 @@ const Storefront = (() => {
       updateLiveCart();
       // Real-time catalog price & info polling every 15 seconds
       let _lastStorefrontCheck = new Date().toISOString();
+      // The owner can show / hide products and categories, change offers, banners… while a customer
+      // has the store (or the installed app) open: re-read the shop's settings and, when what is
+      // shown changed, reload the product list (a product shown again is not "updated", so the
+      // product check below would never bring it back).
+      const _visKey = (b) => JSON.stringify([b.product_visibility || {}, b.hidden_categories || []]);
+      let _bannerRaw = JSON.stringify(_banner);
+      let _settingsBusy = false;
+      const refreshStoreSettings = async () => {
+        if (_settingsBusy || document.hidden || !_tenant) return;
+        _settingsBusy = true;
+        try {
+          const fresh = await StorefrontAPI.fetchTenant(_tenant.slug || slug);
+          if (!fresh) return;
+          const nb = parseBanner(fresh);
+          const raw = JSON.stringify(nb);
+          if (raw === _bannerRaw) return;
+          const visChanged = _visKey(nb) !== _visKey(_banner);
+          _bannerRaw = raw;
+          _banner = nb;
+          _tenant.banner_url = fresh.banner_url;
+          applyShopBrand();
+          renderAnnouncement();
+          renderFooter();
+          initCarousel();
+          if (visChanged) {
+            const allProds = await StorefrontAPI.fetchProducts(_tenant.id);
+            if (Array.isArray(allProds)) _products = allProds.map(normProd).filter(visibleProd);
+            // anything in the cart that is no longer shown is taken out
+            const before = _cart.length;
+            if (_products.length) _cart = _cart.filter(ci => findProd(ci.productId));
+            if (_cart.length !== before) { saveCart(); updateLiveCart(); }
+          }
+          renderOffersStrip();
+          renderCategoriesSlider();
+          renderBigCategoriesGrid();
+          if (_viewMode === 'products') renderGroupedProducts();
+        } catch (e) { console.warn('[Storefront] settings refresh', e); }
+        finally { _settingsBusy = false; }
+      };
+      setInterval(refreshStoreSettings, 15000);
+      // An installed app coming back to the screen: check straight away.
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshStoreSettings(); });
       setInterval(async () => {
         try {
           if (!document.hidden && StorefrontAPI.fetchUpdatedProducts && _tenant && _tenant.id) {

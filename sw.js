@@ -1,5 +1,5 @@
-// Red Shark Storefront – Service Worker v28.2
-const CACHE_NAME = 'rs-storefront-v28.2';
+// Red Shark Storefront – Service Worker v28.3
+const CACHE_NAME = 'rs-storefront-v28.3';
 const ICON_CACHE = 'rs-shop-icon';   // square shop icons drawn by the store page (kept across updates)
 
 function readShopIcon(key) {
