@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.159",
-  "build": 247,
+  "version": "1.4.160",
+  "build": 248,
   "releaseDate": "2026-11-28",
-  "description": "New online store manager: branded dashboard with orders, banners (scheduled, with buttons), product offers with crossed-out prices, announcement bar, brand colour, contact and social links, delivery areas and hours, reports and password change. Customers pay the prices they see (offers, delivery areas, pickup, minimum order, opening hours checked by the shop server). Fixes: add-to-cart on shop-run stores, reports page, category edits wiping settings, POS orders page (status menu makes the invoice, safe customer text, packing slip with address and shop name, dark mode).",
+  "description": "Online store app install: phones now offer Install App (square icons), the installed app shows the shop logo, and every shop installs as its own separate app (no mix-up between shops on the cloud store). Each shop keeps its own shopping cart. Store manager: choose which products and categories customers see (one by one or in bulk); hidden items cannot be ordered; empty categories are not shown.",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
