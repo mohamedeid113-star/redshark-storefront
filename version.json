@@ -1,8 +1,8 @@
 {
   "name": "Red Shark POS",
-  "version": "1.4.158",
-  "build": 246,
-  "releaseDate": "2026-11-27",
-  "description": "Fixes after a full shop test: the new pages (cheques, debt aging, installments, gift cards, smart reorder, expiry, rate history, alerts) open with every licence; customer statements show invoice down payments correctly; invoices made from a delivery order get an INV- number; opening a purchase invoice from the supplier statement works; Exact Cash with a gift card fills only the cash part.",
+  "version": "1.4.159",
+  "build": 247,
+  "releaseDate": "2026-11-28",
+  "description": "New online store manager: branded dashboard with orders, banners (scheduled, with buttons), product offers with crossed-out prices, announcement bar, brand colour, contact and social links, delivery areas and hours, reports and password change. Customers pay the prices they see (offers, delivery areas, pickup, minimum order, opening hours checked by the shop server). Fixes: add-to-cart on shop-run stores, reports page, category edits wiping settings, POS orders page (status menu makes the invoice, safe customer text, packing slip with address and shop name, dark mode).",
   "downloadUrl": "https://shop.redshark-ai.com/dist/update.zip"
 }
